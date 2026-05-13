@@ -11,7 +11,18 @@ import {
   revenueImpact,
   visibilityImpact,
 } from "./common";
-import type { SellerActionType, SellerActionsWorkflowResult, SellerGrowthAction } from "./types";
+import type {
+  SellerActionCategory,
+  SellerActionChecklistItem,
+  SellerActionEffortLevel,
+  SellerActionImpactLevel,
+  SellerActionMetricHighlight,
+  SellerActionTimeHorizon,
+  SellerActionType,
+  SellerActionUrgency,
+  SellerActionsWorkflowResult,
+  SellerGrowthAction,
+} from "./types";
 
 interface ProductActionContext {
   product: Product;
@@ -19,6 +30,42 @@ interface ProductActionContext {
 }
 
 const defaultActionLimit = 5;
+
+const categoryLabels: Record<SellerActionCategory, string> = {
+  inventory: "Stok ve tedarik",
+  operations: "Operasyon riski",
+  content: "Listeleme kalitesi",
+  customer_voice: "Müşteri sesi",
+  returns: "İade riski",
+  campaign: "Kampanya ve bundle",
+  growth: "Büyüme fırsatı",
+  profitability: "Kârlılık",
+};
+
+const urgencyLabels: Record<SellerActionUrgency, string> = {
+  critical: "Kritik",
+  high: "Yüksek",
+  medium: "Orta",
+  low: "Düşük",
+};
+
+const impactLabels: Record<SellerActionImpactLevel, string> = {
+  high: "Yüksek etki",
+  medium: "Orta etki",
+  low: "Düşük etki",
+};
+
+const effortLabels: Record<SellerActionEffortLevel, string> = {
+  low: "Düşük efor",
+  medium: "Orta efor",
+  high: "Yüksek efor",
+};
+
+const timeHorizonLabels: Record<SellerActionTimeHorizon, string> = {
+  today: "Bugün",
+  this_week: "Bu hafta",
+  monitor: "İzlemede tut",
+};
 
 export function generateSellerActionsWorkflow(
   sellerId: string,
@@ -392,6 +439,14 @@ interface CreateActionInput {
 
 function createAction(input: CreateActionInput): SellerGrowthAction {
   const productIds = input.productIds ?? [input.product.id];
+  const category = getActionCategory(input.type);
+  const urgency = getActionUrgency(input.type, input.priorityScore, input.scorecard);
+  const impactLevel = getActionImpactLevel(input.priorityScore, input.product);
+  const effortLevel = getActionEffortLevel(input.type);
+  const timeHorizon = getActionTimeHorizon(input.type, urgency);
+  const expectedOutcome = createExpectedOutcome(input.type, input.product);
+  const metricHighlights = createMetricHighlights(input.type, input.product, input.scorecard, input.evidence);
+  const todayChecklist = createTodayChecklist(input.type, input.product, input.scorecard);
 
   return {
     id: createActionId(input.type, input.product.id),
@@ -399,6 +454,19 @@ function createAction(input: CreateActionInput): SellerGrowthAction {
     title: input.title,
     summary: input.summary,
     priorityScore: input.priorityScore,
+    category,
+    categoryLabel: categoryLabels[category],
+    urgency,
+    urgencyLabel: urgencyLabels[urgency],
+    impactLevel,
+    impactLabel: impactLabels[impactLevel],
+    effortLevel,
+    effortLabel: effortLabels[effortLevel],
+    timeHorizon,
+    timeHorizonLabel: timeHorizonLabels[timeHorizon],
+    expectedOutcome,
+    metricHighlights,
+    todayChecklist,
     productIds,
     reasoning: input.reasoning,
     evidence: input.evidence,
@@ -412,6 +480,14 @@ function createAction(input: CreateActionInput): SellerGrowthAction {
         title: input.title,
         summary: input.summary,
         priorityScore: input.priorityScore,
+        category,
+        urgency,
+        impactLevel,
+        effortLevel,
+        timeHorizon,
+        expectedOutcome,
+        metricHighlights,
+        todayChecklist,
         productIds,
         reasoning: input.reasoning,
         evidence: input.evidence,
@@ -421,6 +497,403 @@ function createAction(input: CreateActionInput): SellerGrowthAction {
         "Bu structured aksiyonu satıcıya kısa, güvenilir ve yapılacak iş odaklı Türkçe ile açıkla. Kanıtsız iddia ekleme.",
     },
   };
+}
+
+function getActionCategory(type: SellerActionType): SellerActionCategory {
+  switch (type) {
+    case "restock":
+      return "inventory";
+    case "pause_promotion":
+      return "operations";
+    case "fix_listing":
+      return "content";
+    case "review_attention":
+      return "customer_voice";
+    case "reduce_return_risk":
+      return "returns";
+    case "create_bundle":
+      return "campaign";
+    case "promote_winner":
+      return "growth";
+    case "protect_margin":
+      return "profitability";
+  }
+}
+
+function getActionUrgency(
+  type: SellerActionType,
+  priorityScore: number,
+  scorecard: ProductScorecard,
+): SellerActionUrgency {
+  if (
+    type === "restock" &&
+    (scorecard.inventory.evidence.projectedGap7d > 0 || scorecard.inventory.evidence.coverageDays === 0)
+  ) {
+    return "critical";
+  }
+
+  if (
+    type === "pause_promotion" &&
+    (scorecard.inventory.score < 45 || scorecard.shipping.score < 45)
+  ) {
+    return "critical";
+  }
+
+  if (type === "create_bundle" || type === "promote_winner") {
+    if (priorityScore >= 78) {
+      return "high";
+    }
+
+    if (priorityScore >= 60) {
+      return "medium";
+    }
+
+    return "low";
+  }
+
+  if (priorityScore >= 85) {
+    return "critical";
+  }
+
+  if (priorityScore >= 74) {
+    return "high";
+  }
+
+  if (priorityScore >= 60) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function getActionImpactLevel(priorityScore: number, product: Product): SellerActionImpactLevel {
+  if (priorityScore >= 80 || product.metrics.revenue30d >= 60_000 || product.metrics.orders30d >= 85) {
+    return "high";
+  }
+
+  if (priorityScore >= 62 || product.metrics.revenue30d >= 20_000 || product.metrics.orders30d >= 35) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function getActionEffortLevel(type: SellerActionType): SellerActionEffortLevel {
+  switch (type) {
+    case "pause_promotion":
+    case "promote_winner":
+      return "low";
+    case "restock":
+    case "fix_listing":
+    case "review_attention":
+    case "reduce_return_risk":
+    case "create_bundle":
+    case "protect_margin":
+      return "medium";
+  }
+}
+
+function getActionTimeHorizon(
+  type: SellerActionType,
+  urgency: SellerActionUrgency,
+): SellerActionTimeHorizon {
+  if (urgency === "critical" || type === "pause_promotion" || type === "protect_margin") {
+    return "today";
+  }
+
+  if (urgency === "low") {
+    return "monitor";
+  }
+
+  return "this_week";
+}
+
+function createExpectedOutcome(
+  type: SellerActionType,
+  product: Product,
+): string {
+  switch (type) {
+    case "restock":
+      return `${product.name} için stok açığı büyümeden tedarik planı netleşir ve satış kaybı riski düşer.`;
+    case "pause_promotion":
+      return `${product.name} büyütülmeden önce stok/kargo riski kontrol altına alınır ve reklam bütçesi boşa akmaz.`;
+    case "fix_listing":
+      return `${product.name} sayfası alıcının karar sorularını daha net cevaplar; dönüşüm ve iade güveni iyileşir.`;
+    case "review_attention":
+      return `${product.name} için tekrar eden yorum temaları görünür olur ve müşteri güvenini zedeleyen başlıklar aksiyona döner.`;
+    case "reduce_return_risk":
+      return `${product.name} iade sebebi yaratabilecek belirsizlikleri azaltır; ürün sayfası beklentiyi daha doğru yönetir.`;
+    case "create_bundle":
+      return `${product.name} tamamlayıcı ürünlerle daha anlamlı bir sepet senaryosuna bağlanır ve ortalama sepet değeri artabilir.`;
+    case "promote_winner":
+      return `${product.name} güçlü sağlık skorunu büyüme fırsatına çevirir; görünürlük kontrollü şekilde artırılır.`;
+    case "protect_margin":
+      return `${product.name} için fiyat, reklam ve iade baskısı birlikte ele alınır; büyüme kararı kârlılık zeminiyle verilir.`;
+  }
+}
+
+function createMetricHighlights(
+  type: SellerActionType,
+  product: Product,
+  scorecard: ProductScorecard,
+  evidence: Record<string, unknown>,
+): SellerActionMetricHighlight[] {
+  switch (type) {
+    case "restock":
+      return [
+        metric("Kullanılabilir stok", `${scorecard.inventory.evidence.availableStock} adet`, stockTone(scorecard)),
+        metric("7 günlük tahmini talep", `${scorecard.inventory.evidence.forecastDemand7d} adet`, "neutral"),
+        metric("Tahmini stok açığı", `${scorecard.inventory.evidence.projectedGap7d} adet`, gapTone(scorecard)),
+        scoreMetric("Stok skoru", scorecard.inventory.score),
+      ];
+    case "pause_promotion":
+      return [
+        scoreMetric("Stok skoru", scorecard.inventory.score),
+        scoreMetric("Kargo güveni", scorecard.shipping.score),
+        metric("Reklam harcaması", formatTry(product.metrics.adSpend30d), "warning"),
+        metric("Görüntülenme", `${product.metrics.views30d.toLocaleString("tr-TR")} adet`, "neutral"),
+      ];
+    case "fix_listing":
+      return [
+        scoreMetric("Listeleme skoru", scorecard.listing.score),
+        scoreMetric("Özellik tamlığı", scorecard.listing.evidence.attributeCompleteness),
+        scoreMetric("Görsel skoru", scorecard.listing.evidence.imageScore),
+        metric("Dönüşüm oranı", formatPercent(product.metrics.conversionRate), "neutral"),
+      ];
+    case "review_attention":
+      return [
+        scoreMetric("Yorum güveni", scorecard.reviews.score),
+        metric("Negatif yorum oranı", formatPercent(scorecard.reviews.evidence.negativeShare), "warning"),
+        metric("Acil yorum", `${scorecard.reviews.evidence.attentionReviewCount} adet`, attentionTone(scorecard)),
+        metric("Tekrar eden tema", scorecard.reviews.evidence.repeatedThemes.join(", ") || "Yok", "neutral"),
+      ];
+    case "reduce_return_risk":
+      return [
+        scoreMetric("İade güveni", scorecard.returns.score),
+        metric("İade oranı", formatPercent(scorecard.returns.evidence.returnRate), "warning"),
+        metric("Riskli yorum", `${scorecard.returns.evidence.riskyReviewCount} adet`, riskReviewTone(scorecard)),
+        scoreMetric("Listeleme güveni", scorecard.listing.score),
+      ];
+    case "create_bundle":
+      return [
+        scoreMetric("Kampanya hazırlığı", scorecard.promotionReadiness.score),
+        scoreMetric("Ürün sağlığı", scorecard.health.score),
+        metric("İlişkili ürün", `${getRelatedProductCount(evidence)} aday`, "positive"),
+        metric("Sepete ekleme", `${product.metrics.cartAdds30d} adet`, "neutral"),
+      ];
+    case "promote_winner":
+      return [
+        scoreMetric("Ürün sağlığı", scorecard.health.score),
+        scoreMetric("Kampanya hazırlığı", scorecard.promotionReadiness.score),
+        metric("Son 30 gün gelir", formatTry(product.metrics.revenue30d), "positive"),
+        metric("Son 30 gün sipariş", `${product.metrics.orders30d} adet`, "positive"),
+      ];
+    case "protect_margin":
+      return [
+        scoreMetric("Kârlılık skoru", scorecard.profitability.score),
+        metric("Brüt marj", formatTry(scorecard.profitability.evidence.grossMargin), marginTone(scorecard)),
+        metric("Reklam/gelir oranı", formatPercent(scorecard.profitability.evidence.adSpendToRevenueRate), "warning"),
+        metric("İade oranı", formatPercent(scorecard.profitability.evidence.returnRate), "warning"),
+      ];
+  }
+}
+
+function createTodayChecklist(
+  type: SellerActionType,
+  product: Product,
+  scorecard: ProductScorecard,
+): SellerActionChecklistItem[] {
+  switch (type) {
+    case "restock":
+      return [
+        checklistItem(
+          "Stok ihtiyacını hesapla",
+          `7 günlük tahmini talep ${scorecard.inventory.evidence.forecastDemand7d} adet; açığı ve lead time'ı birlikte kontrol et.`,
+          "stok",
+        ),
+        checklistItem(
+          "Kampanya temposunu sınırlı tut",
+          "Stok yenilenene kadar ürünü agresif reklam veya vitrin desteğiyle büyütme.",
+          "pazarlama",
+        ),
+      ];
+    case "pause_promotion":
+      return [
+        checklistItem(
+          "Reklam bütçesini dondur",
+          "Stok ve kargo güveni toparlanana kadar yeni bütçe artırımı yapma.",
+          "pazarlama",
+        ),
+        checklistItem(
+          "Operasyon sebebini netleştir",
+          `Stok ${scorecard.inventory.score}/100, kargo ${scorecard.shipping.score}/100; düşük sinyali hangi tarafın ürettiğini işaretle.`,
+          "operasyon",
+        ),
+      ];
+    case "fix_listing":
+      return [
+        checklistItem(
+          "Eksik karar bilgisini tamamla",
+          "Başlık, açıklama, teknik özellik ve görsel alanlarını alıcı sorularına göre güncelle.",
+          "icerik",
+        ),
+        checklistItem(
+          "Yorum kaynaklı belirsizliği kapat",
+          "Boyut, uyumluluk veya renk beklentisi geçen yorumları ürün sayfasındaki net bilgiye çevir.",
+          "icerik",
+        ),
+      ];
+    case "review_attention":
+      return [
+        checklistItem(
+          "Acil yorumları ayır",
+          `${scorecard.reviews.evidence.attentionReviewCount} yorum satıcı aksiyonu gerektiriyor; önce tekrar eden temaları grupla.`,
+          "destek",
+        ),
+        checklistItem(
+          "Cevap ve düzeltme planı yaz",
+          "Şikayeti sadece yanıtlamak yerine açıklama, kalite kontrol veya paketleme aksiyonuna bağla.",
+          "destek",
+        ),
+      ];
+    case "reduce_return_risk":
+      return [
+        checklistItem(
+          "İade sebebini görünür yap",
+          "Uyumluluk, ölçü, malzeme veya paketleme kaynaklı riski ürün sayfasında netleştir.",
+          "icerik",
+        ),
+        checklistItem(
+          "Riskli sipariş sinyalini izle",
+          `Mevcut iade oranı ${formatPercent(product.metrics.returnRate)}; aksiyon sonrası yeni siparişleri karşılaştır.`,
+          "operasyon",
+        ),
+      ];
+    case "create_bundle":
+      return [
+        checklistItem(
+          "Bundle hikayesini yaz",
+          "Ürünleri sadece indirimle değil, birlikte kullanım senaryosuyla paketle.",
+          "pazarlama",
+        ),
+        checklistItem(
+          "Paket sınırlarını kontrol et",
+          "Stok, marj ve kargo güveni düşük ürünü bundle içinde büyütmeden önce sınır koy.",
+          "finans",
+        ),
+      ];
+    case "promote_winner":
+      return [
+        checklistItem(
+          "Vitrin adayını işaretle",
+          `${product.name} sağlık ve kampanya sinyalleriyle büyütmeye aday; görünürlük testini düşük bütçeyle başlat.`,
+          "pazarlama",
+        ),
+        checklistItem(
+          "Stok emniyetini koru",
+          "Büyütme başlamadan önce stok kapsamasını ve yeniden sipariş eşiğini kontrol et.",
+          "stok",
+        ),
+      ];
+    case "protect_margin":
+      return [
+        checklistItem(
+          "Marj baskısını ayır",
+          "Fiyat, birim maliyet, reklam/gelir oranı ve iade oranını aynı tabloda kontrol et.",
+          "finans",
+        ),
+        checklistItem(
+          "Büyütme kararını beklet",
+          "Marj düzelmeden reklam veya kampanya büyütmesi yapma; önce kayıp kalemini azalt.",
+          "pazarlama",
+        ),
+      ];
+  }
+}
+
+function metric(
+  label: string,
+  value: string,
+  tone: SellerActionMetricHighlight["tone"],
+  helperText?: string,
+): SellerActionMetricHighlight {
+  return { label, value, tone, helperText };
+}
+
+function scoreMetric(label: string, score: number): SellerActionMetricHighlight {
+  return metric(label, `${score}/100`, scoreTone(score));
+}
+
+function checklistItem(
+  label: string,
+  detail: string,
+  owner: SellerActionChecklistItem["owner"],
+): SellerActionChecklistItem {
+  return { label, detail, owner };
+}
+
+function scoreTone(score: number): SellerActionMetricHighlight["tone"] {
+  if (score < 45) {
+    return "danger";
+  }
+
+  if (score < 70) {
+    return "warning";
+  }
+
+  if (score >= 80) {
+    return "positive";
+  }
+
+  return "neutral";
+}
+
+function stockTone(scorecard: ProductScorecard): SellerActionMetricHighlight["tone"] {
+  if (scorecard.inventory.evidence.projectedGap7d > 0) {
+    return "danger";
+  }
+
+  if (scorecard.inventory.evidence.availableStock <= scorecard.inventory.evidence.reorderPoint) {
+    return "warning";
+  }
+
+  return "neutral";
+}
+
+function gapTone(scorecard: ProductScorecard): SellerActionMetricHighlight["tone"] {
+  return scorecard.inventory.evidence.projectedGap7d > 0 ? "danger" : "positive";
+}
+
+function attentionTone(scorecard: ProductScorecard): SellerActionMetricHighlight["tone"] {
+  if (scorecard.reviews.evidence.attentionReviewCount >= 3) {
+    return "danger";
+  }
+
+  if (scorecard.reviews.evidence.attentionReviewCount > 0) {
+    return "warning";
+  }
+
+  return "positive";
+}
+
+function riskReviewTone(scorecard: ProductScorecard): SellerActionMetricHighlight["tone"] {
+  if (scorecard.returns.evidence.riskyReviewCount >= 3) {
+    return "danger";
+  }
+
+  if (scorecard.returns.evidence.riskyReviewCount > 0) {
+    return "warning";
+  }
+
+  return "positive";
+}
+
+function marginTone(scorecard: ProductScorecard): SellerActionMetricHighlight["tone"] {
+  return scorecard.profitability.evidence.grossMargin > 0 ? "neutral" : "danger";
+}
+
+function getRelatedProductCount(evidence: Record<string, unknown>): number {
+  return Array.isArray(evidence.relatedProducts) ? evidence.relatedProducts.length : 0;
 }
 
 function selectTopActions(actions: SellerGrowthAction[], limit: number): SellerGrowthAction[] {

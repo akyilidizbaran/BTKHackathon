@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 5.5B Buyer Cart Planning Hardening tamamlandı.
+  * CommercePilot için Milestone 5.5C Seller Workflow Output Hardening tamamlandı.
 * Son değişiklik neydi?
-  * Buyer Smart Cart artık senaryoya göre slot/rol bazlı ürün seçiyor ve her sepet ürününe `cartRoleKey` / `cartRole` ekliyor.
+  * Seller Growth Action çıktıları kategori, aciliyet, etki, efor, zaman ufku, metrik highlight ve günlük checklist alanlarıyla UI-ready hale getirildi.
 * Bir sonraki net adım ne?
-  * Milestone 5.5C ile seller workflow output hardening yapıp aksiyonları kategori bazlı UI'a hazır hale getirmek.
+  * Milestone 5.5D ile workflow runtime validation/test hardening yapıp brain katmanını UI/API öncesi güvenceye almak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -106,6 +106,8 @@
 * 2026-05-13 — Karar: Buyer Smart Cart seçim mantığı slot/rol bazlı olacak. | Gerekçe: Sadece en yüksek skorlu ürünleri seçmek setup bütünlüğünü bozabiliyor; demo için her sepetin senaryoyu tamamlaması gerekir. | Etki: `cartRoleKey` ve `cartRole` çıktıları eklendi.
 * 2026-05-13 — Karar: Slot bazlı seçim bütçe baskısını da hesaba katacak. | Gerekçe: Kahve senaryosunda tek pahalı ürün tüm sepeti kilitleyebiliyordu. | Etki: Slot adayları confidence, relevance, slot score ve price pressure ile sıralanır.
 * 2026-05-13 — Karar: Renk belirtilen buyer komutlarında renk uyumu daha sıkı uygulanacak. | Gerekçe: "Siyah ve gri masa takımı" komutunda pastel/uyumsuz ürün seçilmemeli. | Etki: Explicit color request varsa ürünün renk eşleşmesi aranır; renk eşleşmesi fuzzy hale getirildi.
+* 2026-05-14 — Karar: Seller Growth Action çıktıları UI-ready metadata taşıyacak. | Gerekçe: UI'ın action type/string parse etmeden kategori, aciliyet, etki, efor, metrik ve checklist gösterebilmesi gerekir. | Etki: `SellerGrowthAction` contract'ına category/urgency/impact/effort/timeHorizon/metricHighlights/todayChecklist/expectedOutcome alanları eklendi.
+* 2026-05-14 — Karar: Büyüme fırsatları kritik kriz gibi etiketlenmeyecek. | Gerekçe: Bundle ve winner promotion aksiyonları değerli olabilir ama stok açığı, kârlılık baskısı veya acil yorum riskiyle aynı aciliyet dilinde görünmemeli. | Etki: `create_bundle` ve `promote_winner` aciliyeti en fazla yüksek seviyede tutulur; zaman ufku çoğunlukla "Bu hafta" olur.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -118,6 +120,7 @@
 * 2026-05-13 — Milestone: Milestone 5 buyer smart cart workflow layer kuruldu. | Sonuç: 5 buyer demo senaryosu, %5 bütçe toleransı, buyer personalization, alternatif/tamamlayıcı öneri ve seller signal adayları eklendi; lint, TypeScript, build ve runtime workflow doğrulaması geçti.
 * 2026-05-13 — Milestone: Milestone 5.5A Buyer Parser + Intent Hardening tamamlandı. | Sonuç: `3.000 TL`, `1.500 TL`, `₺3000`, `3 bin TL` bütçe formatları doğrulandı; `meeting_setup` ve `maxDeliveryDays` workflow'a bağlandı; lint, TypeScript, build ve runtime prompt doğrulaması geçti.
 * 2026-05-13 — Milestone: Milestone 5.5B Buyer Cart Planning Hardening tamamlandı. | Sonuç: Buyer sepetleri ev-ofis, kahve, hediye, masa stili, spor ve toplantı senaryolarında slot/rol bazlı planlanır hale getirildi; lint, TypeScript, build ve runtime prompt doğrulaması geçti.
+* 2026-05-14 — Milestone: Milestone 5.5C Seller Workflow Output Hardening tamamlandı. | Sonuç: Seller Growth Action çıktıları kategori, aciliyet, etki, efor, zaman ufku, metrik highlight, expected outcome ve checklist alanlarıyla UI/LLM-ready hale getirildi; TypeScript ve runtime workflow doğrulaması geçti.
 
 ## 8) Yapılanlar
 
@@ -136,6 +139,7 @@
 * [x] Milestone 5 buyer smart cart workflow layer oluşturuldu.
 * [x] Milestone 5.5A buyer parser ve intent hardening tamamlandı.
 * [x] Milestone 5.5B buyer cart planning hardening tamamlandı.
+* [x] Milestone 5.5C seller workflow output hardening tamamlandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -157,7 +161,7 @@
 * [x] Milestone 5 buyer smart cart workflow layer tasarımını netleştir ve uygula.
 * [x] Milestone 5.5A buyer parser, meeting intent ve maxDeliveryDays hardening uygula.
 * [x] Milestone 5.5B buyer cart planning hardening uygula.
-* [ ] Milestone 5.5C seller workflow output hardening uygula.
+* [x] Milestone 5.5C seller workflow output hardening uygula.
 * [ ] Milestone 5.5D validation/test hardening uygula.
 * [ ] Brain hardening bittikten sonra UI/API kapsamını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
@@ -634,6 +638,28 @@
 * Bilinen kalan nokta:
   * Bazı sepetlerde güven skorları uyarı yoğunluğuna bağlı olarak düşük görünebilir; bu bilinçli olarak riskleri saklamamak için bırakıldı.
 
+### 5.5C Seller Workflow Output Hardening
+
+* Amaç:
+  * Seller Growth Actions çıktısını UI, API ve ileride LLM açıklama katmanı için daha kullanışlı ve parse gerektirmeyen bir contract'a çevirmek.
+* Yapılanlar:
+  * `SellerGrowthAction` içine kategori, aciliyet, etki seviyesi, efor seviyesi ve zaman ufku alanları eklendi.
+  * Her aksiyon artık Türkçe label'lar taşır: `categoryLabel`, `urgencyLabel`, `impactLabel`, `effortLabel`, `timeHorizonLabel`.
+  * Her aksiyona `expectedOutcome` eklendi; bu alan satıcıya aksiyonun beklenen iş sonucunu anlatır.
+  * Her aksiyona `metricHighlights` eklendi; UI kartlarında gösterilebilecek 3-4 ana metrik ve tone bilgisi üretir.
+  * Her aksiyona `todayChecklist` eklendi; satıcının bugün veya bu hafta yapacağı işi owner bilgisiyle parçalar.
+  * `llmReadyContext.facts` yeni UI-ready alanlarla zenginleştirildi.
+* Aciliyet yaklaşımı:
+  * Stok açığı, kampanya riski, kârlılık baskısı ve acil yorum gibi risk aksiyonları kritik olabilir.
+  * Bundle ve güçlü ürünü büyütme aksiyonları değerli olsa da kriz diliyle gösterilmez; en fazla yüksek aciliyet alır.
+* Doğrulanan davranış:
+  * `seller-commercepilot` için top 5 aksiyon yine üretiliyor.
+  * Her aksiyon kategori, aciliyet, etki, efor, zaman ufku, metrik highlight, checklist ve LLM facts alanlarını eksiksiz taşıyor.
+  * Örnek top 5: stok yenile, bundle oluştur, güçlü ürünü öne çıkar, kârlılığı koru, yorumları acil incele.
+* Sınırlar:
+  * Bu milestone UI, API route, LLM, Gemini/OpenAI veya LangChain içermez.
+  * Checklist ve expected outcome deterministik metinlerdir; ileride LLM bu structured context üzerinden daha doğal açıklama üretebilir.
+
 ### Güncelleme Kaydı
 
-* Son güncelleme: 2026-05-13
+* Son güncelleme: 2026-05-14

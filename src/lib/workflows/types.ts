@@ -11,6 +11,47 @@ export type SellerActionType =
   | "promote_winner"
   | "protect_margin";
 
+export type SellerActionCategory =
+  | "inventory"
+  | "operations"
+  | "content"
+  | "customer_voice"
+  | "returns"
+  | "campaign"
+  | "growth"
+  | "profitability";
+
+export type SellerActionUrgency = "critical" | "high" | "medium" | "low";
+
+export type SellerActionImpactLevel = "high" | "medium" | "low";
+
+export type SellerActionEffortLevel = "low" | "medium" | "high";
+
+export type SellerActionTimeHorizon = "today" | "this_week" | "monitor";
+
+export type SellerActionMetricTone = "positive" | "neutral" | "warning" | "danger";
+
+export type SellerActionOwner =
+  | "stok"
+  | "operasyon"
+  | "icerik"
+  | "destek"
+  | "pazarlama"
+  | "finans";
+
+export interface SellerActionMetricHighlight {
+  label: string;
+  value: string;
+  tone: SellerActionMetricTone;
+  helperText?: string;
+}
+
+export interface SellerActionChecklistItem {
+  label: string;
+  detail: string;
+  owner: SellerActionOwner;
+}
+
 export interface LlmReadyContext {
   task: string;
   locale: "tr-TR";
@@ -25,6 +66,19 @@ export interface SellerGrowthAction {
   title: string;
   summary: string;
   priorityScore: number;
+  category: SellerActionCategory;
+  categoryLabel: string;
+  urgency: SellerActionUrgency;
+  urgencyLabel: string;
+  impactLevel: SellerActionImpactLevel;
+  impactLabel: string;
+  effortLevel: SellerActionEffortLevel;
+  effortLabel: string;
+  timeHorizon: SellerActionTimeHorizon;
+  timeHorizonLabel: string;
+  expectedOutcome: string;
+  metricHighlights: SellerActionMetricHighlight[];
+  todayChecklist: SellerActionChecklistItem[];
   productIds: string[];
   reasoning: string[];
   evidence: Record<string, unknown>;
