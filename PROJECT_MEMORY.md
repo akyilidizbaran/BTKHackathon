@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 0 web/backend zemini kuruldu; sırada Milestone 1 domain model ve curated mock data kararları var.
+  * CommercePilot için Milestone 1 domain model ve curated mock data omurgası kuruldu.
 * Son değişiklik neydi?
-  * Next.js + TypeScript + Tailwind tabanlı proje zemini oluşturuldu; OpenAI geçici, Gemini final hedef LLM sağlayıcı olarak notlandı.
+  * 40 ürün, 55 gerçekçi Türkçe yorum, 24 sipariş, 25 stok hareketi, 30 ürün ilişkisi, 8 buyer persona ve 5 smart cart taslağı eklendi.
 * Bir sonraki net adım ne?
-  * Milestone 1 için ürün kategorileri, mock veri hikayeleri, metrikler ve demo senaryolarını netleştirmek.
+  * Milestone 2 data access layer ile UI/API'nın mock dataya kontrollü erişmesini sağlamak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -38,7 +38,9 @@
 * Veri akışı:
   * Mock commerce data -> deterministik skorlar/workflow'lar -> UI panelleri -> ileride Gemini açıklamaları/ajan çıktıları.
 * Önemli dizinler/modüller:
-  * Henüz kod tabanı oluşturulmadı. Planlanan yapı: data, types, lib/data, lib/scoring, lib/workflows, lib/agents, lib/gemini, app, components.
+  * `src/types/commerce.ts`: domain tipleri.
+  * `src/data/mock/*`: curated mock commerce dataset.
+  * Planlanan sonraki yapı: lib/data, lib/scoring, lib/workflows, lib/agents, lib/gemini, app, components.
 
 ## 4) Konvansiyonlar ve Standartlar
 
@@ -92,6 +94,7 @@
 
 * 2026-05-12 — Milestone: Ürün yönü netleşti. | Sonuç: Satıcı öncelikli, demo odaklı, AI-ready çift taraflı commerce intelligence yaklaşımı benimsendi.
 * 2026-05-13 — Milestone: Milestone 0 proje zemini kuruldu. | Sonuç: Next.js + TypeScript + Tailwind scaffold, README, `.env.example`, lint/build doğrulaması ve GitHub push hazırlığı tamamlandı.
+* 2026-05-13 — Milestone: Milestone 1 curated commerce dataset kuruldu. | Sonuç: Türkçe domain tipleri ve curated mock data eklendi; referans bütünlüğü, lint, TypeScript ve build doğrulandı.
 
 ## 8) Yapılanlar
 
@@ -102,11 +105,13 @@
 * [x] Alıcı tarafının ana problem alanları ve Phase yaklaşımı belirlendi.
 * [x] Milestone 0 proje zemini oluşturuldu.
 * [x] Lint ve production build doğrulandı.
+* [x] Milestone 1 domain model ve curated mock data oluşturuldu.
+* [x] Mock data referans bütünlüğü doğrulandı.
 
 ## 9) Yapılacaklar (Next)
 
 * [ ] Satıcı panelinde çözülecek ana problemleri kesinleştir.
-* [ ] Milestone 1 için domain model ve curated mock data kararlarını kullanıcıyla netleştir.
+* [x] Milestone 1 için domain model ve curated mock data kararlarını kullanıcıyla netleştir.
 * [ ] Her satıcı problemi için hangi veri sinyallerinin kullanılacağını netleştir.
 * [ ] Seller Growth Actions panelinde gösterilecek aksiyon türlerini belirle.
 * [ ] Satıcı tarafına kârlılık/maliyet baskısı, iade/şikayet riski ve operasyonel dağınıklık problemlerini eklemeyi değerlendir.
@@ -115,8 +120,9 @@
 * [ ] Buyer Smart Cart akışı için 3-4 demo senaryosu seç.
 * [ ] Alıcı tarafındaki ürün karar güveni sinyallerini mock data ile eşleştir.
 * [ ] Alıcı tarafı için yapılacak/yapılmayacak listesini uygulama fazına çevirmeden önce son kez onayla.
-* [ ] Milestone 1'de curated çekirdek veri seti mi, Kaggle destekli hibrit veri seti mi kullanılacağını son karara bağla.
-* [ ] Buyer preference/persona alanlarının ilk veri modelinde pasif mi aktif mi tutulacağını netleştir.
+* [x] Milestone 1'de curated çekirdek veri seti mi, Kaggle destekli hibrit veri seti mi kullanılacağını son karara bağla.
+* [x] Buyer preference/persona alanlarının ilk veri modelinde pasif mi aktif mi tutulacağını netleştir.
+* [ ] Milestone 2 data access helper'larını oluştur.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -423,6 +429,14 @@
   * Agentic işler için aday teknoloji.
   * İlk aşamada doğrudan kullanılmayacak; önce deterministic workflow katmanı kurulacak.
   * Sonra LangChain structured output, tool calling, provider swap ve stateful workflow ihtiyaçlarında devreye alınabilir.
+* Milestone 1 sonucu:
+  * 1 seller: CommercePilot Demo Store.
+  * 40 ürün: ev ofis, elektronik aksesuar, kahve ekipmanları, masa/çalışma alanı, küçük ev/yaşam, hediye/yaşam tarzı.
+  * 55 Türkçe yorum: kargo hızı, paketleme, kurulum, kalite, fiyat/performans, renk uyumu, ses, konfor, uyumluluk, iade riski gibi temalar.
+  * 24 sipariş, 25 stok hareketi, 30 ürün ilişkisi, 8 buyer persona, 5 smart cart taslağı.
+  * Satıcı demo hikayeleri veri içinde `demoStoryFlags` ile işaretlendi.
+  * Kargo vaadi ile yorum/kargo deneyimi çeliştiğinde alıcı uyarısı üretebilmek için fulfillment ve review delivery fields eklendi.
+  * Buyer personalization için previous complaint themes, sensitivities ve preferred colors alanları eklendi.
 
 ### Güncelleme Kaydı
 
