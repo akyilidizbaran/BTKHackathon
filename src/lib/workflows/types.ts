@@ -61,6 +61,7 @@ export type BuyerIntentType =
   | "coffee_starter"
   | "gift_finder"
   | "sports_audio"
+  | "meeting_setup"
   | "desk_style_set"
   | "generic";
 
@@ -88,6 +89,7 @@ export interface ParsedBuyerIntent {
   useCases: string[];
   requestedColors: string[];
   sensitivities: BuyerSensitivity[];
+  maxDeliveryDays?: number;
   keywords: string[];
 }
 

@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 5 buyer smart cart workflow layer kuruldu.
+  * CommercePilot için Milestone 5.5A Buyer Parser + Intent Hardening tamamlandı.
 * Son değişiklik neydi?
-  * Buyer prompt, buyer profili, manuel tercihler, bütçe ve ürün skorlarından akıllı sepet önerisi üreten `buildSmartCartWorkflow` eklendi.
+  * Buyer bütçe parser'ı Türkçe fiyat formatlarına dayanıklı hale getirildi; `meeting_setup` intent'i ve `maxDeliveryDays` desteği eklendi.
 * Bir sonraki net adım ne?
-  * Bir sonraki milestone'da bu workflow'ları UI/API yüzeyine bağlamadan önce ekran kapsamını netleştirmek.
+  * Milestone 5.5B ile buyer sepet planlamasını slot bazlı hale getirip sepet kompozisyonunu güçlendirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -99,6 +99,10 @@
 * 2026-05-13 — Karar: Buyer bütçesi hard cap değil, %5 toleranslı soft cap olacak. | Gerekçe: Kullanıcı bütçe belirttiğinde gerçek alışverişte küçük aşım kabul edilebilir ama açıkça gösterilmelidir. | Etki: Workflow `budget`, `softBudgetLimit`, `isOverRequestedBudget` ve bütçe uyarısı döner.
 * 2026-05-13 — Karar: Buyer personalization ilk versiyonda aktif olacak. | Gerekçe: Ürünün farklılaştırıcı noktası alıcının geçmiş şikayet ve tercihlerini karar desteğine katmasıdır. | Etki: Buyer sensitivities, preferred colors, previous complaint themes ve manuel preferences skorlamaya dahil edilir.
 * 2026-05-13 — Karar: Buyer workflow satıcı tarafına sinyal adayı üretecek. | Gerekçe: CommercePilot'un çift taraflı intelligence iddiası için alıcı ihtiyaçları seller growth action tarafını beslemelidir. | Etki: Çıktıda `sellerSignalCandidates` alanı eklendi.
+* 2026-05-13 — Karar: Brain hardening tek büyük değişiklik yerine alt adımlara bölünecek. | Gerekçe: Parser, sepet planlama, seller output ve validation farklı risk alanlarıdır; ayrı commitler kontrolü artırır. | Etki: Milestone 5.5A ile buyer parser/intent tarafı tamamlandı.
+* 2026-05-13 — Karar: Buyer workflow'a `meeting_setup` intent'i eklenecek. | Gerekçe: "Toplantı için kamera/mikrofon/hub öner" gibi gerçek kullanıcı komutları ev-ofis genel sepetine düşmemeli. | Etki: Toplantı/kamera/mikrofon/hub/sunum/online ders komutları ayrı intent'e yönlenir.
+* 2026-05-13 — Karar: Buyer bütçe parser Türkçe fiyat formatlarını destekleyecek. | Gerekçe: `3.000 TL`, `1.500 TL`, `₺3000`, `3 bin TL` gibi girişler demo sırasında çok olasıdır. | Etki: Budget extraction logic güncellendi.
+* 2026-05-13 — Karar: `maxDeliveryDays` artık pasif tip alanı değil, workflow sinyali olacak. | Gerekçe: Alıcı "2 günde gelsin" dediğinde ürün seçimi ve uyarılar teslimat beklentisini dikkate almalı. | Etki: Parsed intent ve ürün uyarıları max delivery beklentisini taşır.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -109,6 +113,7 @@
 * 2026-05-13 — Milestone: Milestone 3 açıklanabilir scoring layer kuruldu. | Sonuç: Ürün bazlı skorlar yalnızca sayı değil, drivers/evidence/summary/recommendedFocus içeren LLM-ready açıklanabilir karar sinyalleri olarak üretildi.
 * 2026-05-13 — Milestone: Milestone 4 seller workflow layer kuruldu. | Sonuç: Seller Growth Actions ve Product Health workflow'ları eklendi; lint, TypeScript, build ve runtime workflow doğrulaması geçti.
 * 2026-05-13 — Milestone: Milestone 5 buyer smart cart workflow layer kuruldu. | Sonuç: 5 buyer demo senaryosu, %5 bütçe toleransı, buyer personalization, alternatif/tamamlayıcı öneri ve seller signal adayları eklendi; lint, TypeScript, build ve runtime workflow doğrulaması geçti.
+* 2026-05-13 — Milestone: Milestone 5.5A Buyer Parser + Intent Hardening tamamlandı. | Sonuç: `3.000 TL`, `1.500 TL`, `₺3000`, `3 bin TL` bütçe formatları doğrulandı; `meeting_setup` ve `maxDeliveryDays` workflow'a bağlandı; lint, TypeScript, build ve runtime prompt doğrulaması geçti.
 
 ## 8) Yapılanlar
 
@@ -125,6 +130,7 @@
 * [x] Milestone 3 deterministic scoring layer oluşturuldu.
 * [x] Milestone 4 seller workflow layer oluşturuldu.
 * [x] Milestone 5 buyer smart cart workflow layer oluşturuldu.
+* [x] Milestone 5.5A buyer parser ve intent hardening tamamlandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -144,7 +150,11 @@
 * [x] Milestone 3 deterministic scoring layer tasarımını netleştir ve uygula.
 * [x] Milestone 4 workflow layer tasarımını netleştir ve uygula.
 * [x] Milestone 5 buyer smart cart workflow layer tasarımını netleştir ve uygula.
-* [ ] Bir sonraki milestone için UI/API kapsamını netleştir.
+* [x] Milestone 5.5A buyer parser, meeting intent ve maxDeliveryDays hardening uygula.
+* [ ] Milestone 5.5B buyer cart planning hardening uygula.
+* [ ] Milestone 5.5C seller workflow output hardening uygula.
+* [ ] Milestone 5.5D validation/test hardening uygula.
+* [ ] Brain hardening bittikten sonra UI/API kapsamını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -571,6 +581,29 @@
 * Sınırlar:
   * Bu milestone UI, API route, LLM, Gemini/OpenAI veya LangChain içermez.
   * Doğal dil parser keyword/rule-based çalışır; LLM geldiğinde aynı workflow contract üstüne açıklama veya intent extraction eklenebilir.
+
+## 22) Milestone 5.5 Brain Hardening Notları
+
+### 5.5A Buyer Parser + Intent Hardening
+
+* Amaç:
+  * Demo sırasında gerçek kullanıcı diliyle gelebilecek buyer komutlarını daha güvenilir yakalamak.
+* Yapılanlar:
+  * `3.000 TL`, `1.500 TL`, `₺3000`, `3 bin TL` gibi bütçe formatları doğru parse edilir hale getirildi.
+  * `meeting_setup` intent'i eklendi.
+  * Toplantı, kamera, webcam, mikrofon, hub, sunum, online ders ve video görüşme sinyalleri bu intent'e yönlenir.
+  * `maxDeliveryDays` parsed intent içine alındı.
+  * `2 günde gelsin` gibi komutlar teslimat beklentisi olarak işleniyor.
+  * Teslimat beklentisini aşabilecek ürünler buyer warning ve seller shipping friction sinyali üretebilir.
+* Doğrulanan komutlar:
+  * "3.000 TL altında hızlı kargolu ev ofis setup kur."
+  * "1.500 TL altında kahve seti kur."
+  * "3 bin TL altında kompakt çalışma masası setup öner."
+  * "Toplantı için uyumlu kamera mikrofon hub öner."
+  * "2 günde gelsin, 2500 TL altında ev ofis ürünleri öner."
+  * "₺3000 altında ev ofis setup kur."
+* Bilinen kalan nokta:
+  * Toplantı intent'i artık doğru yakalanıyor; ancak kamera/mikrofon/hub kompozisyonunun daha iyi kurulması Milestone 5.5B slot-based cart planning kapsamına bırakıldı.
 
 ### Güncelleme Kaydı
 

@@ -102,6 +102,22 @@ const intentConfigs: Record<BuyerIntentType, IntentConfig> = {
     maximumItems: 1,
     defaultBudget: 2000,
   },
+  meeting_setup: {
+    categories: ["elektronik-aksesuar", "ev-ofis"],
+    useCases: [
+      "toplantı",
+      "webcam",
+      "kamera",
+      "mikrofon",
+      "sunum",
+      "online ders",
+      "laptop setup",
+      "ev ofis",
+    ],
+    minimumItems: 3,
+    maximumItems: 4,
+    defaultBudget: 4500,
+  },
   desk_style_set: {
     categories: ["masa-calisma-alani", "hediye-yasam-tarzi", "elektronik-aksesuar"],
     useCases: ["masa takımı", "masa düzeni", "ev ofis", "öğrenci"],
@@ -215,11 +231,13 @@ function parseBuyerIntent(
   const budget = extractBudget(normalizedPrompt);
   const promptSensitivities = detectSensitivities(normalizedPrompt);
   const promptColors = detectColors(normalizedPrompt);
+  const promptMaxDeliveryDays = extractMaxDeliveryDays(normalizedPrompt);
   const manualColors = manualPreferences?.preferredColors ?? [];
   const manualUseCases = manualPreferences?.preferredUseCases ?? [];
   const manualSensitivities = manualPreferences?.sensitivities ?? [];
   const buyerSensitivities = buyer?.sensitivities ?? [];
   const keywords = createKeywords(normalizedPrompt, type);
+  const maxDeliveryDays = manualPreferences?.maxDeliveryDays ?? promptMaxDeliveryDays;
 
   return {
     type,
@@ -231,6 +249,7 @@ function parseBuyerIntent(
     useCases: unique([...config.useCases, ...manualUseCases]),
     requestedColors: unique([...promptColors, ...manualColors]),
     sensitivities: unique([...promptSensitivities, ...manualSensitivities, ...buyerSensitivities]),
+    maxDeliveryDays,
     keywords,
   };
 }
@@ -248,6 +267,23 @@ function detectIntentType(normalizedPrompt: string): BuyerIntentType {
     return "gift_finder";
   }
 
+  if (
+    includesAny(normalizedPrompt, [
+      "toplantı",
+      "kamera",
+      "webcam",
+      "mikrofon",
+      "hub",
+      "sunum",
+      "görüntü",
+      "ses kalitesi",
+      "online ders",
+      "video görüşme",
+    ])
+  ) {
+    return "meeting_setup";
+  }
+
   if (includesAny(normalizedPrompt, ["masa takımı", "renk paleti", "renklerde", "paletinde"])) {
     return "desk_style_set";
   }
@@ -260,18 +296,16 @@ function detectIntentType(normalizedPrompt: string): BuyerIntentType {
 }
 
 function extractBudget(normalizedPrompt: string): number | undefined {
-  const currencyMatch = normalizedPrompt.match(/(\d{3,5})\s*(?:tl|₺|lira)/);
+  const amountPattern = String.raw`(\d{1,3}(?:[.\s]\d{3})+|\d{3,6})`;
+  const currencyMatches = [
+    normalizedPrompt.match(new RegExp(`${amountPattern}\\s*(?:tl|₺|lira)`)),
+    normalizedPrompt.match(new RegExp(`(?:tl|₺|lira)\\s*${amountPattern}`)),
+    normalizedPrompt.match(new RegExp(`₺\\s*${amountPattern}`)),
+  ];
+  const currencyMatch = currencyMatches.find((match) => match?.[1]);
 
   if (currencyMatch?.[1]) {
-    return Number(currencyMatch[1]);
-  }
-
-  const contextualMatch = normalizedPrompt.match(
-    /(\d{3,5})\s*(?:altında|civarında|kadar|bütçe)/,
-  );
-
-  if (contextualMatch?.[1]) {
-    return Number(contextualMatch[1]);
+    return parseAmount(currencyMatch[1]);
   }
 
   const thousandMatch = normalizedPrompt.match(/(\d{1,2})(?:[,.](\d))?\s*(?:bin|k)/);
@@ -283,13 +317,46 @@ function extractBudget(normalizedPrompt: string): number | undefined {
     return base + decimal;
   }
 
+  const contextualMatches = [
+    normalizedPrompt.match(new RegExp(`${amountPattern}\\s*(?:altında|civarında|kadar|bütçe)`)),
+    normalizedPrompt.match(new RegExp(`(?:altında|civarında|kadar|bütçe)\\s*${amountPattern}`)),
+  ];
+  const contextualMatch = contextualMatches.find((match) => match?.[1]);
+
+  if (contextualMatch?.[1]) {
+    return parseAmount(contextualMatch[1]);
+  }
+
+  return undefined;
+}
+
+function parseAmount(rawAmount: string): number | undefined {
+  const normalizedAmount = rawAmount.replace(/[.\s]/g, "");
+  const parsedAmount = Number(normalizedAmount);
+
+  return Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : undefined;
+}
+
+function extractMaxDeliveryDays(normalizedPrompt: string): number | undefined {
+  const explicitMatch = normalizedPrompt.match(
+    /(?:en geç|maksimum|max)?\s*(\d{1,2})\s*(?:günde|gün içinde|gün)\s*(?:gelsin|teslim|kargo|ulaşsın|olsun)?/,
+  );
+
+  if (explicitMatch?.[1]) {
+    return Number(explicitMatch[1]);
+  }
+
+  if (includesAny(normalizedPrompt, ["yarın gelsin", "yarına gelsin", "ertesi gün teslim"])) {
+    return 1;
+  }
+
   return undefined;
 }
 
 function detectSensitivities(normalizedPrompt: string): BuyerSensitivity[] {
   const sensitivities: BuyerSensitivity[] = [];
 
-  if (includesAny(normalizedPrompt, ["hızlı kargo", "kargo hızı", "teslimat", "çabuk"])) {
+  if (includesAny(normalizedPrompt, ["hızlı kargo", "kargo hızı", "teslimat", "çabuk", "gelsin", "günde"])) {
     sensitivities.push("fast_shipping");
   }
 
@@ -423,6 +490,15 @@ function scoreProductCandidate(
     reasons.push(`Renk tercihiyle uyumlu: ${matchedColors.join(", ")}.`);
   }
 
+  if (
+    intent.maxDeliveryDays &&
+    product.fulfillment.deliveryPromiseDays <= intent.maxDeliveryDays &&
+    product.fulfillment.averageDeliveryDays <= intent.maxDeliveryDays
+  ) {
+    score += 10;
+    reasons.push(`${intent.maxDeliveryDays} gün teslimat beklentisine uyuyor.`);
+  }
+
   score += scoreSensitivityFit(product, scorecard, intent, buyerProfile?.buyer, reasons);
   score -= warnings.filter((warning) => warning.severity === "caution").length * 14;
 
@@ -528,6 +604,19 @@ function calculateRelevanceScore(input: {
     score += 6;
   }
 
+  if (input.intent.type === "meeting_setup" && includesAny(normalizeProductText(input.product), [
+    "webcam",
+    "kamera",
+    "mikrofon",
+    "hub",
+    "toplantı",
+    "sunum",
+    "online ders",
+    "laptop stand",
+  ])) {
+    score += 30;
+  }
+
   if (input.intent.type === "gift_finder" && input.product.catalog.useCases.some((useCase) => normalizeText(useCase).includes("hediye"))) {
     score += 14;
   }
@@ -558,6 +647,25 @@ function createProductWarnings(input: {
       title: "Kargo hassasiyeti için dikkat",
       message: `${input.product.name} hızlı teslimat beklentisi olan alıcı için zayıf kargo sinyali taşıyor.`,
       evidence: input.scorecard.shipping.evidence,
+    });
+  }
+
+  if (
+    input.intent.maxDeliveryDays &&
+    (input.product.fulfillment.deliveryPromiseDays > input.intent.maxDeliveryDays ||
+      input.product.fulfillment.averageDeliveryDays > input.intent.maxDeliveryDays)
+  ) {
+    warnings.push({
+      productId: input.product.id,
+      severity: "caution",
+      title: "Kargo süresi beklentiyi aşabilir",
+      message: `${input.product.name} için teslimat sinyali ${input.intent.maxDeliveryDays} gün beklentisini karşılamayabilir.`,
+      evidence: {
+        maxDeliveryDays: input.intent.maxDeliveryDays,
+        deliveryPromiseDays: input.product.fulfillment.deliveryPromiseDays,
+        averageDeliveryDays: input.product.fulfillment.averageDeliveryDays,
+        shippingScore: input.scorecard.shipping.score,
+      },
     });
   }
 
@@ -691,6 +799,21 @@ function isIntentRelevant(candidate: ProductCandidate, intent: ParsedBuyerIntent
     const productText = normalizeProductText(candidate.product);
 
     return candidate.product.category === "kahve-ekipmanlari" || productText.includes("kahve");
+  }
+
+  if (intent.type === "meeting_setup") {
+    const productText = normalizeProductText(candidate.product);
+
+    return includesAny(productText, [
+      "webcam",
+      "kamera",
+      "mikrofon",
+      "hub",
+      "toplantı",
+      "sunum",
+      "online ders",
+      "laptop stand",
+    ]);
   }
 
   return candidate.relevanceScore >= 18;
