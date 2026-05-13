@@ -97,6 +97,8 @@ export interface BuyerSmartCartItem {
   productId: string;
   productName: string;
   category: ProductCategory;
+  cartRoleKey: string;
+  cartRole: string;
   price: number;
   quantity: number;
   confidenceScore: number;

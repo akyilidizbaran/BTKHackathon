@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 5.5A Buyer Parser + Intent Hardening tamamlandı.
+  * CommercePilot için Milestone 5.5B Buyer Cart Planning Hardening tamamlandı.
 * Son değişiklik neydi?
-  * Buyer bütçe parser'ı Türkçe fiyat formatlarına dayanıklı hale getirildi; `meeting_setup` intent'i ve `maxDeliveryDays` desteği eklendi.
+  * Buyer Smart Cart artık senaryoya göre slot/rol bazlı ürün seçiyor ve her sepet ürününe `cartRoleKey` / `cartRole` ekliyor.
 * Bir sonraki net adım ne?
-  * Milestone 5.5B ile buyer sepet planlamasını slot bazlı hale getirip sepet kompozisyonunu güçlendirmek.
+  * Milestone 5.5C ile seller workflow output hardening yapıp aksiyonları kategori bazlı UI'a hazır hale getirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -103,6 +103,9 @@
 * 2026-05-13 — Karar: Buyer workflow'a `meeting_setup` intent'i eklenecek. | Gerekçe: "Toplantı için kamera/mikrofon/hub öner" gibi gerçek kullanıcı komutları ev-ofis genel sepetine düşmemeli. | Etki: Toplantı/kamera/mikrofon/hub/sunum/online ders komutları ayrı intent'e yönlenir.
 * 2026-05-13 — Karar: Buyer bütçe parser Türkçe fiyat formatlarını destekleyecek. | Gerekçe: `3.000 TL`, `1.500 TL`, `₺3000`, `3 bin TL` gibi girişler demo sırasında çok olasıdır. | Etki: Budget extraction logic güncellendi.
 * 2026-05-13 — Karar: `maxDeliveryDays` artık pasif tip alanı değil, workflow sinyali olacak. | Gerekçe: Alıcı "2 günde gelsin" dediğinde ürün seçimi ve uyarılar teslimat beklentisini dikkate almalı. | Etki: Parsed intent ve ürün uyarıları max delivery beklentisini taşır.
+* 2026-05-13 — Karar: Buyer Smart Cart seçim mantığı slot/rol bazlı olacak. | Gerekçe: Sadece en yüksek skorlu ürünleri seçmek setup bütünlüğünü bozabiliyor; demo için her sepetin senaryoyu tamamlaması gerekir. | Etki: `cartRoleKey` ve `cartRole` çıktıları eklendi.
+* 2026-05-13 — Karar: Slot bazlı seçim bütçe baskısını da hesaba katacak. | Gerekçe: Kahve senaryosunda tek pahalı ürün tüm sepeti kilitleyebiliyordu. | Etki: Slot adayları confidence, relevance, slot score ve price pressure ile sıralanır.
+* 2026-05-13 — Karar: Renk belirtilen buyer komutlarında renk uyumu daha sıkı uygulanacak. | Gerekçe: "Siyah ve gri masa takımı" komutunda pastel/uyumsuz ürün seçilmemeli. | Etki: Explicit color request varsa ürünün renk eşleşmesi aranır; renk eşleşmesi fuzzy hale getirildi.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -114,6 +117,7 @@
 * 2026-05-13 — Milestone: Milestone 4 seller workflow layer kuruldu. | Sonuç: Seller Growth Actions ve Product Health workflow'ları eklendi; lint, TypeScript, build ve runtime workflow doğrulaması geçti.
 * 2026-05-13 — Milestone: Milestone 5 buyer smart cart workflow layer kuruldu. | Sonuç: 5 buyer demo senaryosu, %5 bütçe toleransı, buyer personalization, alternatif/tamamlayıcı öneri ve seller signal adayları eklendi; lint, TypeScript, build ve runtime workflow doğrulaması geçti.
 * 2026-05-13 — Milestone: Milestone 5.5A Buyer Parser + Intent Hardening tamamlandı. | Sonuç: `3.000 TL`, `1.500 TL`, `₺3000`, `3 bin TL` bütçe formatları doğrulandı; `meeting_setup` ve `maxDeliveryDays` workflow'a bağlandı; lint, TypeScript, build ve runtime prompt doğrulaması geçti.
+* 2026-05-13 — Milestone: Milestone 5.5B Buyer Cart Planning Hardening tamamlandı. | Sonuç: Buyer sepetleri ev-ofis, kahve, hediye, masa stili, spor ve toplantı senaryolarında slot/rol bazlı planlanır hale getirildi; lint, TypeScript, build ve runtime prompt doğrulaması geçti.
 
 ## 8) Yapılanlar
 
@@ -131,6 +135,7 @@
 * [x] Milestone 4 seller workflow layer oluşturuldu.
 * [x] Milestone 5 buyer smart cart workflow layer oluşturuldu.
 * [x] Milestone 5.5A buyer parser ve intent hardening tamamlandı.
+* [x] Milestone 5.5B buyer cart planning hardening tamamlandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -151,7 +156,7 @@
 * [x] Milestone 4 workflow layer tasarımını netleştir ve uygula.
 * [x] Milestone 5 buyer smart cart workflow layer tasarımını netleştir ve uygula.
 * [x] Milestone 5.5A buyer parser, meeting intent ve maxDeliveryDays hardening uygula.
-* [ ] Milestone 5.5B buyer cart planning hardening uygula.
+* [x] Milestone 5.5B buyer cart planning hardening uygula.
 * [ ] Milestone 5.5C seller workflow output hardening uygula.
 * [ ] Milestone 5.5D validation/test hardening uygula.
 * [ ] Brain hardening bittikten sonra UI/API kapsamını netleştir.
@@ -604,6 +609,30 @@
   * "₺3000 altında ev ofis setup kur."
 * Bilinen kalan nokta:
   * Toplantı intent'i artık doğru yakalanıyor; ancak kamera/mikrofon/hub kompozisyonunun daha iyi kurulması Milestone 5.5B slot-based cart planning kapsamına bırakıldı.
+
+### 5.5B Buyer Cart Planning Hardening
+
+* Amaç:
+  * Buyer Smart Cart önerilerini yalnızca skor sıralamasıyla değil, senaryoyu tamamlayan ürün rolleriyle kurmak.
+* Yapılanlar:
+  * `BuyerSmartCartItem` çıktısına `cartRoleKey` ve `cartRole` eklendi.
+  * Intent config'lerine slot listeleri eklendi.
+  * Ev-ofis sepeti: ergonomi, kontrol cihazı, aydınlatma, masa düzeni, konfor.
+  * Kahve sepeti: demleme, hazırlık, servis/taşıma, kahve aksesuarı.
+  * Hediye sepeti: ana hediye, hediye sunumu, tamamlayıcı hediye.
+  * Spor sepeti: spor ses ürünü.
+  * Meeting sepeti: görüntü, ses, bağlantı, konumlandırma.
+  * Masa stili sepeti: masa yüzeyi, düzen, yazım/planlama, masa teknolojisi, dekor.
+  * Slot adayları artık slot score, confidence, relevance ve price pressure ile seçilir.
+  * Renk istenen komutlarda ürün rengi fuzzy match ile kontrol edilir.
+  * Eksik zorunlu sepet rolleri varsa workflow warning döner.
+* Doğrulanan davranış:
+  * Ev-ofis komutu artık ergonomi + kontrol cihazı + aydınlatma + masa düzeni rolleriyle ürün seçer.
+  * Kahve komutu pahalı tek ürün yerine demleme + hazırlık rolleriyle daha dengeli sepet kurar.
+  * Meeting komutu kamera + mikrofon + hub + stand rolleriyle tam toplantı setup'ı kurar.
+  * Siyah/gri masa komutu renk uyumu olmayan pastel ürünleri seçmez.
+* Bilinen kalan nokta:
+  * Bazı sepetlerde güven skorları uyarı yoğunluğuna bağlı olarak düşük görünebilir; bu bilinçli olarak riskleri saklamamak için bırakıldı.
 
 ### Güncelleme Kaydı
 

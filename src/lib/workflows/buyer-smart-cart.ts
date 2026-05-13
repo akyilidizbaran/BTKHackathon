@@ -34,6 +34,27 @@ interface IntentConfig {
   minimumItems: number;
   maximumItems: number;
   defaultBudget: number;
+  slots: CartSlotConfig[];
+}
+
+interface CartSlotConfig {
+  key: string;
+  label: string;
+  keywords: string[];
+  categories?: ProductCategory[];
+  required?: boolean;
+}
+
+interface CandidateSlotMatch {
+  key: string;
+  label: string;
+  score: number;
+}
+
+interface SelectedProductCandidate {
+  candidate: ProductCandidate;
+  cartRoleKey: string;
+  cartRole: string;
 }
 
 interface ProductCandidate {
@@ -47,6 +68,7 @@ interface ProductCandidate {
   matchedColors: string[];
   matchedUseCases: string[];
   negativeThemes: ReviewTheme[];
+  slotMatches: CandidateSlotMatch[];
 }
 
 const budgetToleranceRate = 0.05;
@@ -80,6 +102,39 @@ const intentConfigs: Record<BuyerIntentType, IntentConfig> = {
     minimumItems: 3,
     maximumItems: 5,
     defaultBudget: 3000,
+    slots: [
+      {
+        key: "ergonomics",
+        label: "Ergonomi",
+        keywords: ["laptop stand", "monitör stand", "ayak desteği", "minder", "bilek desteği", "ergonomi", "sandalye"],
+        categories: ["ev-ofis", "masa-calisma-alani"],
+      },
+      {
+        key: "input_device",
+        label: "Kontrol cihazı",
+        keywords: ["sessiz kablosuz mouse", "mekanik klavye"],
+        categories: ["elektronik-aksesuar", "masa-calisma-alani"],
+      },
+      {
+        key: "lighting",
+        label: "Aydınlatma",
+        keywords: ["masa lambası", "aydınlatma", "led", "ışık"],
+        categories: ["masa-calisma-alani"],
+      },
+      {
+        key: "desk_order",
+        label: "Masa düzeni",
+        keywords: ["kablo", "organizer", "saklama", "desk mat", "masa seti", "düzenleyici"],
+        categories: ["masa-calisma-alani", "kucuk-ev-yasam"],
+      },
+      {
+        key: "comfort",
+        label: "Konfor",
+        keywords: ["termos", "hava temizleyici", "difüzör", "saat", "rahatlama"],
+        categories: ["kucuk-ev-yasam"],
+        required: false,
+      },
+    ],
   },
   coffee_starter: {
     categories: ["kahve-ekipmanlari", "kucuk-ev-yasam"],
@@ -87,6 +142,33 @@ const intentConfigs: Record<BuyerIntentType, IntentConfig> = {
     minimumItems: 3,
     maximumItems: 4,
     defaultBudget: 1500,
+    slots: [
+      {
+        key: "brewing",
+        label: "Demleme",
+        keywords: ["french press", "moka pot", "pour over", "dripper"],
+        categories: ["kahve-ekipmanlari"],
+      },
+      {
+        key: "preparation",
+        label: "Hazırlık",
+        keywords: ["öğütücü", "terazi", "süt köpürtücü", "ölçü", "kopurtucu", "köpürtücü"],
+        categories: ["kahve-ekipmanlari"],
+      },
+      {
+        key: "serving",
+        label: "Servis ve taşıma",
+        keywords: ["termos", "mug", "servis", "sürahi"],
+        categories: ["kucuk-ev-yasam", "kahve-ekipmanlari"],
+      },
+      {
+        key: "coffee_accessory",
+        label: "Kahve aksesuarı",
+        keywords: ["filtre", "ölçü kaşığı", "silikon mat", "temizleme"],
+        categories: ["kahve-ekipmanlari"],
+        required: false,
+      },
+    ],
   },
   gift_finder: {
     categories: ["hediye-yasam-tarzi", "kucuk-ev-yasam", "kahve-ekipmanlari"],
@@ -94,6 +176,28 @@ const intentConfigs: Record<BuyerIntentType, IntentConfig> = {
     minimumItems: 1,
     maximumItems: 3,
     defaultBudget: 1000,
+    slots: [
+      {
+        key: "main_gift",
+        label: "Ana hediye",
+        keywords: ["hediye", "mum", "saksı", "kalem", "kitap tutucu", "moka pot", "french press"],
+        categories: ["hediye-yasam-tarzi", "kucuk-ev-yasam", "kahve-ekipmanlari"],
+      },
+      {
+        key: "gift_packaging",
+        label: "Hediye sunumu",
+        keywords: ["hediye kutusu", "not kartı", "planlayıcı", "defter", "kalem"],
+        categories: ["hediye-yasam-tarzi"],
+        required: false,
+      },
+      {
+        key: "gift_complement",
+        label: "Tamamlayıcı hediye",
+        keywords: ["ev dekor", "rahatlama", "masa takımı", "ofis"],
+        categories: ["hediye-yasam-tarzi", "kucuk-ev-yasam"],
+        required: false,
+      },
+    ],
   },
   sports_audio: {
     categories: ["elektronik-aksesuar"],
@@ -101,6 +205,14 @@ const intentConfigs: Record<BuyerIntentType, IntentConfig> = {
     minimumItems: 1,
     maximumItems: 1,
     defaultBudget: 2000,
+    slots: [
+      {
+        key: "sports_audio",
+        label: "Spor ses ürünü",
+        keywords: ["spor kulaklık", "kulaklık", "koşu", "fitness", "silikon uç"],
+        categories: ["elektronik-aksesuar"],
+      },
+    ],
   },
   meeting_setup: {
     categories: ["elektronik-aksesuar", "ev-ofis"],
@@ -117,6 +229,32 @@ const intentConfigs: Record<BuyerIntentType, IntentConfig> = {
     minimumItems: 3,
     maximumItems: 4,
     defaultBudget: 4500,
+    slots: [
+      {
+        key: "camera",
+        label: "Görüntü",
+        keywords: ["webcam", "kamera", "görüntü", "1080p", "gizlilik kapağı"],
+        categories: ["elektronik-aksesuar"],
+      },
+      {
+        key: "audio",
+        label: "Ses",
+        keywords: ["mikrofon", "ses", "podcast", "tripod"],
+        categories: ["elektronik-aksesuar"],
+      },
+      {
+        key: "connectivity",
+        label: "Bağlantı",
+        keywords: ["hub", "usb-c hub", "sunum", "laptop setup"],
+        categories: ["elektronik-aksesuar"],
+      },
+      {
+        key: "positioning",
+        label: "Konumlandırma",
+        keywords: ["laptop stand", "tablet stand", "standı", "kamera açısı", "online ders"],
+        categories: ["ev-ofis", "elektronik-aksesuar"],
+      },
+    ],
   },
   desk_style_set: {
     categories: ["masa-calisma-alani", "hediye-yasam-tarzi", "elektronik-aksesuar"],
@@ -124,6 +262,40 @@ const intentConfigs: Record<BuyerIntentType, IntentConfig> = {
     minimumItems: 3,
     maximumItems: 5,
     defaultBudget: 2500,
+    slots: [
+      {
+        key: "desk_surface",
+        label: "Masa yüzeyi",
+        keywords: ["desk mat", "mousepad", "masa seti"],
+        categories: ["masa-calisma-alani"],
+      },
+      {
+        key: "organization",
+        label: "Düzen",
+        keywords: ["organizer", "kablo", "saklama", "kalemlik", "düzenleyici"],
+        categories: ["masa-calisma-alani", "kucuk-ev-yasam"],
+      },
+      {
+        key: "writing",
+        label: "Yazım ve planlama",
+        keywords: ["not defteri", "planlayıcı", "kalem", "etiket"],
+        categories: ["hediye-yasam-tarzi"],
+      },
+      {
+        key: "desk_tech",
+        label: "Masa teknolojisi",
+        keywords: ["mouse", "şarj", "usb-c", "telefon aksesuarı"],
+        categories: ["elektronik-aksesuar"],
+        required: false,
+      },
+      {
+        key: "decor",
+        label: "Dekor",
+        keywords: ["saat", "saksı", "mum", "ev dekor"],
+        categories: ["hediye-yasam-tarzi", "kucuk-ev-yasam"],
+        required: false,
+      },
+    ],
   },
   generic: {
     categories: [
@@ -138,6 +310,7 @@ const intentConfigs: Record<BuyerIntentType, IntentConfig> = {
     minimumItems: 1,
     maximumItems: 4,
     defaultBudget: 2500,
+    slots: [],
   },
 };
 
@@ -151,7 +324,7 @@ export function buildSmartCartWorkflow(
   const selectionBudgetLimit = intent.softBudgetLimit ?? getFallbackBudgetLimit(config, buyer);
   const candidates = getProductCandidates(intent, buyerProfile, input.manualPreferences);
   const selectedCandidates = selectCartCandidates(candidates, intent, config, selectionBudgetLimit);
-  const selectedItems = selectedCandidates.map((candidate) => createCartItem(candidate));
+  const selectedItems = selectedCandidates.map((selectedCandidate) => createCartItem(selectedCandidate));
   const totalPrice = selectedItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const warnings = createWorkflowWarnings({
     intent,
@@ -414,7 +587,7 @@ function getProductCandidates(
         return [];
       }
 
-      return [scoreProductCandidate(product, detail, intent, buyerProfile, manualPreferences)];
+      return [scoreProductCandidate(product, detail, intent, intentConfigs[intent.type], buyerProfile, manualPreferences)];
     })
     .sort((first, second) => {
       const cautionDifference = countCautionWarnings(first) - countCautionWarnings(second);
@@ -443,6 +616,7 @@ function scoreProductCandidate(
   product: Product,
   detail: ProductDetail,
   intent: ParsedBuyerIntent,
+  config: IntentConfig,
   buyerProfile: BuyerProfile | undefined,
   manualPreferences: BuyerManualPreferences | undefined,
 ): ProductCandidate {
@@ -457,6 +631,7 @@ function scoreProductCandidate(
     ...(buyerProfile?.buyer.preferredColors ?? []),
   ]);
   const negativeThemes = getNegativeThemes(detail.reviews);
+  const slotMatches = getSlotMatches(product, config);
   const reasons: string[] = [];
   const warnings = createProductWarnings({
     product,
@@ -490,6 +665,11 @@ function scoreProductCandidate(
     reasons.push(`Renk tercihiyle uyumlu: ${matchedColors.join(", ")}.`);
   }
 
+  if (slotMatches.length > 0) {
+    score += Math.min(12, slotMatches[0].score * 0.16);
+    reasons.push(`Sepet rolüyle eşleşiyor: ${slotMatches[0].label}.`);
+  }
+
   if (
     intent.maxDeliveryDays &&
     product.fulfillment.deliveryPromiseDays <= intent.maxDeliveryDays &&
@@ -521,6 +701,7 @@ function scoreProductCandidate(
     matchedColors,
     matchedUseCases,
     negativeThemes,
+    slotMatches,
   };
 }
 
@@ -624,6 +805,27 @@ function calculateRelevanceScore(input: {
   return clampPriority(score);
 }
 
+function getSlotMatches(product: Product, config: IntentConfig): CandidateSlotMatch[] {
+  const productText = normalizeProductText(product);
+
+  return config.slots
+    .map((slot) => {
+      const matchedKeywordCount = slot.keywords.filter((keyword) =>
+        productText.includes(normalizeText(keyword)),
+      ).length;
+      const categoryScore = slot.categories?.includes(product.category) ? 8 : 0;
+      const score = clampPriority(matchedKeywordCount * 24 + categoryScore);
+
+      return {
+        key: slot.key,
+        label: slot.label,
+        score,
+      };
+    })
+    .filter((match) => match.score > 0)
+    .sort((first, second) => second.score - first.score);
+}
+
 function createProductWarnings(input: {
   product: Product;
   scorecard: ProductScorecard;
@@ -717,8 +919,12 @@ function selectCartCandidates(
   intent: ParsedBuyerIntent,
   config: IntentConfig,
   budgetLimit: number,
-): ProductCandidate[] {
-  const selected: ProductCandidate[] = [];
+): SelectedProductCandidate[] {
+  if (config.slots.length > 0) {
+    return selectSlotPlannedCandidates(candidates, intent, config, budgetLimit);
+  }
+
+  const selected: SelectedProductCandidate[] = [];
   const selectedProductIds = new Set<string>();
   const selectedSubcategories = new Set<string>();
   let totalPrice = 0;
@@ -728,7 +934,7 @@ function selectCartCandidates(
       break;
     }
 
-    if (!isIntentRelevant(candidate, intent)) {
+    if (!isCandidateCompatibleWithIntent(candidate, intent)) {
       continue;
     }
 
@@ -749,7 +955,11 @@ function selectCartCandidates(
       continue;
     }
 
-    selected.push(candidate);
+    selected.push({
+      candidate,
+      cartRoleKey: "recommended",
+      cartRole: "Önerilen ürün",
+    });
     selectedProductIds.add(candidate.product.id);
     selectedSubcategories.add(candidate.product.subcategory);
     totalPrice = nextTotal;
@@ -768,7 +978,7 @@ function selectCartCandidates(
       continue;
     }
 
-    if (!isIntentRelevant(candidate, intent)) {
+    if (!isCandidateCompatibleWithIntent(candidate, intent)) {
       continue;
     }
 
@@ -776,12 +986,141 @@ function selectCartCandidates(
       continue;
     }
 
-    selected.push(candidate);
+    selected.push({
+      candidate,
+      cartRoleKey: "recommended",
+      cartRole: "Önerilen ürün",
+    });
     selectedProductIds.add(candidate.product.id);
     totalPrice += candidate.product.price;
   }
 
   return selected;
+}
+
+function selectSlotPlannedCandidates(
+  candidates: ProductCandidate[],
+  intent: ParsedBuyerIntent,
+  config: IntentConfig,
+  budgetLimit: number,
+): SelectedProductCandidate[] {
+  const selected: SelectedProductCandidate[] = [];
+  const selectedProductIds = new Set<string>();
+  const selectedSlotKeys = new Set<string>();
+  let totalPrice = 0;
+
+  for (const slot of config.slots) {
+    if (selected.length >= config.maximumItems) {
+      break;
+    }
+
+    const candidate = findBestCandidateForSlot(candidates, slot, intent, selectedProductIds, totalPrice, budgetLimit);
+
+    if (!candidate) {
+      continue;
+    }
+
+    selected.push({
+      candidate,
+      cartRoleKey: slot.key,
+      cartRole: slot.label,
+    });
+    selectedProductIds.add(candidate.product.id);
+    selectedSlotKeys.add(slot.key);
+    totalPrice += candidate.product.price;
+  }
+
+  for (const candidate of candidates) {
+    if (selected.length >= config.maximumItems) {
+      break;
+    }
+
+    if (selectedProductIds.has(candidate.product.id) || !isCandidateCompatibleWithIntent(candidate, intent)) {
+      continue;
+    }
+
+    if (totalPrice + candidate.product.price > budgetLimit) {
+      continue;
+    }
+
+    const fallbackSlot = getBestAvailableSlot(candidate, config, selectedSlotKeys);
+
+    selected.push({
+      candidate,
+      cartRoleKey: fallbackSlot?.key ?? "supporting_item",
+      cartRole: fallbackSlot?.label ?? "Tamamlayıcı ürün",
+    });
+    selectedProductIds.add(candidate.product.id);
+
+    if (fallbackSlot) {
+      selectedSlotKeys.add(fallbackSlot.key);
+    }
+
+    totalPrice += candidate.product.price;
+  }
+
+  return selected;
+}
+
+function findBestCandidateForSlot(
+  candidates: ProductCandidate[],
+  slot: CartSlotConfig,
+  intent: ParsedBuyerIntent,
+  selectedProductIds: Set<string>,
+  currentTotal: number,
+  budgetLimit: number,
+): ProductCandidate | undefined {
+  return candidates
+    .filter((candidate) => {
+      return (
+        !selectedProductIds.has(candidate.product.id) &&
+        currentTotal + candidate.product.price <= budgetLimit &&
+        isCandidateCompatibleWithIntent(candidate, intent) &&
+        getSlotMatch(candidate, slot.key)
+      );
+    })
+    .sort((first, second) => {
+      const firstWeightedScore = getSlotCandidateScore(first, slot.key, budgetLimit);
+      const secondWeightedScore = getSlotCandidateScore(second, slot.key, budgetLimit);
+      const weightedDifference = secondWeightedScore - firstWeightedScore;
+
+      if (weightedDifference !== 0) {
+        return weightedDifference;
+      }
+
+      const confidenceDifference = second.confidenceScore - first.confidenceScore;
+
+      if (confidenceDifference !== 0) {
+        return confidenceDifference;
+      }
+
+      return first.product.price - second.product.price;
+    })[0];
+}
+
+function getSlotCandidateScore(
+  candidate: ProductCandidate,
+  slotKey: string,
+  budgetLimit: number,
+): number {
+  const slotScore = getSlotMatch(candidate, slotKey)?.score ?? 0;
+  const pricePressure = budgetLimit > 0 ? (candidate.product.price / budgetLimit) * 35 : 0;
+
+  return slotScore + candidate.confidenceScore * 0.45 + candidate.relevanceScore * 0.25 - pricePressure;
+}
+
+function getSlotMatch(candidate: ProductCandidate, slotKey: string): CandidateSlotMatch | undefined {
+  return candidate.slotMatches.find((slotMatch) => slotMatch.key === slotKey);
+}
+
+function getBestAvailableSlot(
+  candidate: ProductCandidate,
+  config: IntentConfig,
+  selectedSlotKeys: Set<string>,
+): CandidateSlotMatch | undefined {
+  return candidate.slotMatches.find((slotMatch) => {
+    return config.slots.some((slot) => slot.key === slotMatch.key) && !selectedSlotKeys.has(slotMatch.key);
+  });
 }
 
 function isIntentRelevant(candidate: ProductCandidate, intent: ParsedBuyerIntent): boolean {
@@ -819,11 +1158,30 @@ function isIntentRelevant(candidate: ProductCandidate, intent: ParsedBuyerIntent
   return candidate.relevanceScore >= 18;
 }
 
-function createCartItem(candidate: ProductCandidate): BuyerSmartCartItem {
+function isCandidateCompatibleWithIntent(
+  candidate: ProductCandidate,
+  intent: ParsedBuyerIntent,
+): boolean {
+  if (!isIntentRelevant(candidate, intent)) {
+    return false;
+  }
+
+  if (intent.requestedColors.length > 0 && candidate.matchedColors.length === 0) {
+    return false;
+  }
+
+  return true;
+}
+
+function createCartItem(selectedCandidate: SelectedProductCandidate): BuyerSmartCartItem {
+  const { candidate } = selectedCandidate;
+
   return {
     productId: candidate.product.id,
     productName: candidate.product.name,
     category: candidate.product.category,
+    cartRoleKey: selectedCandidate.cartRoleKey,
+    cartRole: selectedCandidate.cartRole,
     price: candidate.product.price,
     quantity: 1,
     confidenceScore: candidate.confidenceScore,
@@ -848,10 +1206,14 @@ function createWorkflowWarnings(input: {
   intent: ParsedBuyerIntent;
   config: IntentConfig;
   selectedItems: BuyerSmartCartItem[];
-  selectedCandidates: ProductCandidate[];
+  selectedCandidates: SelectedProductCandidate[];
   totalPrice: number;
 }): BuyerCartWarning[] {
   const warnings = input.selectedItems.flatMap((item) => item.warnings);
+  const selectedRoleKeys = new Set(input.selectedItems.map((item) => item.cartRoleKey));
+  const missingRequiredSlots = input.config.slots.filter((slot) => {
+    return slot.required !== false && !selectedRoleKeys.has(slot.key);
+  });
 
   if (input.intent.budget && input.totalPrice > input.intent.budget) {
     warnings.push({
@@ -879,6 +1241,20 @@ function createWorkflowWarnings(input: {
     });
   }
 
+  if (missingRequiredSlots.length > 0 && input.selectedItems.length > 0) {
+    warnings.push({
+      severity: "info",
+      title: "Sepet rolleri eksik kaldı",
+      message: `Bu sepet için ${missingRequiredSlots.map((slot) => slot.label).join(", ")} rolü bütçe veya güven sinyalleri nedeniyle tamamlanamadı.`,
+      evidence: {
+        missingRoles: missingRequiredSlots.map((slot) => ({
+          key: slot.key,
+          label: slot.label,
+        })),
+      },
+    });
+  }
+
   if (input.selectedCandidates.length === 0) {
     warnings.push({
       severity: "caution",
@@ -892,15 +1268,15 @@ function createWorkflowWarnings(input: {
 }
 
 function createAlternativeSuggestions(
-  selectedCandidates: ProductCandidate[],
+  selectedCandidates: SelectedProductCandidate[],
   allCandidates: ProductCandidate[],
   budgetLimit: number,
 ): BuyerProductSuggestion[] {
-  const selectedProductIds = new Set(selectedCandidates.map((candidate) => candidate.product.id));
+  const selectedProductIds = new Set(selectedCandidates.map((selectedCandidate) => selectedCandidate.candidate.product.id));
   const relationSuggestions = selectedCandidates.flatMap((candidate) =>
-    getRelatedProducts(candidate.product.id, "alternative").map((product) => ({
+    getRelatedProducts(candidate.candidate.product.id, "alternative").map((product) => ({
       product,
-      sourceProduct: candidate.product,
+      sourceProduct: candidate.candidate.product,
     })),
   );
   const alternatives = relationSuggestions
@@ -934,18 +1310,18 @@ function createAlternativeSuggestions(
 }
 
 function createComplementarySuggestions(
-  selectedCandidates: ProductCandidate[],
+  selectedCandidates: SelectedProductCandidate[],
   budgetLimit: number,
 ): BuyerProductSuggestion[] {
-  const selectedProductIds = new Set(selectedCandidates.map((candidate) => candidate.product.id));
+  const selectedProductIds = new Set(selectedCandidates.map((selectedCandidate) => selectedCandidate.candidate.product.id));
   const suggestions = selectedCandidates.flatMap((candidate) =>
-    [...getRelatedProducts(candidate.product.id, "complementary"), ...getRelatedProducts(candidate.product.id, "bundle")]
+    [...getRelatedProducts(candidate.candidate.product.id, "complementary"), ...getRelatedProducts(candidate.candidate.product.id, "bundle")]
       .filter((product) => !selectedProductIds.has(product.id) && product.price <= budgetLimit)
       .map((product) => ({
         productId: product.id,
         productName: product.name,
         price: product.price,
-        reason: `${candidate.product.name} ile birlikte kullanıldığında sepet değerini artırır.`,
+        reason: `${candidate.candidate.product.name} ile birlikte kullanıldığında sepet değerini artırır.`,
         confidenceScore: product.demoStoryFlags.includes("bundle_candidate") ? 78 : 68,
       })),
   );
@@ -1105,7 +1481,13 @@ function getNegativeThemes(reviews: Review[]): ReviewTheme[] {
 function getMatchedColors(product: Product, colors: string[]): string[] {
   const normalizedColors = colors.map((color) => normalizeText(color));
 
-  return product.catalog.colors.filter((color) => normalizedColors.includes(normalizeText(color)));
+  return product.catalog.colors.filter((color) => {
+    const normalizedProductColor = normalizeText(color);
+
+    return normalizedColors.some((requestedColor) => {
+      return normalizedProductColor.includes(requestedColor) || requestedColor.includes(normalizedProductColor);
+    });
+  });
 }
 
 function normalizeProductText(product: Product): string {
