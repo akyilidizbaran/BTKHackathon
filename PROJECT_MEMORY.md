@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 2 data access layer kuruldu.
+  * CommercePilot için Milestone 3 açıklanabilir deterministic scoring layer kuruldu.
 * Son değişiklik neydi?
-  * Mock data için ürün, yorum, satıcı, alıcı, sipariş, stok, ilişki, sepet ve birleşik commerce view helper'ları eklendi.
+  * Stok kapsaması, listeleme güveni, yorum güveni, kargo güveni, iade güveni, kârlılık güveni, kampanya hazırlığı ve ürün sağlığı skorları eklendi.
 * Bir sonraki net adım ne?
-  * Milestone 3 deterministic scoring layer ile stok riski, ürün sağlığı, yorum aciliyeti, listeleme kalitesi ve kargo güveni gibi sinyalleri hesaplamak.
+  * Milestone 4 workflow layer ile bu skorları kullanarak Seller Growth Actions ve buyer smart cart hazırlık akışlarını oluşturmak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -41,7 +41,8 @@
   * `src/types/commerce.ts`: domain tipleri.
   * `src/data/mock/*`: curated mock commerce dataset.
   * `src/lib/data/*`: mock data access layer ve birleşik view helper'ları.
-  * Planlanan sonraki yapı: lib/scoring, lib/workflows, lib/agents, lib/gemini, app, components.
+  * `src/lib/scoring/*`: açıklanabilir deterministic scoring layer.
+  * Planlanan sonraki yapı: lib/workflows, lib/agents, lib/gemini, app, components.
 
 ## 4) Konvansiyonlar ve Standartlar
 
@@ -97,6 +98,7 @@
 * 2026-05-13 — Milestone: Milestone 0 proje zemini kuruldu. | Sonuç: Next.js + TypeScript + Tailwind scaffold, README, `.env.example`, lint/build doğrulaması ve GitHub push hazırlığı tamamlandı.
 * 2026-05-13 — Milestone: Milestone 1 curated commerce dataset kuruldu. | Sonuç: Türkçe domain tipleri ve curated mock data eklendi; referans bütünlüğü, lint, TypeScript ve build doğrulandı.
 * 2026-05-13 — Milestone: Milestone 2 data access layer kuruldu. | Sonuç: UI/API/workflow katmanlarının mock dataya kontrollü erişmesi için read/query helper'ları eklendi; lint, TypeScript ve build doğrulandı.
+* 2026-05-13 — Milestone: Milestone 3 açıklanabilir scoring layer kuruldu. | Sonuç: Ürün bazlı skorlar yalnızca sayı değil, drivers/evidence/summary/recommendedFocus içeren LLM-ready açıklanabilir karar sinyalleri olarak üretildi.
 
 ## 8) Yapılanlar
 
@@ -110,6 +112,7 @@
 * [x] Milestone 1 domain model ve curated mock data oluşturuldu.
 * [x] Mock data referans bütünlüğü doğrulandı.
 * [x] Milestone 2 data access layer oluşturuldu.
+* [x] Milestone 3 deterministic scoring layer oluşturuldu.
 
 ## 9) Yapılacaklar (Next)
 
@@ -126,7 +129,8 @@
 * [x] Milestone 1'de curated çekirdek veri seti mi, Kaggle destekli hibrit veri seti mi kullanılacağını son karara bağla.
 * [x] Buyer preference/persona alanlarının ilk veri modelinde pasif mi aktif mi tutulacağını netleştir.
 * [x] Milestone 2 data access helper'larını oluştur.
-* [ ] Milestone 3 deterministic scoring layer tasarımını netleştir ve uygula.
+* [x] Milestone 3 deterministic scoring layer tasarımını netleştir ve uygula.
+* [ ] Milestone 4 workflow layer tasarımını netleştir ve uygula.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -464,6 +468,31 @@
 * Sınırlar:
   * Bu milestone scoring, workflow, API route, UI, LLM veya LangChain içermez.
   * Helper'lar şimdilik sync çalışır; gerçek database gelirse aynı fonksiyon isimleri korunarak iç kaynak değiştirilebilir.
+
+## 19) Milestone 3 Açıklanabilir Scoring Layer Notları
+
+* Amaç:
+  * Mock commerce verisini deterministic, açıklanabilir ve ileride LLM tarafından yorumlanabilir karar sinyallerine çevirmek.
+* Skor formatı:
+  * Her skor `0-100` arasıdır.
+  * Çıktılar yalnızca sayı dönmez; `label`, `summary`, `drivers`, `evidence`, `recommendedFocus` alanlarını taşır.
+  * Sabit warning/critical seviyesi kullanılmadı; UI veya LLM daha sonra skoru yorumlayabilir.
+* Eklenen skorlar:
+  * Inventory Coverage: kullanılabilir stok, son 30 gün satış hızı, 7 günlük tahmini talep, stok açığı ve stok kapsama günü.
+  * Listing Confidence: kalite skoru, attribute completeness, image score, issue tags ve beklenti/uyumluluk yorumları.
+  * Review Confidence: negatif yorum, satıcı aksiyonu gerektiren yorum ve tekrar eden temalar.
+  * Shipping Confidence: teslimat vaadi, ortalama teslimat, geç teslim şikayet oranı ve kargo yorumları.
+  * Return Confidence: return rate, iade siparişleri ve iade riski taşıyan yorum temaları.
+  * Profit Confidence: fiyat, maliyet, brüt marj, reklam harcaması, dönüşüm ve iade oranı.
+  * Promotion Readiness: stok, yorum, listeleme, kargo, iade ve kârlılık skorlarının kampanya hazırlığına birleşmesi.
+  * Product Health: tüm sinyallerin genel ürün sağlığına birleşmesi.
+* Örnek doğrulama:
+  * FlowMate mouse: stok kapsaması düşük, kargo güveni yüksek.
+  * AirBeat kulaklık: kargo güveni ve yorum/iade sinyalleri zayıf.
+  * KeyPro klavye: listeleme güveni düşük; switch/ses/uyumluluk açıklaması aksiyon gerektiriyor.
+* Sınırlar:
+  * Bu milestone workflow, Seller Growth Actions üretimi, API route, UI, LLM veya LangChain içermez.
+  * Tahmin modeli yok; 7 günlük talep son 30 gün satış hızından deterministik hesaplanır.
 
 ### Güncelleme Kaydı
 
