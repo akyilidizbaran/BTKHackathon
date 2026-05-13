@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 6A UI Foundation başlatıldı; rol seçimi ve buyer/seller app shell omurgası eklendi.
+  * CommercePilot için Milestone 6B Seller API Contract tamamlandı; seller ekranları ortak API contract builder'larına ve route handler'lara bağlandı.
 * Son değişiklik neydi?
-  * `/` rol seçimi, `/seller` çalışma alanı, `/seller/actions`, `/seller/products`, `/buyer`, `/buyer/products`, `/buyer/cart` route'ları oluşturuldu.
+  * `/api/seller/overview`, `/api/seller/actions`, `/api/seller/products`, `/api/seller/products/[id]/health` endpoint'leri ve `/seller/products/[slug]` ürün sağlık detay sayfası eklendi.
 * Bir sonraki net adım ne?
-  * Milestone 6B ile seller API route'larını ve seller ekranlarını daha veri-contract odaklı hale getirmek.
+  * Milestone 6C ile buyer smart cart API route'u ve buyer komut etkileşimini canlı hale getirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -43,6 +43,7 @@
   * `src/lib/data/*`: mock data access layer ve birleşik view helper'ları.
   * `src/lib/scoring/*`: açıklanabilir deterministic scoring layer.
   * `src/lib/workflows/*`: scoring çıktılarını use-case odaklı aksiyon ve insight çıktılarına çeviren workflow katmanı.
+  * `src/lib/api/*`: UI ve route handler'ların ortak kullandığı API contract/data builder katmanı.
   * Planlanan sonraki yapı: lib/agents, lib/gemini, app, components.
 
 ## 4) Konvansiyonlar ve Standartlar
@@ -117,6 +118,9 @@
 * 2026-05-14 — Karar: Milestone 6A rol seçimi gerçek gateway olacak. | Gerekçe: Buyer ve seller eş önem taşıyacak; kullanıcı demo başında rol seçip ilgili workspace'e geçmeli. | Etki: `/` role gateway, `/seller` ve `/buyer` app shell route'ları eklendi.
 * 2026-05-14 — Karar: UI dili tamamen Türkçe ve premium dark intelligence dashboard olacak. | Gerekçe: Kullanıcı bu dili ve hissi net istedi; hackathon demosunda ürün ciddiyeti artar. | Etki: Deep zinc/charcoal palette, tek emerald accent, Geist/Geist Mono, glass/hairline panel dili kullanıldı.
 * 2026-05-14 — Karar: Milestone 6A için motion/icon bağımlılıkları eklendi. | Gerekçe: Seçilen frontend taste skill'leri motion ve ikon standardı gerektiriyor; CSS-only ile hedef kalite düşük kalacaktı. | Etki: `gsap`, `@gsap/react`, `@phosphor-icons/react` bağımlılıkları eklendi.
+* 2026-05-14 — Karar: Seller API envelope `success/data/error` olarak standardize edildi. | Gerekçe: UI, route handler ve ileride agent/LLM katmanı aynı hata/başarı contract'ını okumalı. | Etki: `src/lib/api/responses.ts` eklendi; seller endpoint'leri aynı envelope ile döner. | Alternatifler: Ham JSON veya farklı endpoint bazlı shape.
+* 2026-05-14 — Karar: Seller ekranları doğrudan workflow çağrısı yerine ortak API contract builder'larını kullanacak. | Gerekçe: Server component içinde kendi route'unu HTTP ile fetch etmek build/runtime'da gereksiz kırılganlık yaratır; route ve UI aynı typed builder'ı paylaşınca contract tek kaynak olur. | Etki: `src/lib/api/seller.ts` eklendi; `/seller`, `/seller/actions`, `/seller/products` ve ürün detay UI aynı data shape'i kullanır.
+* 2026-05-14 — Karar: Product detail UI slug ile, product health API id ile çalışacak. | Gerekçe: UI URL'leri okunabilir olmalı; API contract ise stable product id üzerinden netleşmeli. | Etki: `/seller/products/[slug]` ve `/api/seller/products/[id]/health` route'ları eklendi.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -132,6 +136,7 @@
 * 2026-05-14 — Milestone: Milestone 5.5C Seller Workflow Output Hardening tamamlandı. | Sonuç: Seller Growth Action çıktıları kategori, aciliyet, etki, efor, zaman ufku, metrik highlight, expected outcome ve checklist alanlarıyla UI/LLM-ready hale getirildi; TypeScript ve runtime workflow doğrulaması geçti.
 * 2026-05-14 — Milestone: Milestone 5.5D Validation/Test Hardening tamamlandı. | Sonuç: Mock data integrity, scoring layer, seller workflow ve buyer workflow runtime validation script'i eklendi; lint, typecheck, validation ve production build doğrulaması geçti.
 * 2026-05-14 — Milestone: Milestone 6A UI Foundation başlatıldı. | Sonuç: Görsel referanslar üretildi; rol seçimi, buyer/seller workspace shell, seller action/product preview ve buyer smart cart/product/cart preview route'ları eklendi.
+* 2026-05-14 — Milestone: Milestone 6B Seller API Contract tamamlandı. | Sonuç: Seller overview/actions/products/product health API endpoint'leri, ortak seller API contract builder'ları, ürün sağlık detay sayfası, loading/error/empty state temelleri ve API validation kontrolleri eklendi.
 
 ## 8) Yapılanlar
 
@@ -178,7 +183,7 @@
 * [x] Milestone 5.5D validation/test hardening uygula.
 * [x] Brain hardening bittikten sonra UI/API kapsamını netleştir.
 * [x] Milestone 6A app shell ve rol seçimi oluştur.
-* [ ] Milestone 6B seller API route'ları ve seller ekran veri contract'larını oluştur.
+* [x] Milestone 6B seller API route'ları ve seller ekran veri contract'larını oluştur.
 * [ ] Milestone 6C buyer API route'u ve buyer smart cart etkileşimini canlı hale getir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
@@ -204,6 +209,7 @@
 * Her aksiyonun arkasında görünür bir sebep olmalı: stok, satış, yorum, listeleme kalitesi veya ürün ilişkisi.
 * Buyer tarafı ilk MVP'de daha sade kalabilir ama sistemin çift taraflı olduğunu gösterecek kadar var olmalı.
 * LLM sadece son karar verici gibi konumlanmamalı; karar sinyalleri önce sistem tarafından hesaplanmalı.
+* Seller UI artık route handler ile aynı `src/lib/api/seller.ts` builder'larını kullanır; seller workflow alanı değişirse API validation da güncellenmeli.
 
 ## 12) Satıcı Paneli Stratejisi
 
@@ -726,6 +732,34 @@
   * Bu milestone API route, gerçek form submit, LLM, LangChain veya auth içermez.
   * Buyer komut input'u şimdilik pasif demo yüzeyidir; Milestone 6C'de API ile canlı çalışacak.
   * Seller ekranları mevcut workflow çıktısını server component içinde okur; Milestone 6B'de API contract'a taşınacak.
+
+### 6B Seller API Contract + Product Health Detail
+
+* Amaç:
+  * Seller ekranlarını UI içi doğrudan workflow bağımlılığından çıkarıp API contract odaklı hale getirmek.
+  * Satıcı demo akışında ürün listesinden ürün sağlık detayına inilebilir bir drill-down kurmak.
+* Eklenen API route'ları:
+  * `GET /api/seller/overview`
+  * `GET /api/seller/actions`
+  * `GET /api/seller/products`
+  * `GET /api/seller/products/[id]/health`
+* Contract:
+  * Tüm seller endpoint'leri `{ success, data, error }` envelope yapısını kullanır.
+  * Demo seller sabit: `seller-commercepilot`.
+  * UI ve route handler'lar `src/lib/api/seller.ts` içindeki typed builder'ları paylaşır.
+* Eklenen UI:
+  * `/seller`, `/seller/actions`, `/seller/products` seller API contract shape'ine taşındı.
+  * `/seller/products/[slug]` ürün sağlık detay sayfası eklendi.
+  * Ürün satırları okunabilir slug URL'lerine, detay ekranı stable product id endpoint'ine bağlanır.
+  * Seller segment için loading/error state, ürün detay için loading/not-found state eklendi.
+* Validation:
+  * `scripts/validate-workflows.js` seller API contract shape, endpoint href, KeyPro product health ve evidence snapshot kontrolleriyle genişletildi.
+  * Doğrulanan komutlar: `npm run check`, `npm run build`.
+  * Runtime HTTP doğrulaması: overview/actions/products/product health endpoint'leri `success: true` döndü.
+  * Browser doğrulaması: `/seller/products` ve `/seller/products/keypro-mekanik-klavye` yatay overflow olmadan açıldı; Playwright Chrome binary olmadığı için Puppeteer kullanıldı.
+* Sınırlar:
+  * Auth, DB, LLM, LangChain, mutation ve ürün düzenleme yok.
+  * Server component'ler kendi route'larını HTTP ile fetch etmiyor; build güvenliği için route ve UI ortak builder contract'ını paylaşıyor.
 
 ### Güncelleme Kaydı
 

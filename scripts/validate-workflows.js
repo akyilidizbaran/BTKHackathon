@@ -29,6 +29,12 @@ const {
   buildSmartCartWorkflow,
   generateSellerActionsWorkflow,
 } = require("../src/lib/workflows");
+const {
+  getSellerActionsApiData,
+  getSellerOverviewApiData,
+  getSellerProductHealthApiData,
+  getSellerProductsApiData,
+} = require("../src/lib/api/seller");
 
 const validSellerActionTones = new Set(["positive", "neutral", "warning", "danger"]);
 const validSellerOwners = new Set(["stok", "operasyon", "icerik", "destek", "pazarlama", "finans"]);
@@ -46,6 +52,7 @@ const requiredDemoFlags = [
 validateMockDataIntegrity();
 validateScoringLayer();
 validateSellerWorkflows();
+validateSellerApiContracts();
 validateBuyerWorkflows();
 
 if (failures.length > 0) {
@@ -60,6 +67,7 @@ console.log(
     `Products: ${products.length}`,
     `Reviews: ${reviews.length}`,
     `Seller actions: ${generateSellerActionsWorkflow("seller-commercepilot")?.actions.length ?? 0}`,
+    `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
     "Buyer prompts: 7",
   ].join("\n"),
 );
@@ -258,6 +266,50 @@ function validateSellerWorkflows() {
       assert(validSellerOwners.has(item.owner), `${action.id}: checklist ${itemIndex} owner geçersiz`);
     });
   });
+}
+
+function validateSellerApiContracts() {
+  const sellerId = "seller-commercepilot";
+  const overview = getSellerOverviewApiData(sellerId);
+  const actions = getSellerActionsApiData(sellerId);
+  const productContract = getSellerProductsApiData(sellerId);
+  const keyProHealth = getSellerProductHealthApiData("prod-keypro-mekanik-klavye");
+
+  assert(Boolean(overview), "seller overview API contract üretilemedi");
+  assert(Boolean(actions), "seller actions API contract üretilemedi");
+  assert(Boolean(productContract), "seller products API contract üretilemedi");
+  assert(Boolean(keyProHealth), "seller product health API contract üretilemedi");
+
+  if (overview) {
+    assert(overview.contract.envelope === "success/data/error", "overview envelope contract yanlış");
+    assert(overview.stats.analyzedProductCount === products.length, "overview analyzedProductCount yanlış");
+    assert(overview.topActions.length === 5, "overview top actions top 5 dönmeli");
+    assert(overview.operationSignals.length > 0, "overview operation signals boş");
+  }
+
+  if (actions) {
+    assert(actions.contract.envelope === "success/data/error", "actions envelope contract yanlış");
+    assert(actions.actions.length === 5, "actions API top 5 dönmeli");
+    assert(actions.actionTypeCoverage.includes("restock"), "actions API restock coverage eksik");
+  }
+
+  if (productContract) {
+    assert(productContract.contract.envelope === "success/data/error", "products envelope contract yanlış");
+    assert(productContract.products.length === products.length, "products API ürün sayısı yanlış");
+    assert(productContract.summary.averageHealthScore > 0, "products API ortalama sağlık skoru eksik");
+    assert(productContract.products.every((product) => product.href.startsWith("/seller/products/")), "products API href contract yanlış");
+    assert(
+      productContract.products.every((product) => product.apiHealthEndpoint.startsWith("/api/seller/products/")),
+      "products API health endpoint contract yanlış",
+    );
+  }
+
+  if (keyProHealth) {
+    assert(keyProHealth.product.slug === "keypro-mekanik-klavye", "KeyPro product slug contract yanlış");
+    assert(keyProHealth.product.apiHealthEndpoint === "/api/seller/products/prod-keypro-mekanik-klavye/health", "KeyPro health endpoint yanlış");
+    assert(keyProHealth.topInsights.length === 3, "KeyPro health API top 3 insight dönmeli");
+    assert(keyProHealth.evidenceSnapshot.length >= 4, "KeyPro health evidence snapshot eksik");
+  }
 }
 
 function validateBuyerWorkflows() {
