@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 1 domain model ve curated mock data omurgası kuruldu.
+  * CommercePilot için Milestone 2 data access layer kuruldu.
 * Son değişiklik neydi?
-  * 40 ürün, 55 gerçekçi Türkçe yorum, 24 sipariş, 25 stok hareketi, 30 ürün ilişkisi, 8 buyer persona ve 5 smart cart taslağı eklendi.
+  * Mock data için ürün, yorum, satıcı, alıcı, sipariş, stok, ilişki, sepet ve birleşik commerce view helper'ları eklendi.
 * Bir sonraki net adım ne?
-  * Milestone 2 data access layer ile UI/API'nın mock dataya kontrollü erişmesini sağlamak.
+  * Milestone 3 deterministic scoring layer ile stok riski, ürün sağlığı, yorum aciliyeti, listeleme kalitesi ve kargo güveni gibi sinyalleri hesaplamak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -40,7 +40,8 @@
 * Önemli dizinler/modüller:
   * `src/types/commerce.ts`: domain tipleri.
   * `src/data/mock/*`: curated mock commerce dataset.
-  * Planlanan sonraki yapı: lib/data, lib/scoring, lib/workflows, lib/agents, lib/gemini, app, components.
+  * `src/lib/data/*`: mock data access layer ve birleşik view helper'ları.
+  * Planlanan sonraki yapı: lib/scoring, lib/workflows, lib/agents, lib/gemini, app, components.
 
 ## 4) Konvansiyonlar ve Standartlar
 
@@ -95,6 +96,7 @@
 * 2026-05-12 — Milestone: Ürün yönü netleşti. | Sonuç: Satıcı öncelikli, demo odaklı, AI-ready çift taraflı commerce intelligence yaklaşımı benimsendi.
 * 2026-05-13 — Milestone: Milestone 0 proje zemini kuruldu. | Sonuç: Next.js + TypeScript + Tailwind scaffold, README, `.env.example`, lint/build doğrulaması ve GitHub push hazırlığı tamamlandı.
 * 2026-05-13 — Milestone: Milestone 1 curated commerce dataset kuruldu. | Sonuç: Türkçe domain tipleri ve curated mock data eklendi; referans bütünlüğü, lint, TypeScript ve build doğrulandı.
+* 2026-05-13 — Milestone: Milestone 2 data access layer kuruldu. | Sonuç: UI/API/workflow katmanlarının mock dataya kontrollü erişmesi için read/query helper'ları eklendi; lint, TypeScript ve build doğrulandı.
 
 ## 8) Yapılanlar
 
@@ -107,6 +109,7 @@
 * [x] Lint ve production build doğrulandı.
 * [x] Milestone 1 domain model ve curated mock data oluşturuldu.
 * [x] Mock data referans bütünlüğü doğrulandı.
+* [x] Milestone 2 data access layer oluşturuldu.
 
 ## 9) Yapılacaklar (Next)
 
@@ -122,7 +125,8 @@
 * [ ] Alıcı tarafı için yapılacak/yapılmayacak listesini uygulama fazına çevirmeden önce son kez onayla.
 * [x] Milestone 1'de curated çekirdek veri seti mi, Kaggle destekli hibrit veri seti mi kullanılacağını son karara bağla.
 * [x] Buyer preference/persona alanlarının ilk veri modelinde pasif mi aktif mi tutulacağını netleştir.
-* [ ] Milestone 2 data access helper'larını oluştur.
+* [x] Milestone 2 data access helper'larını oluştur.
+* [ ] Milestone 3 deterministic scoring layer tasarımını netleştir ve uygula.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -437,6 +441,29 @@
   * Satıcı demo hikayeleri veri içinde `demoStoryFlags` ile işaretlendi.
   * Kargo vaadi ile yorum/kargo deneyimi çeliştiğinde alıcı uyarısı üretebilmek için fulfillment ve review delivery fields eklendi.
   * Buyer personalization için previous complaint themes, sensitivities ve preferred colors alanları eklendi.
+
+## 18) Milestone 2 Data Access Layer Notları
+
+* Amaç:
+  * UI, API route, scoring ve workflow katmanlarının mock data dosyalarına doğrudan dağınık şekilde erişmesini önlemek.
+* Eklenen helper kapsamı:
+  * Products: tüm ürünler, id/slug, kategori, seller, demo story flag, use-case, renk, fiyat aralığı, arama.
+  * Reviews: ürün, buyer, tema, sentiment, seller attention ve negatif yorum filtreleri.
+  * Sellers: tüm seller'lar, id ve default seller.
+  * Buyers: buyer profili, hassasiyet, geçmiş şikayet teması ve tercih edilen renk.
+  * Orders: seller, buyer, status, ürün içeren sipariş ve ürün bazlı iade.
+  * Inventory: event, ürün, event type ve çoklu product id filtreleri.
+  * Relations: ürün ilişkileri, outgoing/incoming, relation type ve product+type filtreleri.
+  * Carts: tüm cart'lar, id, buyer ve recommended cart filtreleri.
+* Birleşik commerce view helper'ları:
+  * `getProductDetail`: ürün + yorum + ilişki + ilişkili ürün + stok hareketleri + siparişler.
+  * `getSellerOverview`: seller + ürünler + yorumlar + siparişler + stok hareketleri + ürün ilişkileri.
+  * `getBuyerProfile`: buyer + yorumlar + siparişler + cart'lar.
+  * `getCartDetail`: cart + buyer + ürün detayları + toplam.
+  * `getRelatedProducts`: alternatif/tamamlayıcı/bundle/upgrade ürünleri.
+* Sınırlar:
+  * Bu milestone scoring, workflow, API route, UI, LLM veya LangChain içermez.
+  * Helper'lar şimdilik sync çalışır; gerçek database gelirse aynı fonksiyon isimleri korunarak iç kaynak değiştirilebilir.
 
 ### Güncelleme Kaydı
 
