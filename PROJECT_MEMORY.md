@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 5.5D Validation/Test Hardening tamamlandı.
+  * CommercePilot için Milestone 6A UI Foundation başlatıldı; rol seçimi ve buyer/seller app shell omurgası eklendi.
 * Son değişiklik neydi?
-  * Brain katmanı için mock data, scoring, seller workflow ve buyer workflow doğrulamalarını çalışan `validate:workflows` script'i eklendi.
+  * `/` rol seçimi, `/seller` çalışma alanı, `/seller/actions`, `/seller/products`, `/buyer`, `/buyer/products`, `/buyer/cart` route'ları oluşturuldu.
 * Bir sonraki net adım ne?
-  * Brain hardening tamamlandığı için sıradaki net adım UI/API kapsamını netleştirip uygulama ekranlarına geçmek.
+  * Milestone 6B ile seller API route'larını ve seller ekranlarını daha veri-contract odaklı hale getirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -49,6 +49,7 @@
 
 * Kod stili / lint / format:
   * Next.js App Router + TypeScript + Tailwind CSS kullanılıyor.
+  * UI motion için `gsap` + `@gsap/react`, ikonlar için `@phosphor-icons/react` kullanılıyor.
   * Lint komutu: `npm run lint`
   * Build komutu: `npm run build`
 * Branch/commit yaklaşımı:
@@ -113,6 +114,9 @@
 * 2026-05-14 — Karar: Büyüme fırsatları kritik kriz gibi etiketlenmeyecek. | Gerekçe: Bundle ve winner promotion aksiyonları değerli olabilir ama stok açığı, kârlılık baskısı veya acil yorum riskiyle aynı aciliyet dilinde görünmemeli. | Etki: `create_bundle` ve `promote_winner` aciliyeti en fazla yüksek seviyede tutulur; zaman ufku çoğunlukla "Bu hafta" olur.
 * 2026-05-14 — Karar: Brain katmanı için paket kurmadan runtime validation script'i eklenecek. | Gerekçe: UI/API öncesi mock data referansları, scoring contract'ı ve workflow çıktıları düzenli kontrol edilmeli. | Etki: `scripts/validate-workflows.js`, `npm run validate:workflows`, `npm run typecheck` ve `npm run check` eklendi.
 * 2026-05-14 — Karar: Validation script'i demo hikayelerini de koruyacak. | Gerekçe: Sadece tip kontrolü yeterli değil; top 5 seller action, buyer intent/rol seçimi ve required demo flags bozulursa demo zayıflar. | Etki: Script seller top 5 aksiyon tiplerini, buyer prompt senaryolarını, data referanslarını ve score/output contract'larını doğrular.
+* 2026-05-14 — Karar: Milestone 6A rol seçimi gerçek gateway olacak. | Gerekçe: Buyer ve seller eş önem taşıyacak; kullanıcı demo başında rol seçip ilgili workspace'e geçmeli. | Etki: `/` role gateway, `/seller` ve `/buyer` app shell route'ları eklendi.
+* 2026-05-14 — Karar: UI dili tamamen Türkçe ve premium dark intelligence dashboard olacak. | Gerekçe: Kullanıcı bu dili ve hissi net istedi; hackathon demosunda ürün ciddiyeti artar. | Etki: Deep zinc/charcoal palette, tek emerald accent, Geist/Geist Mono, glass/hairline panel dili kullanıldı.
+* 2026-05-14 — Karar: Milestone 6A için motion/icon bağımlılıkları eklendi. | Gerekçe: Seçilen frontend taste skill'leri motion ve ikon standardı gerektiriyor; CSS-only ile hedef kalite düşük kalacaktı. | Etki: `gsap`, `@gsap/react`, `@phosphor-icons/react` bağımlılıkları eklendi.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -127,6 +131,7 @@
 * 2026-05-13 — Milestone: Milestone 5.5B Buyer Cart Planning Hardening tamamlandı. | Sonuç: Buyer sepetleri ev-ofis, kahve, hediye, masa stili, spor ve toplantı senaryolarında slot/rol bazlı planlanır hale getirildi; lint, TypeScript, build ve runtime prompt doğrulaması geçti.
 * 2026-05-14 — Milestone: Milestone 5.5C Seller Workflow Output Hardening tamamlandı. | Sonuç: Seller Growth Action çıktıları kategori, aciliyet, etki, efor, zaman ufku, metrik highlight, expected outcome ve checklist alanlarıyla UI/LLM-ready hale getirildi; TypeScript ve runtime workflow doğrulaması geçti.
 * 2026-05-14 — Milestone: Milestone 5.5D Validation/Test Hardening tamamlandı. | Sonuç: Mock data integrity, scoring layer, seller workflow ve buyer workflow runtime validation script'i eklendi; lint, typecheck, validation ve production build doğrulaması geçti.
+* 2026-05-14 — Milestone: Milestone 6A UI Foundation başlatıldı. | Sonuç: Görsel referanslar üretildi; rol seçimi, buyer/seller workspace shell, seller action/product preview ve buyer smart cart/product/cart preview route'ları eklendi.
 
 ## 8) Yapılanlar
 
@@ -147,6 +152,7 @@
 * [x] Milestone 5.5B buyer cart planning hardening tamamlandı.
 * [x] Milestone 5.5C seller workflow output hardening tamamlandı.
 * [x] Milestone 5.5D validation/test hardening tamamlandı.
+* [x] Milestone 6A rol seçimi ve buyer/seller app shell omurgası eklendi.
 
 ## 9) Yapılacaklar (Next)
 
@@ -170,7 +176,10 @@
 * [x] Milestone 5.5B buyer cart planning hardening uygula.
 * [x] Milestone 5.5C seller workflow output hardening uygula.
 * [x] Milestone 5.5D validation/test hardening uygula.
-* [ ] Brain hardening bittikten sonra UI/API kapsamını netleştir.
+* [x] Brain hardening bittikten sonra UI/API kapsamını netleştir.
+* [x] Milestone 6A app shell ve rol seçimi oluştur.
+* [ ] Milestone 6B seller API route'ları ve seller ekran veri contract'larını oluştur.
+* [ ] Milestone 6C buyer API route'u ve buyer smart cart etkileşimini canlı hale getir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -685,6 +694,38 @@
 * Sınırlar:
   * Yeni test framework veya paket kurulmadı.
   * Script Node üzerinden TypeScript dosyalarını runtime transpile ederek çalışır; gerçek unit test framework'ü ileride ihtiyaç olursa eklenebilir.
+
+## 23) Milestone 6 UI Foundation Notları
+
+### 6A Role Gateway + App Shell
+
+* Amaç:
+  * Brain katmanını gerçek demo uygulaması gibi gezilebilir bir UI omurgasına taşımak.
+  * Buyer ve seller tarafını eş önemde, aynı ürün zekasının iki yüzü gibi göstermek.
+* Tasarım yönü:
+  * Tam Türkçe arayüz.
+  * Premium dark intelligence dashboard: deep zinc/charcoal zemin, tek emerald accent, hairline divider, refraction glass panel.
+  * Geist + Geist Mono font ailesi.
+  * Mor/neon AI görünümü, emoji, fake KPI ve generic landing-page dili kullanılmadı.
+* Eklenen route'lar:
+  * `/`: rol seçimi gateway.
+  * `/seller`: satıcı genel bakış.
+  * `/seller/actions`: seller growth actions liste görünümü.
+  * `/seller/products`: ürün radar listesi.
+  * `/buyer`: buyer smart cart çalışma alanı.
+  * `/buyer/products`: ürün keşfi omurga ekranı.
+  * `/buyer/cart`: sepet taslağı omurga ekranı.
+* Eklenen UI bileşenleri:
+  * `RoleGateway`: rol seçimi ve ilk giriş ekranı.
+  * `WorkspaceShell`: buyer/seller ortak navigasyon, role switch ve app shell.
+* Eklenen bağımlılıklar:
+  * `gsap`
+  * `@gsap/react`
+  * `@phosphor-icons/react`
+* Sınırlar:
+  * Bu milestone API route, gerçek form submit, LLM, LangChain veya auth içermez.
+  * Buyer komut input'u şimdilik pasif demo yüzeyidir; Milestone 6C'de API ile canlı çalışacak.
+  * Seller ekranları mevcut workflow çıktısını server component içinde okur; Milestone 6B'de API contract'a taşınacak.
 
 ### Güncelleme Kaydı
 

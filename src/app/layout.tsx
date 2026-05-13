@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "CommercePilot",
   description:
-    "Dual-sided commerce intelligence for buyer needs and seller growth actions.",
+    "Alıcı ihtiyaçları ve satıcı büyüme aksiyonları için çift taraflı ticaret zekası.",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full bg-zinc-950 font-sans text-zinc-100">{children}</body>
     </html>
   );
 }
