@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 4 seller workflow layer kuruldu.
+  * CommercePilot için Milestone 5 buyer smart cart workflow layer kuruldu.
 * Son değişiklik neydi?
-  * Açıklanabilir skorları Seller Growth Actions ve Product Health workflow çıktılarına çeviren `src/lib/workflows/` katmanı eklendi.
+  * Buyer prompt, buyer profili, manuel tercihler, bütçe ve ürün skorlarından akıllı sepet önerisi üreten `buildSmartCartWorkflow` eklendi.
 * Bir sonraki net adım ne?
-  * Milestone 5'te buyer smart cart workflow katmanını kurmak.
+  * Bir sonraki milestone'da bu workflow'ları UI/API yüzeyine bağlamadan önce ekran kapsamını netleştirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -95,6 +95,10 @@
 * 2026-05-13 — Karar: Milestone 4 yalnızca seller workflow layer olacak; buyer workflow Milestone 5'e ayrılacak. | Gerekçe: Satıcı büyüme aksiyonları ana demo değeridir ve buyer akışını ayrı kurmak scope kontrolü sağlar. | Etki: `generateSellerActionsWorkflow` ve `analyzeProductHealthWorkflow` eklendi; buyer smart cart bu milestone'a dahil edilmedi.
 * 2026-05-13 — Karar: Seller Growth Actions top 5 aksiyon dönecek ve ürün/aksiyon çeşitliliğini koruyacak. | Gerekçe: Demo sırasında az ama güçlü, farklı problem alanlarını gösteren bir aksiyon listesi daha anlaşılır. | Etki: Aksiyon seçimi öncelik skoruna göre yapılır; ilk seçim turunda aynı aksiyon tipi ve aynı ürün tekrarından kaçınılır.
 * 2026-05-13 — Karar: Workflow çıktıları LLM-ready context taşıyacak ama LLM çağırmayacak. | Gerekçe: Şu aşamada agentic/LLM entegrasyonu yok; ileride Gemini/OpenAI açıklama katmanı eklenirken UI contract değişmemeli. | Etki: Aksiyon ve ürün sağlık çıktılarında `llmReadyContext` alanı bulunur.
+* 2026-05-13 — Karar: Milestone 5 buyer workflow 5 ana senaryoyu destekleyecek. | Gerekçe: Hackathon demosunda farklı alıcı ihtiyaçlarını göstermek için ev ofis, kahve seti, hediye, spor kulaklık ve renk uyumlu masa seti yeterli kapsama sağlar. | Etki: `BuyerIntentType` beş özel intent ve `generic` fallback içerir.
+* 2026-05-13 — Karar: Buyer bütçesi hard cap değil, %5 toleranslı soft cap olacak. | Gerekçe: Kullanıcı bütçe belirttiğinde gerçek alışverişte küçük aşım kabul edilebilir ama açıkça gösterilmelidir. | Etki: Workflow `budget`, `softBudgetLimit`, `isOverRequestedBudget` ve bütçe uyarısı döner.
+* 2026-05-13 — Karar: Buyer personalization ilk versiyonda aktif olacak. | Gerekçe: Ürünün farklılaştırıcı noktası alıcının geçmiş şikayet ve tercihlerini karar desteğine katmasıdır. | Etki: Buyer sensitivities, preferred colors, previous complaint themes ve manuel preferences skorlamaya dahil edilir.
+* 2026-05-13 — Karar: Buyer workflow satıcı tarafına sinyal adayı üretecek. | Gerekçe: CommercePilot'un çift taraflı intelligence iddiası için alıcı ihtiyaçları seller growth action tarafını beslemelidir. | Etki: Çıktıda `sellerSignalCandidates` alanı eklendi.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -104,6 +108,7 @@
 * 2026-05-13 — Milestone: Milestone 2 data access layer kuruldu. | Sonuç: UI/API/workflow katmanlarının mock dataya kontrollü erişmesi için read/query helper'ları eklendi; lint, TypeScript ve build doğrulandı.
 * 2026-05-13 — Milestone: Milestone 3 açıklanabilir scoring layer kuruldu. | Sonuç: Ürün bazlı skorlar yalnızca sayı değil, drivers/evidence/summary/recommendedFocus içeren LLM-ready açıklanabilir karar sinyalleri olarak üretildi.
 * 2026-05-13 — Milestone: Milestone 4 seller workflow layer kuruldu. | Sonuç: Seller Growth Actions ve Product Health workflow'ları eklendi; lint, TypeScript, build ve runtime workflow doğrulaması geçti.
+* 2026-05-13 — Milestone: Milestone 5 buyer smart cart workflow layer kuruldu. | Sonuç: 5 buyer demo senaryosu, %5 bütçe toleransı, buyer personalization, alternatif/tamamlayıcı öneri ve seller signal adayları eklendi; lint, TypeScript, build ve runtime workflow doğrulaması geçti.
 
 ## 8) Yapılanlar
 
@@ -119,6 +124,7 @@
 * [x] Milestone 2 data access layer oluşturuldu.
 * [x] Milestone 3 deterministic scoring layer oluşturuldu.
 * [x] Milestone 4 seller workflow layer oluşturuldu.
+* [x] Milestone 5 buyer smart cart workflow layer oluşturuldu.
 
 ## 9) Yapılacaklar (Next)
 
@@ -129,15 +135,16 @@
 * [ ] Satıcı tarafına kârlılık/maliyet baskısı, iade/şikayet riski ve operasyonel dağınıklık problemlerini eklemeyi değerlendir.
 * [ ] Mock product/review/sales/inventory hikayelerini ürün ürün tasarla.
 * [ ] Satıcı tarafı oturduktan sonra buyer tarafı için aynı kapsam çalışmasını yap.
-* [ ] Buyer Smart Cart akışı için 3-4 demo senaryosu seç.
-* [ ] Alıcı tarafındaki ürün karar güveni sinyallerini mock data ile eşleştir.
+* [x] Buyer Smart Cart akışı için 5 demo senaryosu seç.
+* [x] Alıcı tarafındaki ürün karar güveni sinyallerini mock data ile eşleştir.
 * [ ] Alıcı tarafı için yapılacak/yapılmayacak listesini uygulama fazına çevirmeden önce son kez onayla.
 * [x] Milestone 1'de curated çekirdek veri seti mi, Kaggle destekli hibrit veri seti mi kullanılacağını son karara bağla.
 * [x] Buyer preference/persona alanlarının ilk veri modelinde pasif mi aktif mi tutulacağını netleştir.
 * [x] Milestone 2 data access helper'larını oluştur.
 * [x] Milestone 3 deterministic scoring layer tasarımını netleştir ve uygula.
 * [x] Milestone 4 workflow layer tasarımını netleştir ve uygula.
-* [ ] Milestone 5 buyer smart cart workflow layer tasarımını netleştir ve uygula.
+* [x] Milestone 5 buyer smart cart workflow layer tasarımını netleştir ve uygula.
+* [ ] Bir sonraki milestone için UI/API kapsamını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -529,6 +536,41 @@
 * Sınırlar:
   * Bu milestone buyer workflow, API route, UI, LLM veya LangChain içermez.
   * Tahminler deterministic scoring katmanından gelir; gerçek forecast modeli yoktur.
+
+## 21) Milestone 5 Buyer Smart Cart Workflow Notları
+
+* Amaç:
+  * Alıcı doğal dil komutunu deterministic şekilde ihtiyaç, bütçe, renk, kategori ve hassasiyet sinyallerine çevirmek.
+  * Mock katalogdan açıklamalı, bütçe farkındalığı olan ve kişiselleştirilmiş sepet önerisi üretmek.
+* Eklenen workflow:
+  * `buildSmartCartWorkflow`: prompt + buyerId + opsiyonel manuel tercihler alır; akıllı sepet çıktısı üretir.
+* Desteklenen ilk senaryolar:
+  * `home_office_setup`: ev ofis setup.
+  * `coffee_starter`: başlangıç kahve seti.
+  * `gift_finder`: hediye önerisi.
+  * `sports_audio`: spor/kablosuz kulaklık önerisi.
+  * `desk_style_set`: renk uyumlu masa takımı.
+  * `generic`: fallback.
+* Bütçe yaklaşımı:
+  * Kullanıcı bütçe verdiyse `budget` korunur ve `softBudgetLimit = budget * 1.05` olarak hesaplanır.
+  * Sepet bütçeyi aşarsa ama %5 tolerans içinde kalırsa uyarı döner.
+  * Hard cap yoktur; ancak mevcut seçim algoritması soft limit üstüne çıkmamaya çalışır.
+* Buyer personalization:
+  * Buyer sensitivities, preferred colors ve previous complaint themes skorlamaya dahil edilir.
+  * Manuel tercih desteği var: sensitivities, preferredColors, avoidReviewThemes, preferredUseCases ve maxDeliveryDays alanları kabul edilir.
+  * Geçmiş şikayet temaları ürün yorum temalarıyla çakışırsa alıcıya uyarı üretilir.
+* Çıktı yaklaşımı:
+  * `intent`, `selectedItems`, `warnings`, `alternatives`, `complementarySuggestions`, `buyerPersonalizationNotes`, `sellerSignalCandidates` ve `llmReadyContext` döner.
+  * `sellerSignalCandidates`, buyer talebini ileride seller tarafında bundle, renk talebi, kargo sürtünmesi veya review friction sinyaline çevirmek için hazırlandı.
+* Doğrulanan demo komutları:
+  * Aylin: "Kargo hızı yüksek olan 3000 TL altında ev ofis setup kur."
+  * Deniz: "1500 TL altında başlangıç kahve seti oluştur."
+  * Selin: "Annem için 1000 TL altında hediye öner."
+  * Emre: "Siyah ve gri renklerde masa takımı diz."
+  * Burak: "Spor için kulağı yormayan kablosuz kulaklık öner."
+* Sınırlar:
+  * Bu milestone UI, API route, LLM, Gemini/OpenAI veya LangChain içermez.
+  * Doğal dil parser keyword/rule-based çalışır; LLM geldiğinde aynı workflow contract üstüne açıklama veya intent extraction eklenebilir.
 
 ### Güncelleme Kaydı
 
