@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 3 açıklanabilir deterministic scoring layer kuruldu.
+  * CommercePilot için Milestone 4 seller workflow layer kuruldu.
 * Son değişiklik neydi?
-  * Stok kapsaması, listeleme güveni, yorum güveni, kargo güveni, iade güveni, kârlılık güveni, kampanya hazırlığı ve ürün sağlığı skorları eklendi.
+  * Açıklanabilir skorları Seller Growth Actions ve Product Health workflow çıktılarına çeviren `src/lib/workflows/` katmanı eklendi.
 * Bir sonraki net adım ne?
-  * Milestone 4 workflow layer ile bu skorları kullanarak Seller Growth Actions ve buyer smart cart hazırlık akışlarını oluşturmak.
+  * Milestone 5'te buyer smart cart workflow katmanını kurmak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -42,7 +42,8 @@
   * `src/data/mock/*`: curated mock commerce dataset.
   * `src/lib/data/*`: mock data access layer ve birleşik view helper'ları.
   * `src/lib/scoring/*`: açıklanabilir deterministic scoring layer.
-  * Planlanan sonraki yapı: lib/workflows, lib/agents, lib/gemini, app, components.
+  * `src/lib/workflows/*`: scoring çıktılarını use-case odaklı aksiyon ve insight çıktılarına çeviren workflow katmanı.
+  * Planlanan sonraki yapı: lib/agents, lib/gemini, app, components.
 
 ## 4) Konvansiyonlar ve Standartlar
 
@@ -91,6 +92,9 @@
 * 2026-05-13 — Karar: Seller Growth Actions ilk aşamada 5 öncelikli aksiyon gösterecek. | Gerekçe: Demo sırasında net, kısa ve güçlü görünmesi için. | Etki: Workflow çıktısı önceliklendirilmiş top 5 aksiyona odaklanacak.
 * 2026-05-13 — Karar: Buyer tarafında çoklu senaryo ve kişisel tercih hafızası ileride desteklenecek. | Gerekçe: Kullanıcı hız, renk, kargo, önceki yorum/şikayet gibi kişisel sinyallere göre öneri bekliyor. | Etki: Milestone 1 veri modelinde buyer preference/review history için genişleme alanı bırakılacak.
 * 2026-05-13 — Karar: Agentic işler için LangChain değerlendirilecek ancak Milestone 1'de agent implementasyonu yapılmayacak. | Gerekçe: Önce domain data/workflow temeli kurulmalı; LangChain daha sonra provider swap, structured output ve tool orchestration için anlamlı. | Etki: Agent katmanı sonraki milestone'larda `lib/workflows` üzerine oturacak.
+* 2026-05-13 — Karar: Milestone 4 yalnızca seller workflow layer olacak; buyer workflow Milestone 5'e ayrılacak. | Gerekçe: Satıcı büyüme aksiyonları ana demo değeridir ve buyer akışını ayrı kurmak scope kontrolü sağlar. | Etki: `generateSellerActionsWorkflow` ve `analyzeProductHealthWorkflow` eklendi; buyer smart cart bu milestone'a dahil edilmedi.
+* 2026-05-13 — Karar: Seller Growth Actions top 5 aksiyon dönecek ve ürün/aksiyon çeşitliliğini koruyacak. | Gerekçe: Demo sırasında az ama güçlü, farklı problem alanlarını gösteren bir aksiyon listesi daha anlaşılır. | Etki: Aksiyon seçimi öncelik skoruna göre yapılır; ilk seçim turunda aynı aksiyon tipi ve aynı ürün tekrarından kaçınılır.
+* 2026-05-13 — Karar: Workflow çıktıları LLM-ready context taşıyacak ama LLM çağırmayacak. | Gerekçe: Şu aşamada agentic/LLM entegrasyonu yok; ileride Gemini/OpenAI açıklama katmanı eklenirken UI contract değişmemeli. | Etki: Aksiyon ve ürün sağlık çıktılarında `llmReadyContext` alanı bulunur.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -99,6 +103,7 @@
 * 2026-05-13 — Milestone: Milestone 1 curated commerce dataset kuruldu. | Sonuç: Türkçe domain tipleri ve curated mock data eklendi; referans bütünlüğü, lint, TypeScript ve build doğrulandı.
 * 2026-05-13 — Milestone: Milestone 2 data access layer kuruldu. | Sonuç: UI/API/workflow katmanlarının mock dataya kontrollü erişmesi için read/query helper'ları eklendi; lint, TypeScript ve build doğrulandı.
 * 2026-05-13 — Milestone: Milestone 3 açıklanabilir scoring layer kuruldu. | Sonuç: Ürün bazlı skorlar yalnızca sayı değil, drivers/evidence/summary/recommendedFocus içeren LLM-ready açıklanabilir karar sinyalleri olarak üretildi.
+* 2026-05-13 — Milestone: Milestone 4 seller workflow layer kuruldu. | Sonuç: Seller Growth Actions ve Product Health workflow'ları eklendi; lint, TypeScript, build ve runtime workflow doğrulaması geçti.
 
 ## 8) Yapılanlar
 
@@ -113,13 +118,14 @@
 * [x] Mock data referans bütünlüğü doğrulandı.
 * [x] Milestone 2 data access layer oluşturuldu.
 * [x] Milestone 3 deterministic scoring layer oluşturuldu.
+* [x] Milestone 4 seller workflow layer oluşturuldu.
 
 ## 9) Yapılacaklar (Next)
 
-* [ ] Satıcı panelinde çözülecek ana problemleri kesinleştir.
+* [x] Satıcı panelinde çözülecek ana problemleri kesinleştir.
 * [x] Milestone 1 için domain model ve curated mock data kararlarını kullanıcıyla netleştir.
 * [ ] Her satıcı problemi için hangi veri sinyallerinin kullanılacağını netleştir.
-* [ ] Seller Growth Actions panelinde gösterilecek aksiyon türlerini belirle.
+* [x] Seller Growth Actions panelinde gösterilecek aksiyon türlerini belirle.
 * [ ] Satıcı tarafına kârlılık/maliyet baskısı, iade/şikayet riski ve operasyonel dağınıklık problemlerini eklemeyi değerlendir.
 * [ ] Mock product/review/sales/inventory hikayelerini ürün ürün tasarla.
 * [ ] Satıcı tarafı oturduktan sonra buyer tarafı için aynı kapsam çalışmasını yap.
@@ -130,7 +136,8 @@
 * [x] Buyer preference/persona alanlarının ilk veri modelinde pasif mi aktif mi tutulacağını netleştir.
 * [x] Milestone 2 data access helper'larını oluştur.
 * [x] Milestone 3 deterministic scoring layer tasarımını netleştir ve uygula.
-* [ ] Milestone 4 workflow layer tasarımını netleştir ve uygula.
+* [x] Milestone 4 workflow layer tasarımını netleştir ve uygula.
+* [ ] Milestone 5 buyer smart cart workflow layer tasarımını netleştir ve uygula.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -493,6 +500,35 @@
 * Sınırlar:
   * Bu milestone workflow, Seller Growth Actions üretimi, API route, UI, LLM veya LangChain içermez.
   * Tahmin modeli yok; 7 günlük talep son 30 gün satış hızından deterministik hesaplanır.
+
+## 20) Milestone 4 Seller Workflow Layer Notları
+
+* Amaç:
+  * Açıklanabilir scoring çıktılarını satıcının anlayacağı yapılacak işlere çevirmek.
+  * UI/API/agent katmanlarının ham skor detayına doğrudan bağlanmasını önlemek.
+* Eklenen workflow'lar:
+  * `generateSellerActionsWorkflow`: seller bazında ürünleri analiz eder ve önceliklendirilmiş 5 Seller Growth Action üretir.
+  * `analyzeProductHealthWorkflow`: tek ürün için skor kartı ve en zayıf 3 sağlık içgörüsünü üretir.
+* Seller action tipleri:
+  * `restock`: stok yenileme.
+  * `pause_promotion`: stok/kargo riski varken kampanya temposunu kontrol etme.
+  * `fix_listing`: başlık, açıklama, özellik ve görsel kalitesini iyileştirme.
+  * `review_attention`: negatif/aksiyon gerektiren yorumları ele alma.
+  * `reduce_return_risk`: iade riskini düşürme.
+  * `create_bundle`: ilişkili ürünlerle bundle/kampanya önerme.
+  * `promote_winner`: güçlü ürünü büyütme.
+  * `protect_margin`: kârlılık baskısını azaltma.
+* Çıktı yaklaşımı:
+  * Her aksiyon `priorityScore`, `reasoning`, `evidence`, `recommendedNextStep` ve `llmReadyContext` taşır.
+  * Metinler satıcıya gösterilebilir Türkçe içerik olacak şekilde hazırlandı.
+  * `llmReadyContext` şu an sadece structured context sağlar; OpenAI/Gemini/LangChain çağrısı yoktur.
+* Doğrulama:
+  * `seller-commercepilot` için 40 ürün analiz edildi.
+  * Top 5 aksiyon: stok yenile, bundle oluştur, güçlü ürünü öne çıkar, kârlılığı koru, yorumları acil incele.
+  * KeyPro ürün sağlık örneğinde en zayıf alanlar listeleme güveni, yorum güveni ve kârlılık baskısı olarak üretildi.
+* Sınırlar:
+  * Bu milestone buyer workflow, API route, UI, LLM veya LangChain içermez.
+  * Tahminler deterministic scoring katmanından gelir; gerçek forecast modeli yoktur.
 
 ### Güncelleme Kaydı
 
