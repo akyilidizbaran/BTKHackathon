@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "tsc --noEmit",
+    "validate:workflows": "node scripts/validate-workflows.js",
+    "check": "npm run lint && npm run typecheck && npm run validate:workflows"
   },
   "dependencies": {
     "next": "16.2.6",

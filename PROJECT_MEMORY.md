@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 5.5C Seller Workflow Output Hardening tamamlandı.
+  * CommercePilot için Milestone 5.5D Validation/Test Hardening tamamlandı.
 * Son değişiklik neydi?
-  * Seller Growth Action çıktıları kategori, aciliyet, etki, efor, zaman ufku, metrik highlight ve günlük checklist alanlarıyla UI-ready hale getirildi.
+  * Brain katmanı için mock data, scoring, seller workflow ve buyer workflow doğrulamalarını çalışan `validate:workflows` script'i eklendi.
 * Bir sonraki net adım ne?
-  * Milestone 5.5D ile workflow runtime validation/test hardening yapıp brain katmanını UI/API öncesi güvenceye almak.
+  * Brain hardening tamamlandığı için sıradaki net adım UI/API kapsamını netleştirip uygulama ekranlarına geçmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -67,6 +67,9 @@
   * `npm install`
   * `npm run dev`
   * `npm run lint`
+  * `npm run typecheck`
+  * `npm run validate:workflows`
+  * `npm run check`
   * `npm run build`
 * Ortam değişkenleri (sadece İSİMLER):
   * LLM_PROVIDER
@@ -108,6 +111,8 @@
 * 2026-05-13 — Karar: Renk belirtilen buyer komutlarında renk uyumu daha sıkı uygulanacak. | Gerekçe: "Siyah ve gri masa takımı" komutunda pastel/uyumsuz ürün seçilmemeli. | Etki: Explicit color request varsa ürünün renk eşleşmesi aranır; renk eşleşmesi fuzzy hale getirildi.
 * 2026-05-14 — Karar: Seller Growth Action çıktıları UI-ready metadata taşıyacak. | Gerekçe: UI'ın action type/string parse etmeden kategori, aciliyet, etki, efor, metrik ve checklist gösterebilmesi gerekir. | Etki: `SellerGrowthAction` contract'ına category/urgency/impact/effort/timeHorizon/metricHighlights/todayChecklist/expectedOutcome alanları eklendi.
 * 2026-05-14 — Karar: Büyüme fırsatları kritik kriz gibi etiketlenmeyecek. | Gerekçe: Bundle ve winner promotion aksiyonları değerli olabilir ama stok açığı, kârlılık baskısı veya acil yorum riskiyle aynı aciliyet dilinde görünmemeli. | Etki: `create_bundle` ve `promote_winner` aciliyeti en fazla yüksek seviyede tutulur; zaman ufku çoğunlukla "Bu hafta" olur.
+* 2026-05-14 — Karar: Brain katmanı için paket kurmadan runtime validation script'i eklenecek. | Gerekçe: UI/API öncesi mock data referansları, scoring contract'ı ve workflow çıktıları düzenli kontrol edilmeli. | Etki: `scripts/validate-workflows.js`, `npm run validate:workflows`, `npm run typecheck` ve `npm run check` eklendi.
+* 2026-05-14 — Karar: Validation script'i demo hikayelerini de koruyacak. | Gerekçe: Sadece tip kontrolü yeterli değil; top 5 seller action, buyer intent/rol seçimi ve required demo flags bozulursa demo zayıflar. | Etki: Script seller top 5 aksiyon tiplerini, buyer prompt senaryolarını, data referanslarını ve score/output contract'larını doğrular.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -121,6 +126,7 @@
 * 2026-05-13 — Milestone: Milestone 5.5A Buyer Parser + Intent Hardening tamamlandı. | Sonuç: `3.000 TL`, `1.500 TL`, `₺3000`, `3 bin TL` bütçe formatları doğrulandı; `meeting_setup` ve `maxDeliveryDays` workflow'a bağlandı; lint, TypeScript, build ve runtime prompt doğrulaması geçti.
 * 2026-05-13 — Milestone: Milestone 5.5B Buyer Cart Planning Hardening tamamlandı. | Sonuç: Buyer sepetleri ev-ofis, kahve, hediye, masa stili, spor ve toplantı senaryolarında slot/rol bazlı planlanır hale getirildi; lint, TypeScript, build ve runtime prompt doğrulaması geçti.
 * 2026-05-14 — Milestone: Milestone 5.5C Seller Workflow Output Hardening tamamlandı. | Sonuç: Seller Growth Action çıktıları kategori, aciliyet, etki, efor, zaman ufku, metrik highlight, expected outcome ve checklist alanlarıyla UI/LLM-ready hale getirildi; TypeScript ve runtime workflow doğrulaması geçti.
+* 2026-05-14 — Milestone: Milestone 5.5D Validation/Test Hardening tamamlandı. | Sonuç: Mock data integrity, scoring layer, seller workflow ve buyer workflow runtime validation script'i eklendi; lint, typecheck, validation ve production build doğrulaması geçti.
 
 ## 8) Yapılanlar
 
@@ -140,6 +146,7 @@
 * [x] Milestone 5.5A buyer parser ve intent hardening tamamlandı.
 * [x] Milestone 5.5B buyer cart planning hardening tamamlandı.
 * [x] Milestone 5.5C seller workflow output hardening tamamlandı.
+* [x] Milestone 5.5D validation/test hardening tamamlandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -162,7 +169,7 @@
 * [x] Milestone 5.5A buyer parser, meeting intent ve maxDeliveryDays hardening uygula.
 * [x] Milestone 5.5B buyer cart planning hardening uygula.
 * [x] Milestone 5.5C seller workflow output hardening uygula.
-* [ ] Milestone 5.5D validation/test hardening uygula.
+* [x] Milestone 5.5D validation/test hardening uygula.
 * [ ] Brain hardening bittikten sonra UI/API kapsamını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
@@ -659,6 +666,25 @@
 * Sınırlar:
   * Bu milestone UI, API route, LLM, Gemini/OpenAI veya LangChain içermez.
   * Checklist ve expected outcome deterministik metinlerdir; ileride LLM bu structured context üzerinden daha doğal açıklama üretebilir.
+
+### 5.5D Validation/Test Hardening
+
+* Amaç:
+  * UI/API'ye geçmeden önce brain katmanındaki veri, scoring ve workflow contract kırılmalarını tek komutla görünür yapmak.
+* Eklenen komutlar:
+  * `npm run typecheck`: TypeScript no-emit kontrolü.
+  * `npm run validate:workflows`: runtime workflow ve mock data validation.
+  * `npm run check`: lint + typecheck + workflow validation.
+* Validation kapsamı:
+  * Mock data referans bütünlüğü: seller/product/buyer/review/order/cart/inventory/relation id bağlantıları.
+  * Demo story flags: low stock, slow mover, negative review, bundle, strong product, listing issue, margin pressure ve return risk hikayelerinin veri içinde kalması.
+  * Scoring layer: tüm ürünlerde 0-100 score, label, summary, drivers, evidence ve recommendedFocus contract'ı.
+  * Product health workflow: KeyPro örneğinde top 3 insight ve LLM-ready context.
+  * Seller workflow: `seller-commercepilot` top 5 aksiyon, priority sırası, UI-ready alanlar, metrik highlight, checklist, LLM facts ve büyüme aksiyonlarının kritik kriz gibi etiketlenmemesi.
+  * Buyer workflow: 7 gerçekçi Türkçe prompt için intent, budget parser, delivery parser, required cart roles, color match, selected item evidence ve LLM-ready context.
+* Sınırlar:
+  * Yeni test framework veya paket kurulmadı.
+  * Script Node üzerinden TypeScript dosyalarını runtime transpile ederek çalışır; gerçek unit test framework'ü ileride ihtiyaç olursa eklenebilir.
 
 ### Güncelleme Kaydı
 
