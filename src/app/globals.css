@@ -1,8 +1,16 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f6f7fb;
+  --foreground: #111827;
+  --commerce-accent: #f97316;
+  --commerce-accent-strong: #ea580c;
+  --commerce-accent-soft: #fff7ed;
+  --commerce-ai: #059669;
+  --commerce-border: #e5e7eb;
+  --commerce-panel: #ffffff;
+  --commerce-muted: #f1f5f9;
+  --commerce-text-muted: #64748b;
 }
 
 @theme inline {
@@ -12,13 +20,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -26,17 +27,17 @@ body {
 }
 
 ::selection {
-  background: rgba(110, 231, 183, 0.28);
-  color: #f4f4f5;
+  background: rgba(249, 115, 22, 0.22);
+  color: #111827;
 }
 
 .commerce-noise {
   background-image:
-    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px),
-    radial-gradient(circle at 70% 60%, rgba(255, 255, 255, 0.025) 0 1px, transparent 1px);
+    radial-gradient(circle at 30% 30%, rgba(15, 23, 42, 0.035) 0 1px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(249, 115, 22, 0.035) 0 1px, transparent 1px);
   background-size: 18px 18px, 26px 26px;
-  mix-blend-mode: screen;
-  opacity: 0.18;
+  mix-blend-mode: multiply;
+  opacity: 0.14;
 }
 
 @keyframes commerce-shimmer {
@@ -55,8 +56,111 @@ body {
 
 .commerce-skeleton::after {
   animation: commerce-shimmer 1.8s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, rgba(15, 23, 42, 0.07), transparent);
   content: "";
   inset: 0;
   position: absolute;
+}
+
+.commerce-legacy-light {
+  color: #111827;
+}
+
+.commerce-legacy-light [class~="bg-white/10"],
+.commerce-legacy-light [class~="bg-white/[0.035]"],
+.commerce-legacy-light [class~="bg-white/[0.04]"],
+.commerce-legacy-light [class~="bg-white/[0.045]"],
+.commerce-legacy-light [class~="bg-white/[0.055]"],
+.commerce-legacy-light [class~="bg-white/[0.07]"],
+.commerce-legacy-light [class~="bg-zinc-950/35"],
+.commerce-legacy-light [class~="bg-zinc-950/40"],
+.commerce-legacy-light [class~="bg-zinc-950/45"],
+.commerce-legacy-light [class~="bg-zinc-950/50"],
+.commerce-legacy-light [class~="bg-zinc-950/55"],
+.commerce-legacy-light [class~="bg-zinc-950/70"] {
+  background-color: var(--commerce-panel) !important;
+}
+
+.commerce-legacy-light [class~="border-white/10"],
+.commerce-legacy-light [class~="border-white/[0.10]"],
+.commerce-legacy-light [class~="border-emerald-200/15"] {
+  border-color: var(--commerce-border) !important;
+}
+
+.commerce-legacy-light [class~="divide-white/10"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--commerce-border) !important;
+}
+
+.commerce-legacy-light [class~="text-white"],
+.commerce-legacy-light [class~="text-zinc-100"],
+.commerce-legacy-light [class~="text-zinc-200"],
+.commerce-legacy-light [class~="text-zinc-300"] {
+  color: #111827 !important;
+}
+
+.commerce-legacy-light [class~="text-zinc-400"],
+.commerce-legacy-light [class~="text-zinc-500"],
+.commerce-legacy-light [class~="text-zinc-600"] {
+  color: var(--commerce-text-muted) !important;
+}
+
+.commerce-legacy-light [class~="text-emerald-100"],
+.commerce-legacy-light [class~="text-emerald-100/85"],
+.commerce-legacy-light [class~="text-emerald-200"],
+.commerce-legacy-light [class~="text-emerald-200/70"],
+.commerce-legacy-light [class~="text-emerald-200/80"],
+.commerce-legacy-light [class~="text-emerald-200/85"],
+.commerce-legacy-light [class~="text-emerald-200/90"] {
+  color: var(--commerce-accent-strong) !important;
+}
+
+.commerce-legacy-light [class~="bg-emerald-300"],
+.commerce-legacy-light [class~="bg-emerald-300/80"] {
+  background-color: var(--commerce-accent) !important;
+}
+
+.commerce-legacy-light [class~="bg-emerald-300"][class~="text-zinc-950"],
+.commerce-legacy-light [class~="bg-emerald-300/80"][class~="text-zinc-950"] {
+  color: #ffffff !important;
+}
+
+.commerce-legacy-light [class~="bg-emerald-300/10"],
+.commerce-legacy-light [class~="bg-emerald-300/[0.035]"],
+.commerce-legacy-light [class~="bg-emerald-300/[0.04]"] {
+  background-color: var(--commerce-accent-soft) !important;
+}
+
+.commerce-legacy-light [class~="border-emerald-200/20"],
+.commerce-legacy-light [class~="border-emerald-200/30"],
+.commerce-legacy-light [class~="border-emerald-200/40"],
+.commerce-legacy-light [class~="border-emerald-300/30"] {
+  border-color: rgba(249, 115, 22, 0.34) !important;
+}
+
+.commerce-legacy-light [class~="hover:bg-white/[0.025]"]:hover,
+.commerce-legacy-light [class~="hover:bg-white/[0.03]"]:hover,
+.commerce-legacy-light [class~="hover:bg-white/[0.055]"]:hover,
+.commerce-legacy-light [class~="hover:bg-white/[0.06]"]:hover,
+.commerce-legacy-light [class~="hover:bg-white/10"]:hover {
+  background-color: #f8fafc !important;
+}
+
+.commerce-legacy-light [class~="hover:bg-emerald-200"]:hover {
+  background-color: var(--commerce-accent-strong) !important;
+}
+
+.commerce-legacy-light [class~="hover:text-white"]:hover,
+.commerce-legacy-light [class~="hover:text-emerald-100"]:hover,
+.commerce-legacy-light [class~="hover:text-emerald-200"]:hover {
+  color: var(--commerce-accent-strong) !important;
+}
+
+.commerce-legacy-light [class~="focus:bg-zinc-950/70"]:focus {
+  background-color: var(--commerce-panel) !important;
+}
+
+.commerce-legacy-light [class~="shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]"],
+.commerce-legacy-light [class~="shadow-[inset_0_1px_0_rgba(255,255,255,0.10)]"],
+.commerce-legacy-light [class~="shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"] {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 18px 48px -42px rgba(15, 23, 42, 0.42) !important;
 }

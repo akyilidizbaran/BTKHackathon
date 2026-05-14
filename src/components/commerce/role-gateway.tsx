@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRef } from "react";
-import { ArrowRight, ChartLineUp, ShoppingBagOpen } from "@phosphor-icons/react";
+import { ArrowRight, ChartLineUp, MagnifyingGlass, ShoppingBagOpen, Storefront } from "@phosphor-icons/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -11,23 +11,23 @@ gsap.registerPlugin(useGSAP);
 const roles = [
   {
     title: "Satıcı Alanı",
-    eyebrow: "Büyüme aksiyonları",
+    eyebrow: "Satıcı merkezi",
     description:
-      "Stok, yorum, listeleme, satış ve kârlılık sinyallerini tek çalışma alanında oku.",
+      "Ürünlerini, satılmayan stoklarını ve agent destekli listeleme aksiyonlarını yönet.",
     href: "/seller",
     cta: "Satıcı olarak devam et",
     icon: ChartLineUp,
-    details: ["Bugünkü 5 aksiyon", "Ürün sağlık radarı", "Kârlılık ve iade sinyali"],
+    details: ["Ürün yönetimi", "Satış ve stok", "Agent aksiyonları"],
   },
   {
     title: "Alıcı Alanı",
-    eyebrow: "Akıllı alışveriş",
+    eyebrow: "Marketplace",
     description:
-      "İhtiyaç, bütçe, renk, teslimat ve kişisel tercihleri birlikte değerlendiren sepet önerileri gör.",
+      "Kategoriler, ürünler, sepet ve sağ altta yaşayacak agent alışveriş yardımcısı.",
     href: "/buyer",
     cta: "Alıcı olarak devam et",
     icon: ShoppingBagOpen,
-    details: ["Doğal dil komutu", "Rol bazlı sepet", "Satın almadan önce uyarılar"],
+    details: ["Ürün keşfi", "Sepet önerisi", "Kişisel uyarılar"],
   },
 ];
 
@@ -52,31 +52,31 @@ export function RoleGateway() {
   return (
     <main
       ref={rootRef}
-      className="relative min-h-[100dvh] overflow-x-hidden bg-[radial-gradient(circle_at_18%_18%,rgba(16,185,129,0.12),transparent_28%),linear-gradient(135deg,#09090b_0%,#121214_46%,#18181b_100%)] px-4 py-5 text-zinc-100 sm:px-6 lg:px-8"
+      className="relative min-h-[100dvh] overflow-x-hidden bg-[#f6f7fb] px-4 py-5 text-slate-950 sm:px-6 lg:px-8"
     >
-      <div className="pointer-events-none fixed inset-0 opacity-[0.18] [background-image:linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.06)_1px,transparent_1px)] [background-size:72px_72px]" />
+      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_14%_12%,rgba(249,115,22,0.09),transparent_30%),radial-gradient(circle_at_84%_16%,rgba(5,150,105,0.07),transparent_28%)]" />
       <div className="pointer-events-none fixed inset-0 commerce-noise" />
 
       <div className="relative mx-auto flex min-h-[calc(100dvh-2.5rem)] max-w-[1400px] flex-col">
         <nav
           data-gateway-reveal
-          className="flex items-center justify-between border-b border-white/10 pb-5"
+          className="flex items-center justify-between border-b border-slate-200 pb-5"
           aria-label="Ana navigasyon"
         >
           <Link href="/" className="group inline-flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full border border-emerald-300/30 bg-emerald-300/10 text-sm font-semibold text-emerald-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]">
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-[0_12px_30px_-18px_rgba(249,115,22,0.8)]">
               CP
             </span>
             <span>
-              <span className="block text-sm font-medium tracking-tight text-white">CommercePilot</span>
-              <span className="block text-xs text-zinc-500">Çift taraflı ticaret zekası</span>
+              <span className="block text-sm font-semibold tracking-tight text-slate-950">CommercePilot</span>
+              <span className="block text-xs text-slate-500">Agent destekli e-ticaret</span>
             </span>
           </Link>
-          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] p-1 text-sm text-zinc-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:flex">
-            <Link className="rounded-full px-4 py-2 transition hover:bg-white/10 active:translate-y-px" href="/seller">
+          <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white p-1 text-sm text-slate-600 shadow-sm sm:flex">
+            <Link className="rounded-full px-4 py-2 transition hover:bg-orange-50 hover:text-orange-700 active:translate-y-px" href="/seller">
               Satıcı
             </Link>
-            <Link className="rounded-full px-4 py-2 transition hover:bg-white/10 active:translate-y-px" href="/buyer">
+            <Link className="rounded-full px-4 py-2 transition hover:bg-orange-50 hover:text-orange-700 active:translate-y-px" href="/buyer">
               Alıcı
             </Link>
           </div>
@@ -84,16 +84,21 @@ export function RoleGateway() {
 
         <section className="grid flex-1 items-center gap-10 py-14 lg:grid-cols-[0.86fr_1.14fr] lg:py-10">
           <div data-gateway-reveal className="max-w-4xl">
-            <p className="mb-6 max-w-xl text-sm leading-6 text-emerald-200/80">
-              Aynı veri omurgası, iki farklı karar yüzeyi.
-            </p>
-            <h1 className="max-w-4xl text-[clamp(2.75rem,5vw,5.5rem)] font-semibold leading-[0.95] tracking-[-0.065em] text-white">
-              Alışveriş zekasını iki taraftan yönet.
+            <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700">
+              <Storefront size={18} weight="duotone" />
+              Light marketplace pivotu başladı
+            </div>
+            <h1 className="max-w-5xl text-[clamp(2.65rem,5vw,5.25rem)] font-semibold leading-[0.95] tracking-[-0.055em] text-slate-950">
+              CommercePilot artık tanıdık bir alışveriş yüzeyi.
             </h1>
-            <p className="mt-7 max-w-[58ch] text-base leading-8 text-zinc-400 sm:text-lg">
-              CommercePilot, alıcı ihtiyaçlarını ve satıcı sinyallerini aynı sistemde okur.
-              Bu ilk arayüzde rolünü seçip ilgili çalışma alanına geçebilirsin.
+            <p className="mt-7 max-w-[62ch] text-base leading-8 text-slate-600 sm:text-lg">
+              Alıcı mağazada gezer, satıcı panelini yönetir. Sağ altta yaşayacak agent pet ise sepet
+              kurma, ürün uyarısı ve listeleme aksiyonlarını bağlam içinde taşır.
             </p>
+            <div className="mt-8 flex max-w-xl items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+              <MagnifyingGlass size={20} weight="bold" className="text-slate-400" />
+              <span className="text-sm text-slate-500">Ürün, kategori veya agent komutu ara</span>
+            </div>
           </div>
 
           <div data-gateway-reveal className="grid gap-4 md:grid-cols-2 lg:gap-5">
@@ -104,33 +109,33 @@ export function RoleGateway() {
                 <Link
                   key={role.title}
                   href={role.href}
-                  className="group relative min-h-[430px] overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.045] p-6 shadow-[inset_0_1px_0_rgba(255,255,255,0.10),0_30px_80px_-48px_rgba(16,185,129,0.55)] backdrop-blur-xl transition duration-500 hover:-translate-y-1 hover:border-emerald-200/30 hover:bg-white/[0.07] active:translate-y-0 md:p-7"
+                  className="group relative min-h-[430px] overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-[0_28px_80px_-60px_rgba(15,23,42,0.85)] transition duration-500 hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_34px_88px_-58px_rgba(249,115,22,0.65)] active:translate-y-0 md:p-7"
                   style={{ animationDelay: `${index * 120}ms` }}
                 >
-                  <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-emerald-200/50 to-transparent" />
+                  <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-orange-300/70 to-transparent" />
                   <div className="flex items-start justify-between gap-5">
                     <div>
-                      <p className="text-sm text-emerald-200/80">{role.eyebrow}</p>
-                      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">
+                      <p className="text-sm font-medium text-orange-700">{role.eyebrow}</p>
+                      <h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-slate-950">
                         {role.title}
                       </h2>
                     </div>
-                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-white/10 bg-zinc-950/50 text-emerald-100">
+                    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-orange-100 bg-orange-50 text-orange-700">
                       <Icon size={24} weight="duotone" />
                     </span>
                   </div>
-                  <p className="mt-6 text-sm leading-7 text-zinc-400">{role.description}</p>
+                  <p className="mt-6 text-sm leading-7 text-slate-600">{role.description}</p>
 
-                  <div className="mt-10 divide-y divide-white/10 border-y border-white/10">
+                  <div className="mt-10 divide-y divide-slate-200 border-y border-slate-200">
                     {role.details.map((detail) => (
-                      <div key={detail} className="flex items-center justify-between py-4 text-sm text-zinc-300">
+                      <div key={detail} className="flex items-center justify-between py-4 text-sm text-slate-600">
                         <span>{detail}</span>
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-300/80" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-orange-500" />
                       </div>
                     ))}
                   </div>
 
-                  <div className="absolute inset-x-6 bottom-6 flex items-center justify-between rounded-full border border-white/10 bg-zinc-950/55 px-4 py-3 text-sm font-medium text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition group-hover:border-emerald-200/30 group-hover:bg-emerald-300 group-hover:text-zinc-950">
+                  <div className="absolute inset-x-6 bottom-6 flex items-center justify-between rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_42px_-28px_rgba(15,23,42,0.9)] transition group-hover:bg-orange-500">
                     <span>{role.cta}</span>
                     <ArrowRight size={18} weight="bold" />
                   </div>
