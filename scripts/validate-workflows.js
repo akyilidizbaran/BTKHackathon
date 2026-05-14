@@ -37,6 +37,7 @@ const {
   getSellerProductHealthApiData,
   getSellerProductsApiData,
 } = require("../src/lib/api/seller");
+const { getSellerActionExplanationApiData } = require("../src/lib/api/seller-action-explanations");
 const {
   buyerSmartCartExamples,
   getBuyerSmartCartApiData,
@@ -57,32 +58,45 @@ const requiredDemoFlags = [
   "return_risk",
 ];
 
-validateMockDataIntegrity();
-validateScoringLayer();
-validateSellerWorkflows();
-validateSellerApiContracts();
-validateBuyerWorkflows();
-validateBuyerApiContracts();
-
-if (failures.length > 0) {
-  console.error("Workflow validation failed:");
-  failures.forEach((failure) => console.error(`- ${failure}`));
+main().catch((error) => {
+  console.error(error);
   process.exit(1);
-}
+});
 
-console.log(
-  [
-    "Workflow validation passed.",
-    `Products: ${products.length}`,
-    `Reviews: ${reviews.length}`,
-    `Seller actions: ${generateSellerActionsWorkflow("seller-commercepilot")?.actions.length ?? 0}`,
-    `Seller action detail endpoint: ${getSellerActionDetailApiData("restock-ergoflex-calisma-sandalyesi")?.contract.endpoint ?? "missing"}`,
-    `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
-    `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
-    `Buyer API examples: ${buyerSmartCartExamples.length}`,
-    "Buyer prompts: 7",
-  ].join("\n"),
-);
+async function main() {
+  validateMockDataIntegrity();
+  validateScoringLayer();
+  validateSellerWorkflows();
+  validateSellerApiContracts();
+  await validateSellerActionExplanationApiContracts();
+  validateBuyerWorkflows();
+  validateBuyerApiContracts();
+
+  if (failures.length > 0) {
+    console.error("Workflow validation failed:");
+    failures.forEach((failure) => console.error(`- ${failure}`));
+    process.exit(1);
+  }
+
+  const restockExplanation = await getSellerActionExplanationApiData("restock-ergoflex-calisma-sandalyesi", {
+    forceFallback: true,
+  });
+
+  console.log(
+    [
+      "Workflow validation passed.",
+      `Products: ${products.length}`,
+      `Reviews: ${reviews.length}`,
+      `Seller actions: ${generateSellerActionsWorkflow("seller-commercepilot")?.actions.length ?? 0}`,
+      `Seller action detail endpoint: ${getSellerActionDetailApiData("restock-ergoflex-calisma-sandalyesi")?.contract.endpoint ?? "missing"}`,
+      `Seller action explanation endpoint: ${restockExplanation?.contract.endpoint ?? "missing"}`,
+      `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
+      `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
+      `Buyer API examples: ${buyerSmartCartExamples.length}`,
+      "Buyer prompts: 7",
+    ].join("\n"),
+  );
+}
 
 function registerTypeScriptRuntime() {
   const originalResolveFilename = Module._resolveFilename;
@@ -366,6 +380,45 @@ function validateSellerApiContracts() {
     assert(keyProHealth.topInsights.length === 3, "KeyPro health API top 3 insight dönmeli");
     assert(keyProHealth.evidenceSnapshot.length >= 4, "KeyPro health evidence snapshot eksik");
   }
+}
+
+async function validateSellerActionExplanationApiContracts() {
+  const restockExplanation = await getSellerActionExplanationApiData("restock-ergoflex-calisma-sandalyesi", {
+    forceFallback: true,
+  });
+  const missingExplanation = await getSellerActionExplanationApiData("missing-action", {
+    forceFallback: true,
+  });
+
+  assert(Boolean(restockExplanation), "seller action explanation API contract üretilemedi");
+  assert(!missingExplanation, "olmayan seller action explanation undefined dönmeli");
+
+  if (!restockExplanation) {
+    return;
+  }
+
+  assert(restockExplanation.contract.envelope === "success/data/error", "action explanation envelope contract yanlış");
+  assert(
+    restockExplanation.contract.endpoint === "/api/seller/actions/restock-ergoflex-calisma-sandalyesi/explanation",
+    "action explanation endpoint contract yanlış",
+  );
+  assert(restockExplanation.contract.method === "GET", "action explanation method contract yanlış");
+  assert(restockExplanation.contract.modelCall === "runtime-only", "action explanation build-time çağrı yapmamalı");
+  assert(restockExplanation.action.id === "restock-ergoflex-calisma-sandalyesi", "action explanation action id yanlış");
+  assert(restockExplanation.explanation.status === "fallback", "forced action explanation fallback dönmeli");
+  assert(restockExplanation.explanation.provider === "deterministic", "forced action explanation provider deterministic olmalı");
+  assert(restockExplanation.explanation.model === "gpt-4o-mini", "action explanation default model gpt-4o-mini olmalı");
+  assert(restockExplanation.explanation.headline.length > 0, "action explanation headline eksik");
+  assert(restockExplanation.explanation.summary.length > 0, "action explanation summary eksik");
+  assert(restockExplanation.explanation.evidenceBullets.length >= 3, "action explanation evidence zayıf");
+  assert(restockExplanation.explanation.nextBestAction.length > 0, "action explanation nextBestAction eksik");
+  assert(restockExplanation.explanation.sellerMessageDraft.length > 0, "action explanation sellerMessageDraft eksik");
+  assert(
+    restockExplanation.explanation.fallbackReason?.includes("FORCED_FALLBACK"),
+    "forced action explanation fallback reason eksik",
+  );
+  assert(restockExplanation.source.actionEndpoint === "/api/seller/actions/restock-ergoflex-calisma-sandalyesi", "action explanation source endpoint yanlış");
+  assert(restockExplanation.source.evidenceCount >= 5, "action explanation source evidence count eksik");
 }
 
 function validateBuyerWorkflows() {

@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 6E Seller Action Detail + Execution Preview tamamlandı; seller aksiyonları artık detay sayfasında uygulanabilir plana açılıyor.
+  * CommercePilot için Milestone 7 OpenAI açıklama katmanı tamamlandı; seller aksiyon detayında runtime model açıklaması gösteriliyor.
 * Son değişiklik neydi?
-  * `/api/seller/actions/[id]` route'u, seller action detail API contract builder'ı ve `/seller/actions/[id]` execution preview UI'ı eklendi.
+  * `GET /api/seller/actions/[id]/explanation`, provider wrapper, `gpt-4o-mini` runtime çağrısı, deterministic fallback ve UI paneli eklendi.
 * Bir sonraki net adım ne?
-  * 6E review sonrası Milestone 6F için LLM/Gemini açıklama katmanı veya buyer product/cart preview derinleştirmesinin kapsamını netleştirmek.
+  * Milestone 7 review sonrası Gemini provider swap veya buyer product/cart preview derinleştirmesini netleştirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -44,6 +44,8 @@
   * `src/lib/scoring/*`: açıklanabilir deterministic scoring layer.
   * `src/lib/workflows/*`: scoring çıktılarını use-case odaklı aksiyon ve insight çıktılarına çeviren workflow katmanı.
   * `src/lib/api/*`: UI ve route handler'ların ortak kullandığı API contract/data builder katmanı.
+  * `src/lib/llm/*`: provider kontrollü OpenAI Responses API text generation wrapper'ı ve deterministic fallback davranışı.
+  * `src/lib/api/seller-action-explanations.ts`: seller action detail context'ini runtime LLM açıklama contract'ına çevirir.
   * Planlanan sonraki yapı: lib/agents, lib/gemini, app, components.
 
 ## 4) Konvansiyonlar ve Standartlar
@@ -75,6 +77,7 @@
   * `npm run build`
 * Ortam değişkenleri (sadece İSİMLER):
   * LLM_PROVIDER
+  * OPENAI_MODEL
   * OPENAI_API_KEY
   * GEMINI_API_KEY
 * Lokal geliştirme notları:
@@ -125,6 +128,7 @@
 * 2026-05-14 — Karar: Buyer UI canlı API çağıracak, ilk render ise aynı typed builder ile hydrate edilecek. | Gerekçe: İlk ekran hızlı ve build-safe kalırken kullanıcı submit/preset aksiyonları gerçek route'a gitmeli. | Etki: `/buyer` server component initial contract üretir, `BuyerSmartCartWorkspace` client component POST `/api/buyer/smart-cart` çağırır.
 * 2026-05-14 — Karar: Buyer-to-seller loop yeni seller-facing GET contract olarak kurulacak: `/api/seller/buyer-signals`. | Gerekçe: Buyer workflow zaten `sellerSignalCandidates` üretiyor; bunu seller dashboard'a deterministic, route-testable ve LLM-ready contract olarak taşımak çift taraflı commerce intelligence iddiasını güçlendirir. | Etki: `src/lib/api/seller.ts` buyer smart cart örneklerinden sinyal aggregate eder; `/seller` ekranı alıcı sinyal özetini ve ilgili ürün/action hint'lerini gösterir. | Alternatifler: Buyer UI içinde ayrı loop göstermek veya seller actions workflow'u doğrudan mutasyona uğratmak.
 * 2026-05-14 — Karar: Seller action detayları stable action id ile açılacak: `/seller/actions/[id]` ve `GET /api/seller/actions/[id]`. | Gerekçe: Demo akışında satıcı öneriye tıkladığında kanıt, yapılacak iş ve LLM-ready context'i tek ekranda görmeli. | Etki: `src/lib/api/seller.ts` action detail contract ve deterministic execution preview üretir; seller overview/actions/product detail linkleri aksiyon detayına gider. | Alternatifler: Tek sayfalık action listesinde accordion veya gerçek mutation akışı.
+* 2026-05-14 — Karar: Milestone 7'de LLM açıklama katmanı OpenAI `gpt-4o-mini` ile çalışacak, Gemini final provider swap olarak sonraya bırakılacak. | Gerekçe: Kullanıcının mevcut API key'i OpenAI için; ürün mimarisi provider değişimine hazır kalmalı. | Etki: `LLM_PROVIDER=openai`, `OPENAI_MODEL=gpt-4o-mini`, direct Responses API `fetch`, runtime-only endpoint ve deterministic fallback eklendi. | Alternatifler: Gemini'yi hemen bağlamak veya LLM'i tamamen mock bırakmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -144,6 +148,7 @@
 * 2026-05-14 — Milestone: Milestone 6C Buyer Smart Cart API + Live Interaction tamamlandı. | Sonuç: `/api/buyer/smart-cart` route'u, buyer API contract builder'ı, canlı `/buyer` komut formu, preset prompt çalıştırma, loading/error/empty state ve buyer API validation kontrolleri eklendi.
 * 2026-05-14 — Milestone: Milestone 6D Buyer-to-Seller Signal Loop tamamlandı. | Sonuç: `/api/seller/buyer-signals` route'u, buyer smart cart örneklerinden seller sinyal aggregation contract'ı, seller dashboard buyer loop bölümü, validation kontrolleri ve runtime UI/API doğrulaması eklendi.
 * 2026-05-14 — Milestone: Milestone 6E Seller Action Detail + Execution Preview tamamlandı. | Sonuç: `/api/seller/actions/[id]` route'u, `/seller/actions/[id]` detay sayfası, action execution preview, evidence snapshot, generated drafts, LLM-ready context görünümü, loading/not-found state ve validation kontrolleri eklendi.
+* 2026-05-14 — Milestone: Milestone 7 OpenAI Seller Action Explanation tamamlandı. | Sonuç: `/api/seller/actions/[id]/explanation` route'u, `gpt-4o-mini` OpenAI Responses API wrapper'ı, JSON parse/fallback contract'ı, seller action detail UI paneli ve validation kontrolleri eklendi; check/build/runtime/UI doğrulandı.
 
 ## 8) Yapılanlar
 
@@ -169,6 +174,7 @@
 * [x] Milestone 6C buyer smart cart API ve canlı komut etkileşimi tamamlandı.
 * [x] Milestone 6D buyer-to-seller signal loop eklendi.
 * [x] Milestone 6E seller action detail ve execution preview eklendi.
+* [x] Milestone 7 OpenAI `gpt-4o-mini` seller action explanation katmanı eklendi.
 
 ## 9) Yapılacaklar (Next)
 
@@ -198,7 +204,9 @@
 * [x] Milestone 6C buyer API route'u ve buyer smart cart etkileşimini canlı hale getir.
 * [x] 6C review sonrası buyer ürün keşfi/sepet sayfası derinleştirme veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
 * [x] 6D review sonrası ürün detay/aksiyon drill-down veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
-* [ ] 6E review sonrası LLM/Gemini açıklama katmanı veya buyer product/cart preview derinleştirmesinin kapsamını netleştir.
+* [x] 6E review sonrası LLM/Gemini açıklama katmanı veya buyer product/cart preview derinleştirmesinin kapsamını netleştir.
+* [ ] Milestone 7 review sonrası Gemini provider swap için route/prompt contract'ının korunup korunmayacağını netleştir.
+* [ ] Buyer product/cart preview derinleştirmesinin demo değerini OpenAI/Gemini açıklama katmanıyla karşılaştır.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -215,6 +223,8 @@
   * Ürün yalnızca chatbot gibi anlatılırsa çift taraflı commerce intelligence farkı kaybolur.
 * Dependency audit:
   * `npm audit --omit=dev`, Next 16.2.6 içindeki PostCSS bağımlılığı için 2 moderate uyarı veriyor. `npm view next version` mevcut latest sürümün 16.2.6 olduğunu gösteriyor; `npm audit fix --force` kırıcı downgrade önerdiği için uygulanmadı.
+* LLM network/runtime:
+  * OpenAI çağrısı sadece runtime endpointte yapılır; API key eksikse, provider desteklenmiyorsa veya ağ/API hatası olursa UI deterministic fallback görmelidir.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 
@@ -227,6 +237,8 @@
 * Buyer canlı akışı `src/lib/api/buyer.ts` ve `/api/buyer/smart-cart` üzerinden ilerler; prompt parser veya workflow rol mantığı değişirse API validation da güncellenmeli.
 * Buyer-to-seller loop `src/lib/api/seller.ts` içindeki `getSellerBuyerSignalsApiData` ile buyer smart cart örneklerini çalıştırır; `sellerSignalCandidates` shape'i değişirse seller API validation ve `/seller` loop bölümü birlikte güncellenmeli.
 * Seller action detail `src/lib/api/seller.ts` içindeki `getSellerActionDetailApiData` ile action id üzerinden çalışır; `SellerGrowthAction` id/type/checklist alanları değişirse dynamic route, validation ve `/seller/actions/[id]` birlikte güncellenmeli.
+* Seller action explanation `src/lib/api/seller-action-explanations.ts` ile çalışır; validation canlı OpenAI çağırmaz, `forceFallback: true` ile contract'ı doğrular.
+* OpenAI API key sadece `.env.local` içinde tutulur; `.env*` gitignore kapsamındadır ve secret commitlenmemelidir.
 
 ## 12) Satıcı Paneli Stratejisi
 
@@ -853,6 +865,30 @@
 * Sınırlar:
   * Auth, DB, LLM, LangChain, mutation ve gerçek aksiyon tamamlama state'i yok.
   * Generated drafts deterministik taslaktır; model çağrısı veya gerçek kampanya/stok emri oluşturmaz.
+
+### 7 OpenAI Seller Action Explanation
+
+* Amaç:
+  * Seller action detail ekranındaki deterministic context'i canlı LLM açıklamasına çevirmek.
+  * Kullanıcının kararı gereği ilk aşamada Gemini yerine kesin olarak OpenAI `gpt-4o-mini` kullanmak.
+* Eklenen API route:
+  * `GET /api/seller/actions/[id]/explanation`: stable action id alır, runtime OpenAI explanation contract'ını `{ success, data, error }` envelope ile döner.
+  * Geçersiz action id `SELLER_ACTION_EXPLANATION_NOT_FOUND` ile 404 döner.
+* Contract:
+  * `src/lib/llm/*` direct OpenAI Responses API `fetch` wrapper'ını ve deterministic fallback'i içerir.
+  * `src/lib/api/seller-action-explanations.ts` model prompt/input, JSON parse, fallback body, source metadata ve `runtime-only` model call contract'ını üretir.
+  * Model çıktısı `headline`, `summary`, `evidenceBullets`, `nextBestAction`, `sellerMessageDraft` alanlarına normalize edilir.
+* Eklenen UI:
+  * `/seller/actions/[id]` içinde client-side `SellerActionExplanationPanel` eklendi.
+  * Panel loading, error/retry, generated/fallback state, model adı ve evidence summary gösterir.
+* Validation:
+  * `scripts/validate-workflows.js` explanation endpoint, default model, forced fallback, evidence bullets ve source endpoint kontrolleriyle genişletildi.
+  * Doğrulanan komutlar: `npm run check`, `npm run build`.
+  * Runtime HTTP doğrulaması: `/api/seller/actions/restock-ergoflex-calisma-sandalyesi/explanation` `provider: openai`, `model: gpt-4o-mini`, `status: generated` döndürdü.
+  * Browser doğrulaması: `/seller/actions/restock-ergoflex-calisma-sandalyesi` desktop ve mobilde OpenAI paneli görünür, loading kapanır, `openai · gpt-4o-mini` etiketi görünür ve yatay overflow yok. Playwright Chrome binary olmadığı için Puppeteer kullanıldı.
+* Sınırlar:
+  * LLM şu anda yalnızca açıklama üretir; stok emri, kampanya, DB mutation veya gerçek agent tool call yapmaz.
+  * Gemini provider implementasyonu sonraki adımdadır; mevcut contract provider swap için korunmalı.
 
 ### Güncelleme Kaydı
 

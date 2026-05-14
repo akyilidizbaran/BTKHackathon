@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { SellerActionExplanationPanel } from "@/components/commerce/seller-action-explanation-panel";
 import {
   getSellerActionDetailApiData,
   getSellerActionsApiData,
@@ -154,30 +155,32 @@ export default async function SellerActionDetailPage({
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-white/10 bg-zinc-950/45 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <div className="flex flex-col justify-between gap-3 border-b border-white/10 pb-5 md:flex-row md:items-end">
-            <div>
-              <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">LLM-ready context</h3>
-              <p className="mt-2 text-sm leading-6 text-zinc-500">
-                Deterministik workflow çıktısıdır; model çağrısı yapılmaz.
-              </p>
-            </div>
-            <p className="font-mono text-xs text-zinc-500">{data.llmReadyContext.task}</p>
-          </div>
+        <SellerActionExplanationPanel actionId={data.action.id} />
+      </section>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1fr]">
-            <div className="divide-y divide-white/10">
-              {factEntries.map(([key, value]) => (
-                <div key={key} className="py-3">
-                  <p className="font-mono text-xs text-zinc-500">{key}</p>
-                  <p className="mt-2 text-sm leading-6 text-white">{formatFactValue(value)}</p>
-                </div>
-              ))}
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-              <p className="text-sm text-zinc-500">Instruction</p>
-              <p className="mt-3 text-sm leading-7 text-zinc-400">{data.llmReadyContext.instruction}</p>
-            </div>
+      <section className="rounded-[1.75rem] border border-white/10 bg-zinc-950/45 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
+        <div className="flex flex-col justify-between gap-3 border-b border-white/10 pb-5 md:flex-row md:items-end">
+          <div>
+            <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">LLM-ready context</h3>
+            <p className="mt-2 text-sm leading-6 text-zinc-500">
+              Model açıklama endpointi bu deterministik contexti kullanır; build sırasında LLM çağrısı yapılmaz.
+            </p>
+          </div>
+          <p className="font-mono text-xs text-zinc-500">{data.llmReadyContext.task}</p>
+        </div>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1fr]">
+          <div className="divide-y divide-white/10">
+            {factEntries.map(([key, value]) => (
+              <div key={key} className="py-3">
+                <p className="font-mono text-xs text-zinc-500">{key}</p>
+                <p className="mt-2 text-sm leading-6 text-white">{formatFactValue(value)}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+            <p className="text-sm text-zinc-500">Instruction</p>
+            <p className="mt-3 text-sm leading-7 text-zinc-400">{data.llmReadyContext.instruction}</p>
           </div>
         </div>
       </section>
