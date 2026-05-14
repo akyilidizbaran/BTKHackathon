@@ -3,19 +3,19 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 8A Buyer Smart Cart Explanation + Product/Cart Preview Polish tamamlandı.
+  * CommercePilot için marketplace + agent pet ürün pivotu Milestone 8B olarak planlandı.
 * Son değişiklik neydi?
-  * `POST /api/buyer/smart-cart/explanation`, buyer explanation UI paneli, ürün karar ekranı ve sepet karar özeti güçlendirildi; 8A QA sırasında no-budget LLM guard eklendi.
+  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md` eklendi; dark dashboard yönü light klasik e-ticaret + sağ alt agent pet deneyimine çevrildi.
 * Bir sonraki net adım ne?
-  * Milestone 8A review sonrası end-to-end demo script/presentation readiness veya Gemini provider swap kapsamını netleştirmek.
+  * Milestone 8C Light Marketplace Design System: dark theme'i kaldırıp CommercePilot'u klasik e-ticaret shell'ine taşımak.
 
 ## 1) Proje Amacı ve Kapsam
 
 * Amaç:
-  * CommercePilot, alıcı ihtiyaçlarını ve satıcı verilerini birleştiren çift taraflı bir e-ticaret zekası platformudur. İlk MVP'de satıcı tarafı daha güçlü konumlanacak; amaç satıcıya yalnızca veri göstermek değil, stok, satış, yorum ve ürün kalitesi sinyallerinden aksiyon önermektir.
+  * CommercePilot, klasik marketplace alışveriş deneyimi ile alıcı/satıcı tarafında yaşayan agent pet'i birleştiren çift taraflı bir e-ticaret zekası platformudur. Amaç kullanıcıya tanıdık bir e-ticaret arayüzü sunarken, AI agent'ın sepet kurma, ürün uyarısı, satılmayan ürün analizi ve izinli listeleme düzenleme aksiyonlarını doğal şekilde yürütmesidir.
 * Kapsam içi:
-  * Satıcı paneli, ürün yönetimi, stok takibi, satış performansı, yorum içgörüleri, ürün sağlık skoru, listeleme kalitesi ve büyüme aksiyonları.
-  * Alıcı tarafı daha sonra ürün keşfi, akıllı sepet ve doğal dil alışveriş akışlarıyla ele alınacak.
+  * Buyer tarafı: marketplace homepage, kategori/search, ürün grid, ürün detay, yorumlar, sepet, sağ alt agent pet ve agent destekli sepet mutation'ları.
+  * Seller tarafı: klasik satıcı paneli, ürün yönetimi, stok/satış/yorum sinyalleri, satılmayan ürün analizi, agent destekli listeleme mutation'ları.
   * İlk aşamada mock/kurgu veri kullanılacak; veriler rastgele değil, demo hikayesi taşıyacak şekilde tasarlanacak.
 * Kapsam dışı:
   * İlk fazda gerçek ödeme, gerçek kimlik doğrulama, gerçek veritabanı, kargo/lojistik ve scraping yok.
@@ -27,7 +27,9 @@
 * AI/LLM çıktıları kör şekilde kullanılmayacak; önce deterministik veri analizi yapılacak, LLM yalnızca açıklama, özetleme ve metin üretme katmanında kullanılacak.
 * Mock data rastgele olmayacak; her ürün net bir demo problemine hizmet edecek.
 * İlk kurulumda overengineering yapılmayacak; gerçek auth/database/payment ertelenecek.
-* UI içinde Gemini çalışıyormuş gibi sahte davranılmayacak; Phase 1'de AI-ready alanlar açıkça deterministik/mock insight olarak gösterilecek.
+* Dark dashboard dili artık ana yön değil; CommercePilot light, klasik e-ticaret düzeniyle ilerleyecek.
+* Agent pet proactive konuşabilir ama susturma/gizleme modları ve izin katmanları olmadan kullanıcı adına mutation yapmamalı.
+* UI içinde Gemini çalışıyormuş gibi sahte davranılmayacak; OpenAI geçici provider olarak kalacak, Gemini final provider swap sonraya bırakılacak.
 
 ## 3) Mimari Özet
 
@@ -47,7 +49,8 @@
   * `src/lib/llm/*`: provider kontrollü OpenAI Responses API text generation wrapper'ı ve deterministic fallback davranışı.
   * `src/lib/api/seller-action-explanations.ts`: seller action detail context'ini runtime LLM açıklama contract'ına çevirir.
   * `src/lib/api/buyer-smart-cart-explanations.ts`: buyer smart cart context'ini runtime LLM sepet açıklama contract'ına çevirir.
-  * Planlanan sonraki yapı: lib/agents, lib/gemini, app, components.
+  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`: marketplace + agent pet pivot kararları ve 17 milestone yol haritası.
+  * Planlanan sonraki yapı: `src/lib/agents/prompts/*`, `src/lib/agents/tools/*`, `src/lib/agents/runtime/*`, light marketplace components ve mock mutation/audit katmanı.
 
 ## 4) Konvansiyonlar ve Standartlar
 
@@ -132,6 +135,10 @@
 * 2026-05-14 — Karar: Milestone 7'de LLM açıklama katmanı OpenAI `gpt-4o-mini` ile çalışacak, Gemini final provider swap olarak sonraya bırakılacak. | Gerekçe: Kullanıcının mevcut API key'i OpenAI için; ürün mimarisi provider değişimine hazır kalmalı. | Etki: `LLM_PROVIDER=openai`, `OPENAI_MODEL=gpt-4o-mini`, direct Responses API `fetch`, runtime-only endpoint ve deterministic fallback eklendi. | Alternatifler: Gemini'yi hemen bağlamak veya LLM'i tamamen mock bırakmak.
 * 2026-05-14 — Karar: Milestone 8A buyer tarafında OpenAI explanation ve preview polish birlikte yapılacak. | Gerekçe: Seller action explanation tamamlandıktan sonra demo akışında buyer tarafı da karar güveni ve AI açıklaması göstermeli. | Etki: `POST /api/buyer/smart-cart/explanation`, buyer explanation client paneli, `/buyer/products` ürün karar ekranı ve `/buyer/cart` sepet karar özeti eklendi. | Alternatifler: Önce Gemini provider swap yapmak veya sadece ürün/sepet UI polish yapmak.
 * 2026-05-14 — Karar: Buyer explanation no-budget senaryolarında LLM bütçe iddiası post-process guard ile temizlenecek. | Gerekçe: Runtime OpenAI çıktısı bazen kullanıcı bütçe belirtmediği halde `bütçeniz` veya `%5 tolerans` gibi ifadeler üretebilir. | Etki: `src/lib/api/buyer-smart-cart-explanations.ts` budget context'i açık hale getirir, no-budget claim'leri fallback alanlarıyla değiştirir; validation sentetik model çıktısıyla bu guard'ı doğrular. | Alternatifler: Yalnızca prompt sıkılaştırmak.
+* 2026-05-14 — Karar: CommercePilot ana UI yönü light klasik marketplace düzenine dönecek. | Gerekçe: Kullanıcı premium siyah dashboard yerine Trendyol/Hepsiburada gibi tanıdık ama kendi markamıza ait e-ticaret görünümü istedi. | Etki: Dark theme ana deneyimden kalkacak; buyer homepage, ürün detay, sepet ve seller panel light commerce düzeniyle yeniden ele alınacak. | Alternatifler: Dark dashboard'u koruyup agent eklemek.
+* 2026-05-14 — Karar: AI deneyimi ayrı bir chatbot sayfası olmaktan çok sağ altta yaşayan agent pet olarak kurulacak. | Gerekçe: Ürün değeri, agent'ın alışveriş ve satıcı iş akışlarının üstünde bağlama göre konuşması ve aksiyon almasıyla daha net görünecek. | Etki: Floating draggable pet, küçük chat paneli, büyük agent sayfası, proactive balonlar, sessiz/gizle modları ve agent permission modeli roadmap'e girdi. | Alternatifler: Sadece klasik chat widget.
+* 2026-05-14 — Karar: Agent permission modeli `chat`, `suggest`, `assist`, `autopilot` katmanlarına ayrılacak. | Gerekçe: Buyer sepet mutation'ı ve seller listing mutation'ı gerçek davranmalı ama kullanıcı izni olmadan kontrolsüz aksiyon almamalı. | Etki: Mutation tool'ları audit log ve onay/autopilot ayrımıyla tasarlanacak. | Alternatifler: Her şeyi öneri olarak bırakmak veya baştan tam otomatik yapmak.
+* 2026-05-14 — Karar: LangChain hemen bağlanmayacak; önce typed internal agent runtime ve tool registry kurulacak. | Gerekçe: Tool contract'ları, UI state ve mutation sınırları oturmadan LangChain eklemek karmaşıklığı artırır. | Etki: `src/lib/agents/prompts`, `src/lib/agents/tools`, `src/lib/agents/runtime` planlandı; LangChain adapter readiness Milestone 8P'ye bırakıldı. | Alternatifler: LangChain'i ilk agent milestone'unda doğrudan kullanmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -154,6 +161,7 @@
 * 2026-05-14 — Milestone: Milestone 7 OpenAI Seller Action Explanation tamamlandı. | Sonuç: `/api/seller/actions/[id]/explanation` route'u, `gpt-4o-mini` OpenAI Responses API wrapper'ı, JSON parse/fallback contract'ı, seller action detail UI paneli ve validation kontrolleri eklendi; check/build/runtime/UI doğrulandı.
 * 2026-05-14 — Milestone: Milestone 8A Buyer Smart Cart Explanation + Product/Cart Preview Polish tamamlandı. | Sonuç: `/api/buyer/smart-cart/explanation` route'u, `gpt-4o-mini` buyer explanation contract'ı, `/buyer` explanation paneli, `/buyer/products` ürün karar ekranı ve `/buyer/cart` sepet karar özeti eklendi; check/build/runtime/UI doğrulandı.
 * 2026-05-14 — Milestone: Milestone 8A QA hardening tamamlandı. | Sonuç: Buyer explanation no-budget guard eklendi; 5 buyer örneği live OpenAI ile generated döndü, invalid prompt 400 verdi, mobil browser QA ve build/check tekrar geçti.
+* 2026-05-14 — Milestone: Milestone 8B Marketplace + Agent Pet Roadmap tamamlandı. | Sonuç: `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md` ile light marketplace pivotu, agent pet deneyimi, permission modeli ve 17 milestone planı yazıldı.
 
 ## 8) Yapılanlar
 
@@ -182,6 +190,7 @@
 * [x] Milestone 7 OpenAI `gpt-4o-mini` seller action explanation katmanı eklendi.
 * [x] Milestone 8A buyer smart cart explanation ve product/cart preview polish eklendi.
 * [x] Milestone 8A QA sırasında buyer explanation no-budget LLM guard eklendi.
+* [x] Milestone 8B marketplace + agent pet roadmap dosyası oluşturuldu.
 
 ## 9) Yapılacaklar (Next)
 
@@ -216,6 +225,11 @@
 * [x] Buyer product/cart preview derinleştirmesinin demo değerini OpenAI/Gemini açıklama katmanıyla karşılaştır.
 * [ ] Milestone 8A review sonrası end-to-end demo script/presentation readiness kapsamını netleştir.
 * [ ] Gemini provider swap için mevcut seller/buyer explanation contract'ını koruyacak adapter tasarımını netleştir.
+* [ ] Milestone 8C light marketplace design system ve shell'i uygula.
+* [ ] Milestone 8D mock catalog expansion kapsamını ürün/kategori/yorum/görsel metadata olarak uygula.
+* [ ] Milestone 8H sonrası floating draggable agent pet shell'ini buyer/seller sayfalarına yerleştir.
+* [ ] Milestone 8J sonrası agent prompt/tool/runtime registry katmanını kur.
+* [ ] Milestone 8O için permission, audit log ve rollback davranışını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -249,6 +263,9 @@
 * Seller action explanation `src/lib/api/seller-action-explanations.ts` ile çalışır; validation canlı OpenAI çağırmaz, `forceFallback: true` ile contract'ı doğrular.
 * Buyer smart cart explanation `src/lib/api/buyer-smart-cart-explanations.ts` ile çalışır; validation canlı OpenAI çağırmaz, `forceFallback: true` ile contract'ı doğrular.
 * Buyer explanation no-budget guard: kullanıcı bütçe belirtmediyse model `bütçeniz`, `%5 tolerans`, `bütçe içinde/altında` gibi iddiaları UI contract'ına geçirmemeli; bu kontrol `scripts/validate-workflows.js` içinde sentetik model çıktısıyla korunur.
+* 8B sonrası roadmap tek kaynak: `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`. Milestone sırası değişirse bu dosya ve `PROJECT_MEMORY.md` birlikte güncellenmeli.
+* Seller tarafında "gerçek mutation" ilk aşamada dış marketplace entegrasyonu değil, mock app state üzerinde uygulanmış ve audit log'a yazılmış değişiklik anlamına gelir.
+* Agent proactive balonları bağlama özel ve susturulabilir olmalı; her sayfada sürekli konuşan bir widget demo değerini düşürür.
 * OpenAI API key sadece `.env.local` içinde tutulur; `.env*` gitignore kapsamındadır ve secret commitlenmemelidir.
 
 ## 12) Satıcı Paneli Stratejisi
@@ -926,6 +943,28 @@
 * Sınırlar:
   * Buyer explanation yalnızca açıklama üretir; gerçek ödeme, sepet persistence, kullanıcı auth veya agent tool call yapmaz.
   * Gemini provider implementasyonu sonraki adımdadır; buyer/seller explanation contract'ları provider swap sırasında korunmalı.
+
+### 8B Marketplace + Agent Pet Roadmap
+
+* Amaç:
+  * CommercePilot'u premium dark dashboard hissinden çıkarıp light, klasik marketplace düzenine taşımak.
+  * AI deneyimini sağ altta yaşayan, sürüklenebilir ve proactive konuşabilen agent pet etrafında ürünleştirmek.
+* Roadmap dosyası:
+  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`.
+* Kilit kararlar:
+  * Site adı `CommercePilot` kalır.
+  * Dark theme ana deneyimden kalkar.
+  * Buyer tarafı marketplace homepage, ürün detay, yorumlar ve cart mutation'larıyla ilerler.
+  * Seller tarafı ayrı `/seller` alanında klasik satıcı paneli olarak kalır.
+  * Agent pet küçük sağ alt chat paneli, büyütülmüş agent sayfası, proactive balonlar ve sürüklenebilir avatar davranışıyla tasarlanır.
+  * Permission modeli `chat`, `suggest`, `assist`, `autopilot` olarak ayrılır.
+  * OpenAI geçici kalır; LangChain doğrudan ilk adımda değil, typed internal tool registry oturduktan sonra adapter olarak değerlendirilir.
+* Milestone sayısı:
+  * Toplam 17 milestone planlandı.
+  * 8B-8Q: marketplace pivot, agent pet, buyer/seller tools, permission ve demo hardening.
+  * 9A: Gemini/provider finalization.
+* Sonraki net adım:
+  * 8C Light Marketplace Design System: dark theme'i kaldırıp light e-ticaret shell'ini ve temel UI tokenlarını kurmak.
 
 ### Güncelleme Kaydı
 
