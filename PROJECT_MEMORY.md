@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 6C Buyer Smart Cart API + canlı etkileşim tamamlandı; alıcı komutu artık API route üzerinden sepet önerisi üretir.
+  * CommercePilot için Milestone 6D Buyer-to-Seller Signal Loop tamamlandı; alıcı smart cart örneklerinden seller dashboard'a aksiyon sinyali akıyor.
 * Son değişiklik neydi?
-  * `/api/buyer/smart-cart` route'u, buyer smart cart API contract builder'ı ve `/buyer` içindeki canlı komut/sepet arayüzü eklendi.
+  * `/api/seller/buyer-signals` route'u, seller buyer signal API contract builder'ı ve `/seller` içindeki buyer-to-seller loop bölümü eklendi.
 * Bir sonraki net adım ne?
-  * 6C review sonrası buyer ürün keşfi/sepet sayfası derinleştirme veya LLM/Gemini entegrasyon fazının kapsamını netleştirmek.
+  * 6D review sonrası Milestone 6E için ürün detay/aksiyon drill-down veya LLM/Gemini entegrasyon fazının kapsamını netleştirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -123,6 +123,7 @@
 * 2026-05-14 — Karar: Product detail UI slug ile, product health API id ile çalışacak. | Gerekçe: UI URL'leri okunabilir olmalı; API contract ise stable product id üzerinden netleşmeli. | Etki: `/seller/products/[slug]` ve `/api/seller/products/[id]/health` route'ları eklendi.
 * 2026-05-14 — Karar: Buyer Smart Cart canlı etkileşimi tek API route üzerinden kurulacak: `GET/POST /api/buyer/smart-cart`. | Gerekçe: Demo için kullanıcı komutu canlı çalışmalı ama auth/DB/mutation/LLM kapsamı açılmamalı. | Etki: `src/lib/api/buyer.ts`, route handler ve client workspace eklendi; GET bootstrap örnekleri, POST sepet önerisi döner.
 * 2026-05-14 — Karar: Buyer UI canlı API çağıracak, ilk render ise aynı typed builder ile hydrate edilecek. | Gerekçe: İlk ekran hızlı ve build-safe kalırken kullanıcı submit/preset aksiyonları gerçek route'a gitmeli. | Etki: `/buyer` server component initial contract üretir, `BuyerSmartCartWorkspace` client component POST `/api/buyer/smart-cart` çağırır.
+* 2026-05-14 — Karar: Buyer-to-seller loop yeni seller-facing GET contract olarak kurulacak: `/api/seller/buyer-signals`. | Gerekçe: Buyer workflow zaten `sellerSignalCandidates` üretiyor; bunu seller dashboard'a deterministic, route-testable ve LLM-ready contract olarak taşımak çift taraflı commerce intelligence iddiasını güçlendirir. | Etki: `src/lib/api/seller.ts` buyer smart cart örneklerinden sinyal aggregate eder; `/seller` ekranı alıcı sinyal özetini ve ilgili ürün/action hint'lerini gösterir. | Alternatifler: Buyer UI içinde ayrı loop göstermek veya seller actions workflow'u doğrudan mutasyona uğratmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -140,6 +141,7 @@
 * 2026-05-14 — Milestone: Milestone 6A UI Foundation başlatıldı. | Sonuç: Görsel referanslar üretildi; rol seçimi, buyer/seller workspace shell, seller action/product preview ve buyer smart cart/product/cart preview route'ları eklendi.
 * 2026-05-14 — Milestone: Milestone 6B Seller API Contract tamamlandı. | Sonuç: Seller overview/actions/products/product health API endpoint'leri, ortak seller API contract builder'ları, ürün sağlık detay sayfası, loading/error/empty state temelleri ve API validation kontrolleri eklendi.
 * 2026-05-14 — Milestone: Milestone 6C Buyer Smart Cart API + Live Interaction tamamlandı. | Sonuç: `/api/buyer/smart-cart` route'u, buyer API contract builder'ı, canlı `/buyer` komut formu, preset prompt çalıştırma, loading/error/empty state ve buyer API validation kontrolleri eklendi.
+* 2026-05-14 — Milestone: Milestone 6D Buyer-to-Seller Signal Loop tamamlandı. | Sonuç: `/api/seller/buyer-signals` route'u, buyer smart cart örneklerinden seller sinyal aggregation contract'ı, seller dashboard buyer loop bölümü, validation kontrolleri ve runtime UI/API doğrulaması eklendi.
 
 ## 8) Yapılanlar
 
@@ -163,6 +165,7 @@
 * [x] Milestone 6A rol seçimi ve buyer/seller app shell omurgası eklendi.
 * [x] Milestone 6B seller API contract ve ürün sağlık detay akışı tamamlandı.
 * [x] Milestone 6C buyer smart cart API ve canlı komut etkileşimi tamamlandı.
+* [x] Milestone 6D buyer-to-seller signal loop eklendi.
 
 ## 9) Yapılacaklar (Next)
 
@@ -190,7 +193,8 @@
 * [x] Milestone 6A app shell ve rol seçimi oluştur.
 * [x] Milestone 6B seller API route'ları ve seller ekran veri contract'larını oluştur.
 * [x] Milestone 6C buyer API route'u ve buyer smart cart etkileşimini canlı hale getir.
-* [ ] 6C review sonrası buyer ürün keşfi/sepet sayfası derinleştirme veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
+* [x] 6C review sonrası buyer ürün keşfi/sepet sayfası derinleştirme veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
+* [ ] 6D review sonrası ürün detay/aksiyon drill-down veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -217,6 +221,7 @@
 * LLM sadece son karar verici gibi konumlanmamalı; karar sinyalleri önce sistem tarafından hesaplanmalı.
 * Seller UI artık route handler ile aynı `src/lib/api/seller.ts` builder'larını kullanır; seller workflow alanı değişirse API validation da güncellenmeli.
 * Buyer canlı akışı `src/lib/api/buyer.ts` ve `/api/buyer/smart-cart` üzerinden ilerler; prompt parser veya workflow rol mantığı değişirse API validation da güncellenmeli.
+* Buyer-to-seller loop `src/lib/api/seller.ts` içindeki `getSellerBuyerSignalsApiData` ile buyer smart cart örneklerini çalıştırır; `sellerSignalCandidates` shape'i değişirse seller API validation ve `/seller` loop bölümü birlikte güncellenmeli.
 
 ## 12) Satıcı Paneli Stratejisi
 
@@ -792,6 +797,29 @@
 * Sınırlar:
   * Auth, DB, LLM, LangChain, checkout, kalıcı sepet ve ürün satın alma mutation yok.
   * Buyer products ve cart route'ları hâlâ preview/omurga seviyesinde; canlı komut akışı `/buyer` üstünde kuruldu.
+
+### 6D Buyer-to-Seller Signal Loop
+
+* Amaç:
+  * Buyer Smart Cart çıktısındaki `sellerSignalCandidates` alanını satıcı dashboard'unda görünür ve API-testable hale getirmek.
+  * CommercePilot'un çift taraflı zekâ iddiasını demo akışında net göstermek: alıcı komutu -> sepet sonucu -> satıcı sinyali -> önerilen hamle.
+* Eklenen API route:
+  * `GET /api/seller/buyer-signals`: buyer örnek prompt'larını çalıştırır, seller'a ait ürünlerle eşleşen sinyalleri `{ success, data, error }` envelope içinde döner.
+* Contract:
+  * `src/lib/api/seller.ts` içinde `SellerBuyerSignalsApiData`, prompt snapshot, signal row, type coverage, affected product summary ve matched seller action alanları eklendi.
+  * Contract kaynağı `buyer-smart-cart-workflow`; endpoint metadata'sı `GET /api/seller/buyer-signals`.
+* Eklenen UI:
+  * `/seller` genel bakışta buyer signal metriği ve API contract rail'inde buyer loop durumu eklendi.
+  * Yeni buyer-to-seller loop bölümü prompt kaynakları, sinyal tipi coverage, öncelik skoru, etkilenmiş ürünler ve seller action hint'lerini gösterir.
+  * Çok ürünlü sinyal satırlarında UI taşmasını önlemek için ilk 3 ürün gösterilir, kalan ürün sayısı özetlenir.
+* Validation:
+  * `scripts/validate-workflows.js` seller buyer signals contract, endpoint, prompt count, signal count, type coverage ve action hint kontrolleriyle genişletildi.
+  * Doğrulanan komutlar: `npm run check`, `npm run build`.
+  * Runtime HTTP doğrulaması: `/api/seller/buyer-signals` `success: true`, 15 sinyal, 5 prompt ve 18 etkilenmiş ürün döndürdü.
+  * Browser doğrulaması: `/seller` desktop ve mobilde açıldı; buyer loop title/endpoint/sinyal listesi görünür, yatay overflow yok. Playwright Chrome binary olmadığı için Puppeteer kullanıldı.
+* Sınırlar:
+  * Auth, DB, LLM, LangChain, mutation veya gerçek buyer event persistence yok.
+  * Seller actions workflow'u doğrudan buyer sinyalleriyle mutate edilmedi; 6D yalnızca deterministic aggregate/read contract ve dashboard görünürlüğü sağlar.
 
 ### Güncelleme Kaydı
 

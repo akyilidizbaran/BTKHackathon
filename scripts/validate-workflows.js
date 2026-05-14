@@ -31,6 +31,7 @@ const {
 } = require("../src/lib/workflows");
 const {
   getSellerActionsApiData,
+  getSellerBuyerSignalsApiData,
   getSellerOverviewApiData,
   getSellerProductHealthApiData,
   getSellerProductsApiData,
@@ -75,6 +76,7 @@ console.log(
     `Reviews: ${reviews.length}`,
     `Seller actions: ${generateSellerActionsWorkflow("seller-commercepilot")?.actions.length ?? 0}`,
     `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
+    `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
     `Buyer API examples: ${buyerSmartCartExamples.length}`,
     "Buyer prompts: 7",
   ].join("\n"),
@@ -280,11 +282,13 @@ function validateSellerApiContracts() {
   const sellerId = "seller-commercepilot";
   const overview = getSellerOverviewApiData(sellerId);
   const actions = getSellerActionsApiData(sellerId);
+  const buyerSignals = getSellerBuyerSignalsApiData(sellerId);
   const productContract = getSellerProductsApiData(sellerId);
   const keyProHealth = getSellerProductHealthApiData("prod-keypro-mekanik-klavye");
 
   assert(Boolean(overview), "seller overview API contract üretilemedi");
   assert(Boolean(actions), "seller actions API contract üretilemedi");
+  assert(Boolean(buyerSignals), "seller buyer signals API contract üretilemedi");
   assert(Boolean(productContract), "seller products API contract üretilemedi");
   assert(Boolean(keyProHealth), "seller product health API contract üretilemedi");
 
@@ -299,6 +303,22 @@ function validateSellerApiContracts() {
     assert(actions.contract.envelope === "success/data/error", "actions envelope contract yanlış");
     assert(actions.actions.length === 5, "actions API top 5 dönmeli");
     assert(actions.actionTypeCoverage.includes("restock"), "actions API restock coverage eksik");
+  }
+
+  if (buyerSignals) {
+    assert(buyerSignals.contract.envelope === "success/data/error", "buyer signals envelope contract yanlış");
+    assert(buyerSignals.contract.endpoint === "/api/seller/buyer-signals", "buyer signals endpoint contract yanlış");
+    assert(buyerSignals.contract.method === "GET", "buyer signals method contract yanlış");
+    assert(buyerSignals.summary.promptCount === buyerSmartCartExamples.length, "buyer signals prompt count yanlış");
+    assert(buyerSignals.summary.signalCount === buyerSignals.signals.length, "buyer signals count uyumsuz");
+    assert(buyerSignals.summary.affectedProductCount > 0, "buyer signals affected product count eksik");
+    assert(buyerSignals.summary.typeCoverage.length >= 3, "buyer signals type coverage zayıf");
+    assert(buyerSignals.promptSnapshots.length === buyerSmartCartExamples.length, "buyer signal prompt snapshot sayısı yanlış");
+    assert(buyerSignals.signals.length >= 5, "buyer signals satıcı için yetersiz sinyal üretiyor");
+    assert(
+      buyerSignals.signals.every((signal) => signal.affectedProducts.length > 0 && signal.sellerActionHint.length > 0),
+      "buyer signals ürün veya aksiyon hint eksik",
+    );
   }
 
   if (productContract) {

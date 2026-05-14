@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { getSellerOverviewApiData } from "@/lib/api/seller";
+import { getSellerBuyerSignalsApiData, getSellerOverviewApiData } from "@/lib/api/seller";
+import type { SellerBuyerSignalsApiData } from "@/lib/api/seller";
 
 export default function SellerOverviewPage() {
   const data = getSellerOverviewApiData();
+  const buyerSignals = getSellerBuyerSignalsApiData();
 
   if (!data) {
     return (
@@ -39,7 +41,7 @@ export default function SellerOverviewPage() {
           <div className="mt-9 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 md:grid-cols-4">
             <Metric label="Analiz edilen ürün" value={String(data.stats.analyzedProductCount)} />
             <Metric label="Bugün ele alınacak" value={String(data.stats.attentionActionCount)} />
-            <Metric label="Stok riski" value={String(data.stats.lowStockProductCount)} />
+            <Metric label="Alıcı sinyali" value={String(buyerSignals?.summary.signalCount ?? 0)} />
             <Metric label="30 gün gelir" value={formatTry(data.stats.totalRevenue30d)} />
           </div>
         </div>
@@ -50,6 +52,7 @@ export default function SellerOverviewPage() {
             <Signal label="Envelope" value={data.contract.envelope} tone="good" />
             <Signal label="Kaynak" value={data.contract.source} tone="calm" />
             <Signal label="Seller" value={data.contract.sellerId} tone="calm" />
+            <Signal label="Buyer loop" value={buyerSignals ? "Aktif" : "Bekliyor"} tone={buyerSignals ? "good" : "calm"} />
           </div>
           <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.035] p-4 font-mono text-xs leading-6 text-zinc-500">
             GET /api/seller/overview
@@ -57,9 +60,20 @@ export default function SellerOverviewPage() {
             GET /api/seller/actions
             <br />
             GET /api/seller/products
+            <br />
+            GET /api/seller/buyer-signals
           </div>
         </div>
       </section>
+
+      {buyerSignals ? (
+        <BuyerSignalsSection data={buyerSignals} />
+      ) : (
+        <EmptyPanel
+          title="Alıcı sinyali üretilemedi"
+          description="Buyer Smart Cart örnekleri seller tarafına bağlanamadı. Buyer workflow ve seller product referansları kontrol edilmeli."
+        />
+      )}
 
       <section className="grid gap-5 xl:grid-cols-[1fr_360px]">
         <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
@@ -132,6 +146,117 @@ export default function SellerOverviewPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+function BuyerSignalsSection({ data }: { data: SellerBuyerSignalsApiData }) {
+  const topSignals = data.signals.slice(0, 4);
+  const promptSnapshots = data.promptSnapshots.slice(0, 3);
+
+  return (
+    <section className="rounded-[1.75rem] border border-emerald-200/15 bg-emerald-300/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
+      <div className="flex flex-col justify-between gap-5 border-b border-white/10 pb-6 xl:flex-row xl:items-end">
+        <div>
+          <p className="text-sm text-emerald-200/80">Buyer-to-seller loop</p>
+          <h2 className="mt-3 max-w-4xl text-3xl font-semibold leading-[0.95] tracking-[-0.055em] text-white md:text-4xl">
+            Alıcı komutları satıcı sinyaline dönüştü.
+          </h2>
+          <p className="mt-4 max-w-[72ch] text-sm leading-7 text-zinc-500">{data.loopNarrative}</p>
+        </div>
+        <div className="rounded-full border border-white/10 px-4 py-2 font-mono text-xs text-zinc-400">
+          {data.contract.method} {data.contract.endpoint}
+        </div>
+      </div>
+
+      <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 md:grid-cols-4">
+        <Metric label="Prompt" value={String(data.summary.promptCount)} />
+        <Metric label="Sinyal" value={String(data.summary.signalCount)} />
+        <Metric label="Ürün etkisi" value={String(data.summary.affectedProductCount)} />
+        <Metric label="Ortalama öncelik" value={`${data.summary.averagePriorityScore}/100`} />
+      </div>
+
+      <div className="mt-7 grid gap-7 xl:grid-cols-[0.72fr_1.28fr]">
+        <div>
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-lg font-semibold tracking-[-0.035em] text-white">Prompt kaynakları</h3>
+            <span className="text-xs text-zinc-500">{data.summary.typeCoverage.length} sinyal tipi</span>
+          </div>
+          <div className="mt-5 divide-y divide-white/10">
+            {promptSnapshots.map((snapshot) => (
+              <div key={snapshot.id} className="py-4 first:pt-0">
+                <div className="flex items-center justify-between gap-4">
+                  <p className="text-sm font-medium text-white">{snapshot.label}</p>
+                  <p className="font-mono text-xs text-emerald-200/80">{snapshot.confidenceScore}/100</p>
+                </div>
+                <p className="mt-2 text-sm leading-6 text-zinc-500">{snapshot.prompt}</p>
+                <p className="mt-3 text-xs text-zinc-500">
+                  {snapshot.intentLabel} · {formatTry(snapshot.totalPrice)} · {snapshot.signalCount} sinyal
+                </p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {data.summary.typeCoverage.map((coverage) => (
+              <span
+                key={coverage.type}
+                className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-400"
+              >
+                {coverage.label}: {coverage.count}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between gap-4">
+            <h3 className="text-lg font-semibold tracking-[-0.035em] text-white">Satıcıya yansıyan sinyaller</h3>
+            <span className="text-xs text-zinc-500">{data.summary.highPrioritySignalCount} yüksek öncelik</span>
+          </div>
+          <div className="mt-5 divide-y divide-white/10">
+            {topSignals.map((signal) => (
+              <article key={signal.id} className="grid gap-4 py-5 first:pt-0 lg:grid-cols-[168px_1fr_230px]">
+                <div>
+                  <p className="font-mono text-3xl tracking-[-0.06em] text-white">{signal.priorityScore}</p>
+                  <p className="mt-2 text-xs text-emerald-200/80">{signal.priorityLabel}</p>
+                  <p className="mt-3 text-xs text-zinc-500">{signal.typeLabel}</p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-medium text-white">{signal.summary}</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-500">{signal.sourcePrompt}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {signal.affectedProducts.slice(0, 3).map((product) => (
+                      <Link
+                        key={`${signal.id}-${product.id}`}
+                        href={product.href}
+                        className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-400 transition hover:border-emerald-200/30 hover:text-emerald-100"
+                      >
+                        {product.name} · {product.healthScore}/100
+                      </Link>
+                    ))}
+                    {signal.affectedProducts.length > 3 ? (
+                      <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-500">
+                        +{signal.affectedProducts.length - 3} ürün
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs text-zinc-500">Önerilen hamle</p>
+                  <p className="mt-2 text-sm leading-6 text-emerald-100/85">{signal.sellerActionHint}</p>
+                  {signal.matchedSellerActions[0] ? (
+                    <p className="mt-4 text-xs leading-5 text-zinc-500">
+                      Bağlı aksiyon: {signal.matchedSellerActions[0].title}
+                    </p>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
