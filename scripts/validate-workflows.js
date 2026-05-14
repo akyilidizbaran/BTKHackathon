@@ -44,6 +44,7 @@ const {
   getDefaultBuyerSmartCartApiData,
   validateBuyerSmartCartRequest,
 } = require("../src/lib/api/buyer");
+const { getBuyerSmartCartExplanationApiData } = require("../src/lib/api/buyer-smart-cart-explanations");
 
 const validSellerActionTones = new Set(["positive", "neutral", "warning", "danger"]);
 const validSellerOwners = new Set(["stok", "operasyon", "icerik", "destek", "pazarlama", "finans"]);
@@ -71,6 +72,7 @@ async function main() {
   await validateSellerActionExplanationApiContracts();
   validateBuyerWorkflows();
   validateBuyerApiContracts();
+  await validateBuyerSmartCartExplanationApiContracts();
 
   if (failures.length > 0) {
     console.error("Workflow validation failed:");
@@ -81,6 +83,15 @@ async function main() {
   const restockExplanation = await getSellerActionExplanationApiData("restock-ergoflex-calisma-sandalyesi", {
     forceFallback: true,
   });
+  const buyerExplanation = await getBuyerSmartCartExplanationApiData(
+    {
+      buyerId: "buyer-aylin",
+      prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
+    },
+    {
+      forceFallback: true,
+    },
+  );
 
   console.log(
     [
@@ -90,6 +101,7 @@ async function main() {
       `Seller actions: ${generateSellerActionsWorkflow("seller-commercepilot")?.actions.length ?? 0}`,
       `Seller action detail endpoint: ${getSellerActionDetailApiData("restock-ergoflex-calisma-sandalyesi")?.contract.endpoint ?? "missing"}`,
       `Seller action explanation endpoint: ${restockExplanation?.contract.endpoint ?? "missing"}`,
+      `Buyer smart cart explanation endpoint: ${buyerExplanation.contract.endpoint}`,
       `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
       `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
       `Buyer API examples: ${buyerSmartCartExamples.length}`,
@@ -536,6 +548,42 @@ function validateBuyerApiContracts() {
   assert(meetingData.result.selectedItems.some((item) => item.cartRoleKey === "camera"), "buyer API meeting camera rolü eksik");
   assert(!emptyValidation.ok && emptyValidation.code === "PROMPT_REQUIRED", "buyer API boş prompt validation yanlış");
   assert(!longValidation.ok && longValidation.code === "PROMPT_TOO_LONG", "buyer API uzun prompt validation yanlış");
+}
+
+async function validateBuyerSmartCartExplanationApiContracts() {
+  const explanation = await getBuyerSmartCartExplanationApiData(
+    {
+      buyerId: "buyer-aylin",
+      prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
+    },
+    {
+      forceFallback: true,
+    },
+  );
+
+  assert(explanation.contract.envelope === "success/data/error", "buyer explanation envelope contract yanlış");
+  assert(explanation.contract.endpoint === "/api/buyer/smart-cart/explanation", "buyer explanation endpoint yanlış");
+  assert(explanation.contract.method === "POST", "buyer explanation method yanlış");
+  assert(explanation.contract.modelCall === "runtime-only", "buyer explanation build-time çağrı yapmamalı");
+  assert(explanation.summary.intentLabel === "Toplantı setup", "buyer explanation intent label yanlış");
+  assert(explanation.summary.itemCount >= 3, "buyer explanation item count zayıf");
+  assert(explanation.explanation.status === "fallback", "forced buyer explanation fallback dönmeli");
+  assert(explanation.explanation.provider === "deterministic", "forced buyer explanation provider deterministic olmalı");
+  assert(explanation.explanation.model === "gpt-4o-mini", "buyer explanation default model gpt-4o-mini olmalı");
+  assert(explanation.explanation.headline.length > 0, "buyer explanation headline eksik");
+  assert(explanation.explanation.summary.length > 0, "buyer explanation summary eksik");
+  assert(explanation.explanation.evidenceBullets.length >= 3, "buyer explanation evidence zayıf");
+  assert(explanation.explanation.buyerDecision.length > 0, "buyer explanation buyerDecision eksik");
+  assert(explanation.explanation.riskNote.length > 0, "buyer explanation riskNote eksik");
+  assert(explanation.explanation.sellerSignalBridge.length > 0, "buyer explanation sellerSignalBridge eksik");
+  assert(explanation.explanation.cartAdjustment.length > 0, "buyer explanation cartAdjustment eksik");
+  assert(
+    explanation.explanation.fallbackReason?.includes("FORCED_FALLBACK"),
+    "forced buyer explanation fallback reason eksik",
+  );
+  assert(explanation.source.smartCartEndpoint === "/api/buyer/smart-cart", "buyer explanation source endpoint yanlış");
+  assert(explanation.source.selectedItemCount >= 3, "buyer explanation source selected count eksik");
+  assert(explanation.source.sellerSignalCount > 0, "buyer explanation source seller signal eksik");
 }
 
 function validateExplainableScore(label, score) {

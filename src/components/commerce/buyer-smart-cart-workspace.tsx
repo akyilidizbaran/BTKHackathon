@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useRef, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowClockwise,
   CheckCircle,
@@ -17,6 +17,7 @@ import type {
   BuyerSmartCartApiRequest,
   BuyerSmartCartExample,
 } from "@/lib/api/buyer";
+import type { BuyerSmartCartExplanationApiData } from "@/lib/api/buyer-smart-cart-explanations";
 
 gsap.registerPlugin(useGSAP);
 
@@ -26,6 +27,10 @@ interface BuyerSmartCartWorkspaceProps {
 }
 
 type RequestState = "idle" | "loading" | "error";
+type ExplanationState =
+  | { status: "loading"; data?: undefined; error?: undefined }
+  | { status: "ready"; data: BuyerSmartCartExplanationApiData; error?: undefined }
+  | { status: "error"; data?: undefined; error: string };
 
 export function BuyerSmartCartWorkspace({
   initialData,
@@ -36,6 +41,8 @@ export function BuyerSmartCartWorkspace({
   const [buyerId, setBuyerId] = useState(initialData.request.buyerId ?? examples[0]?.buyerId ?? "buyer-aylin");
   const [requestState, setRequestState] = useState<RequestState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [explanationState, setExplanationState] = useState<ExplanationState>({ status: "loading" });
+  const [explanationRetryKey, setExplanationRetryKey] = useState(0);
   const resultRef = useRef<HTMLDivElement>(null);
 
   const buyerOptions = useMemo(() => {
@@ -59,6 +66,50 @@ export function BuyerSmartCartWorkspace({
     },
     { scope: resultRef, dependencies: [data.result.prompt] },
   );
+
+  useEffect(() => {
+    let isActive = true;
+
+    async function loadExplanation() {
+      setExplanationState({ status: "loading" });
+
+      try {
+        const response = await fetch("/api/buyer/smart-cart/explanation", {
+          body: JSON.stringify({
+            buyerId: data.request.buyerId,
+            prompt: data.request.prompt,
+          }),
+          cache: "no-store",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          method: "POST",
+        });
+        const envelope = (await response.json()) as ApiEnvelope<BuyerSmartCartExplanationApiData>;
+
+        if (!response.ok || !envelope.success) {
+          throw new Error(envelope.error?.message ?? "Sepet açıklaması alınamadı.");
+        }
+
+        if (isActive) {
+          setExplanationState({ data: envelope.data, status: "ready" });
+        }
+      } catch (error) {
+        if (isActive) {
+          setExplanationState({
+            error: error instanceof Error ? error.message : "Sepet açıklaması alınamadı.",
+            status: "error",
+          });
+        }
+      }
+    }
+
+    loadExplanation();
+
+    return () => {
+      isActive = false;
+    };
+  }, [data.request.buyerId, data.request.prompt, explanationRetryKey]);
 
   async function submitSmartCart(event?: FormEvent<HTMLFormElement>) {
     event?.preventDefault();
@@ -239,7 +290,7 @@ export function BuyerSmartCartWorkspace({
         </div>
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1fr_380px]" aria-busy={isLoading}>
+      <section className="grid gap-5 xl:grid-cols-[1fr_420px]" aria-busy={isLoading}>
         <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
           <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-5 md:flex-row md:items-end">
             <div>
@@ -299,6 +350,11 @@ export function BuyerSmartCartWorkspace({
         </div>
 
         <div className="space-y-5">
+          <BuyerSmartCartExplanationPanel
+            state={explanationState}
+            onRetry={() => setExplanationRetryKey((key) => key + 1)}
+          />
+
           <SidePanel title="Satın almadan önce bil">
             {data.result.warnings.length > 0 ? (
               data.result.warnings.slice(0, 4).map((warning) => (
@@ -345,6 +401,102 @@ function Metric({ label, value }: { label: string; value: string }) {
     <div className="bg-zinc-950/55 p-4">
       <p className="text-xs text-zinc-500">{label}</p>
       <p className="mt-2 font-mono text-lg font-medium tracking-[-0.04em] text-white">{value}</p>
+    </div>
+  );
+}
+
+function BuyerSmartCartExplanationPanel({
+  onRetry,
+  state,
+}: {
+  onRetry: () => void;
+  state: ExplanationState;
+}) {
+  if (state.status === "loading") {
+    return (
+      <SidePanel title="OpenAI sepet açıklaması">
+        <div className="border-t border-white/10 pt-4">
+          <div className="commerce-skeleton h-4 w-2/3 rounded-full bg-white/10" />
+          <div className="commerce-skeleton mt-3 h-4 w-full rounded-full bg-white/10" />
+          <div className="commerce-skeleton mt-3 h-4 w-4/5 rounded-full bg-white/10" />
+          <div className="commerce-skeleton mt-5 h-24 rounded-2xl bg-white/10" />
+        </div>
+      </SidePanel>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <SidePanel title="OpenAI sepet açıklaması">
+        <div className="border-t border-white/10 pt-4">
+          <p className="text-sm leading-6 text-zinc-500">{state.error}</p>
+          <button
+            className="mt-4 rounded-full border border-white/10 px-4 py-2 text-xs font-medium text-white transition hover:border-emerald-200/40 hover:text-emerald-100 active:translate-y-px"
+            type="button"
+            onClick={onRetry}
+          >
+            Tekrar dene
+          </button>
+        </div>
+      </SidePanel>
+    );
+  }
+
+  const explanation = state.data.explanation;
+  const isGenerated = explanation.status === "generated";
+
+  return (
+    <div className="rounded-[1.75rem] border border-emerald-200/15 bg-emerald-300/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-6">
+      <div className="flex flex-col gap-3 border-b border-white/10 pb-5">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="font-mono text-xs text-emerald-200/70">OpenAI sepet açıklaması</p>
+            <h2 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-white">{explanation.headline}</h2>
+          </div>
+          <span
+            className={
+              isGenerated
+                ? "shrink-0 rounded-full border border-emerald-200/20 bg-emerald-300/10 px-3 py-1 font-mono text-xs text-emerald-100"
+                : "shrink-0 rounded-full border border-amber-200/20 bg-amber-300/10 px-3 py-1 font-mono text-xs text-amber-100"
+            }
+          >
+            {explanation.provider} · {explanation.model}
+          </span>
+        </div>
+        <p className="text-sm leading-6 text-zinc-500">{isGenerated ? "Canlı model çıktısı" : "Deterministik fallback çıktı"}</p>
+      </div>
+
+      <p className="mt-5 text-sm leading-7 text-zinc-400">{explanation.summary}</p>
+
+      <div className="mt-5 divide-y divide-white/10 rounded-2xl border border-white/10 bg-zinc-950/40 px-4">
+        {explanation.evidenceBullets.map((item) => (
+          <p key={item} className="py-3 text-sm leading-6 text-zinc-500">
+            {item}
+          </p>
+        ))}
+      </div>
+
+      <div className="mt-5 space-y-4">
+        <DecisionNote label="Alıcı kararı" value={explanation.buyerDecision} />
+        <DecisionNote label="Risk notu" value={explanation.riskNote} />
+        <DecisionNote label="Satıcıya dönen sinyal" value={explanation.sellerSignalBridge} />
+        <DecisionNote label="Sepet ayarı" value={explanation.cartAdjustment} />
+      </div>
+
+      {explanation.fallbackReason ? (
+        <p className="mt-5 rounded-2xl border border-amber-200/15 bg-amber-300/[0.045] p-3 text-xs leading-5 text-amber-100/80">
+          {explanation.fallbackReason}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function DecisionNote({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-zinc-600">{label}</p>
+      <p className="mt-1 text-sm leading-6 text-white">{value}</p>
     </div>
   );
 }
