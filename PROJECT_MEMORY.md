@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 6B Seller API Contract tamamlandı; seller ekranları ortak API contract builder'larına ve route handler'lara bağlandı.
+  * CommercePilot için Milestone 6C Buyer Smart Cart API + canlı etkileşim tamamlandı; alıcı komutu artık API route üzerinden sepet önerisi üretir.
 * Son değişiklik neydi?
-  * `/api/seller/overview`, `/api/seller/actions`, `/api/seller/products`, `/api/seller/products/[id]/health` endpoint'leri ve `/seller/products/[slug]` ürün sağlık detay sayfası eklendi.
+  * `/api/buyer/smart-cart` route'u, buyer smart cart API contract builder'ı ve `/buyer` içindeki canlı komut/sepet arayüzü eklendi.
 * Bir sonraki net adım ne?
-  * Milestone 6C ile buyer smart cart API route'u ve buyer komut etkileşimini canlı hale getirmek.
+  * 6C review sonrası buyer ürün keşfi/sepet sayfası derinleştirme veya LLM/Gemini entegrasyon fazının kapsamını netleştirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -121,6 +121,8 @@
 * 2026-05-14 — Karar: Seller API envelope `success/data/error` olarak standardize edildi. | Gerekçe: UI, route handler ve ileride agent/LLM katmanı aynı hata/başarı contract'ını okumalı. | Etki: `src/lib/api/responses.ts` eklendi; seller endpoint'leri aynı envelope ile döner. | Alternatifler: Ham JSON veya farklı endpoint bazlı shape.
 * 2026-05-14 — Karar: Seller ekranları doğrudan workflow çağrısı yerine ortak API contract builder'larını kullanacak. | Gerekçe: Server component içinde kendi route'unu HTTP ile fetch etmek build/runtime'da gereksiz kırılganlık yaratır; route ve UI aynı typed builder'ı paylaşınca contract tek kaynak olur. | Etki: `src/lib/api/seller.ts` eklendi; `/seller`, `/seller/actions`, `/seller/products` ve ürün detay UI aynı data shape'i kullanır.
 * 2026-05-14 — Karar: Product detail UI slug ile, product health API id ile çalışacak. | Gerekçe: UI URL'leri okunabilir olmalı; API contract ise stable product id üzerinden netleşmeli. | Etki: `/seller/products/[slug]` ve `/api/seller/products/[id]/health` route'ları eklendi.
+* 2026-05-14 — Karar: Buyer Smart Cart canlı etkileşimi tek API route üzerinden kurulacak: `GET/POST /api/buyer/smart-cart`. | Gerekçe: Demo için kullanıcı komutu canlı çalışmalı ama auth/DB/mutation/LLM kapsamı açılmamalı. | Etki: `src/lib/api/buyer.ts`, route handler ve client workspace eklendi; GET bootstrap örnekleri, POST sepet önerisi döner.
+* 2026-05-14 — Karar: Buyer UI canlı API çağıracak, ilk render ise aynı typed builder ile hydrate edilecek. | Gerekçe: İlk ekran hızlı ve build-safe kalırken kullanıcı submit/preset aksiyonları gerçek route'a gitmeli. | Etki: `/buyer` server component initial contract üretir, `BuyerSmartCartWorkspace` client component POST `/api/buyer/smart-cart` çağırır.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -137,6 +139,7 @@
 * 2026-05-14 — Milestone: Milestone 5.5D Validation/Test Hardening tamamlandı. | Sonuç: Mock data integrity, scoring layer, seller workflow ve buyer workflow runtime validation script'i eklendi; lint, typecheck, validation ve production build doğrulaması geçti.
 * 2026-05-14 — Milestone: Milestone 6A UI Foundation başlatıldı. | Sonuç: Görsel referanslar üretildi; rol seçimi, buyer/seller workspace shell, seller action/product preview ve buyer smart cart/product/cart preview route'ları eklendi.
 * 2026-05-14 — Milestone: Milestone 6B Seller API Contract tamamlandı. | Sonuç: Seller overview/actions/products/product health API endpoint'leri, ortak seller API contract builder'ları, ürün sağlık detay sayfası, loading/error/empty state temelleri ve API validation kontrolleri eklendi.
+* 2026-05-14 — Milestone: Milestone 6C Buyer Smart Cart API + Live Interaction tamamlandı. | Sonuç: `/api/buyer/smart-cart` route'u, buyer API contract builder'ı, canlı `/buyer` komut formu, preset prompt çalıştırma, loading/error/empty state ve buyer API validation kontrolleri eklendi.
 
 ## 8) Yapılanlar
 
@@ -158,6 +161,8 @@
 * [x] Milestone 5.5C seller workflow output hardening tamamlandı.
 * [x] Milestone 5.5D validation/test hardening tamamlandı.
 * [x] Milestone 6A rol seçimi ve buyer/seller app shell omurgası eklendi.
+* [x] Milestone 6B seller API contract ve ürün sağlık detay akışı tamamlandı.
+* [x] Milestone 6C buyer smart cart API ve canlı komut etkileşimi tamamlandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -184,7 +189,8 @@
 * [x] Brain hardening bittikten sonra UI/API kapsamını netleştir.
 * [x] Milestone 6A app shell ve rol seçimi oluştur.
 * [x] Milestone 6B seller API route'ları ve seller ekran veri contract'larını oluştur.
-* [ ] Milestone 6C buyer API route'u ve buyer smart cart etkileşimini canlı hale getir.
+* [x] Milestone 6C buyer API route'u ve buyer smart cart etkileşimini canlı hale getir.
+* [ ] 6C review sonrası buyer ürün keşfi/sepet sayfası derinleştirme veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -210,6 +216,7 @@
 * Buyer tarafı ilk MVP'de daha sade kalabilir ama sistemin çift taraflı olduğunu gösterecek kadar var olmalı.
 * LLM sadece son karar verici gibi konumlanmamalı; karar sinyalleri önce sistem tarafından hesaplanmalı.
 * Seller UI artık route handler ile aynı `src/lib/api/seller.ts` builder'larını kullanır; seller workflow alanı değişirse API validation da güncellenmeli.
+* Buyer canlı akışı `src/lib/api/buyer.ts` ve `/api/buyer/smart-cart` üzerinden ilerler; prompt parser veya workflow rol mantığı değişirse API validation da güncellenmeli.
 
 ## 12) Satıcı Paneli Stratejisi
 
@@ -760,6 +767,31 @@
 * Sınırlar:
   * Auth, DB, LLM, LangChain, mutation ve ürün düzenleme yok.
   * Server component'ler kendi route'larını HTTP ile fetch etmiyor; build güvenliği için route ve UI ortak builder contract'ını paylaşıyor.
+
+### 6C Buyer Smart Cart API + Live Interaction
+
+* Amaç:
+  * Alıcı komutunu pasif demo metninden çıkarıp gerçek API route üzerinden çalışan smart cart deneyimine çevirmek.
+  * Buyer tarafında doğal dil komut -> intent parse -> rol bazlı sepet -> uyarı/alternatif/tamamlayıcı/satıcı sinyali akışını UI'da canlı göstermek.
+* Eklenen API route:
+  * `GET /api/buyer/smart-cart`: örnek prompt'lar ve default sepet contract'ı döner.
+  * `POST /api/buyer/smart-cart`: `{ prompt, buyerId, manualPreferences? }` alır ve `{ success, data, error }` envelope ile smart cart sonucu döner.
+* Contract:
+  * `src/lib/api/buyer.ts` içinde `BuyerSmartCartApiData`, request validation, örnek prompt'lar ve summary alanları eklendi.
+  * Boş prompt `PROMPT_REQUIRED`, fazla uzun prompt `PROMPT_TOO_LONG`, invalid JSON `INVALID_JSON` error envelope döndürür.
+* Eklenen UI:
+  * `/buyer` artık `BuyerSmartCartWorkspace` client component'iyle canlı çalışır.
+  * Komut textarea, buyer profile selector, preset prompt butonları, loading/error state ve API contract rail'i eklendi.
+  * Sonuç bölümünde toplam fiyat, güven skoru, uyarı sayısı, satıcı sinyali, rol bazlı ürün satırları, uyarılar, alternatif/tamamlayıcı öneriler ve satıcıya dönen sinyaller gösterilir.
+  * Buyer segment için loading/error state eklendi.
+* Validation:
+  * `scripts/validate-workflows.js` buyer API contract, default result, meeting setup, örnek prompt sayısı ve prompt validation kontrolleriyle genişletildi.
+  * Doğrulanan komutlar: `npm run check`, `npm run build`.
+  * Runtime HTTP doğrulaması: GET bootstrap, POST meeting setup ve boş prompt error envelope geçti.
+  * Browser doğrulaması: `/buyer` açıldı; preset "Toplantı" gerçek API çağrısıyla camera/audio/connectivity rollerini döndürdü; mobilde yatay overflow yok.
+* Sınırlar:
+  * Auth, DB, LLM, LangChain, checkout, kalıcı sepet ve ürün satın alma mutation yok.
+  * Buyer products ve cart route'ları hâlâ preview/omurga seviyesinde; canlı komut akışı `/buyer` üstünde kuruldu.
 
 ### Güncelleme Kaydı
 

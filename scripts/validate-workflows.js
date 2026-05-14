@@ -35,6 +35,12 @@ const {
   getSellerProductHealthApiData,
   getSellerProductsApiData,
 } = require("../src/lib/api/seller");
+const {
+  buyerSmartCartExamples,
+  getBuyerSmartCartApiData,
+  getDefaultBuyerSmartCartApiData,
+  validateBuyerSmartCartRequest,
+} = require("../src/lib/api/buyer");
 
 const validSellerActionTones = new Set(["positive", "neutral", "warning", "danger"]);
 const validSellerOwners = new Set(["stok", "operasyon", "icerik", "destek", "pazarlama", "finans"]);
@@ -54,6 +60,7 @@ validateScoringLayer();
 validateSellerWorkflows();
 validateSellerApiContracts();
 validateBuyerWorkflows();
+validateBuyerApiContracts();
 
 if (failures.length > 0) {
   console.error("Workflow validation failed:");
@@ -68,6 +75,7 @@ console.log(
     `Reviews: ${reviews.length}`,
     `Seller actions: ${generateSellerActionsWorkflow("seller-commercepilot")?.actions.length ?? 0}`,
     `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
+    `Buyer API examples: ${buyerSmartCartExamples.length}`,
     "Buyer prompts: 7",
   ].join("\n"),
 );
@@ -403,6 +411,30 @@ function validateBuyerWorkflows() {
       });
     }
   });
+}
+
+function validateBuyerApiContracts() {
+  const defaultData = getDefaultBuyerSmartCartApiData();
+  const meetingData = getBuyerSmartCartApiData({
+    buyerId: "buyer-aylin",
+    prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
+  });
+  const emptyValidation = validateBuyerSmartCartRequest({ prompt: "" });
+  const longValidation = validateBuyerSmartCartRequest({ prompt: "x".repeat(281) });
+
+  assert(buyerSmartCartExamples.length >= 5, "buyer API örnek prompt sayısı yetersiz");
+  assert(defaultData.contract.envelope === "success/data/error", "buyer API envelope contract yanlış");
+  assert(defaultData.contract.endpoint === "/api/buyer/smart-cart", "buyer API endpoint contract yanlış");
+  assert(defaultData.contract.method === "POST", "buyer API method contract yanlış");
+  assert(defaultData.request.buyerId === "buyer-aylin", "buyer API default buyer yanlış");
+  assert(defaultData.summary.itemCount === defaultData.result.selectedItems.length, "buyer API itemCount uyumsuz");
+  assert(defaultData.summary.warningCount === defaultData.result.warnings.length, "buyer API warningCount uyumsuz");
+  assert(defaultData.summary.sellerSignalCount === defaultData.result.sellerSignalCandidates.length, "buyer API seller signal count uyumsuz");
+  assert(defaultData.result.intent.type === "home_office_setup", "buyer API default intent yanlış");
+  assert(meetingData.result.intent.type === "meeting_setup", "buyer API meeting intent yanlış");
+  assert(meetingData.result.selectedItems.some((item) => item.cartRoleKey === "camera"), "buyer API meeting camera rolü eksik");
+  assert(!emptyValidation.ok && emptyValidation.code === "PROMPT_REQUIRED", "buyer API boş prompt validation yanlış");
+  assert(!longValidation.ok && longValidation.code === "PROMPT_TOO_LONG", "buyer API uzun prompt validation yanlış");
 }
 
 function validateExplainableScore(label, score) {
