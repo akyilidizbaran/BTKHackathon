@@ -584,6 +584,45 @@ async function validateBuyerSmartCartExplanationApiContracts() {
   assert(explanation.source.smartCartEndpoint === "/api/buyer/smart-cart", "buyer explanation source endpoint yanlış");
   assert(explanation.source.selectedItemCount >= 3, "buyer explanation source selected count eksik");
   assert(explanation.source.sellerSignalCount > 0, "buyer explanation source seller signal eksik");
+
+  const noBudgetGuard = await getBuyerSmartCartExplanationApiData(
+    {
+      buyerId: "buyer-emre",
+      prompt: "Siyah ve gri renklerde masa takımı diz.",
+    },
+    {
+      modelTextOverride: JSON.stringify({
+        buyerDecision: "Bütçenizi aşmadan bu sepet doğrudan alınabilir.",
+        cartAdjustment: "Sepet bütçe içinde kalıyor; ek ürün ekleyebilirsin.",
+        evidenceBullets: [
+          "Toplam 2950 TL, bütçeniz 3000 TL ile uyumlu.",
+          "Siyah ve gri ürünler masa stili talebini karşılıyor.",
+          "Kargo sinyali güçlü olan ürünler seçildi.",
+          "Bütçe altında kalan aksesuarlar tamamlayıcı olabilir.",
+        ],
+        headline: "Masa stili bütçe içinde",
+        riskNote: "Bütçe altında olduğu için fiyat riski yok.",
+        sellerSignalBridge: "Satıcı tarafına renk uyumu talebi döner.",
+        summary: "Bu sepet 3000 TL bütçeniz içinde kalıyor.",
+      }),
+    },
+  );
+  const guardedNoBudgetText = JSON.stringify(noBudgetGuard.explanation).toLocaleLowerCase("tr-TR");
+
+  assert(noBudgetGuard.summary.budgetStatusLabel === "Bütçe belirtilmedi", "no-budget explanation status yanlış");
+  assert(
+    noBudgetGuard.explanation.summary.toLocaleLowerCase("tr-TR").includes("bütçe belirtilmedi"),
+    "no-budget explanation summary bütçe guard fallback'ine dönmeli",
+  );
+  assert(noBudgetGuard.explanation.evidenceBullets.length >= 3, "no-budget explanation guard evidence zayıf");
+  assert(
+    !guardedNoBudgetText.includes("bütçeniz 3000") &&
+      !guardedNoBudgetText.includes("bütçeniz 3.000") &&
+      !guardedNoBudgetText.includes("bütçenizi") &&
+      !guardedNoBudgetText.includes("bütçe içinde") &&
+      !guardedNoBudgetText.includes("bütçe altında"),
+    "no-budget explanation olmayan bütçe iddiasını UI contract'ına geçiriyor",
+  );
 }
 
 function validateExplainableScore(label, score) {

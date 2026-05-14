@@ -57,6 +57,7 @@ export interface BuyerSmartCartModelExplanation {
 
 export interface BuyerSmartCartExplanationOptions {
   forceFallback?: boolean;
+  modelTextOverride?: string;
 }
 
 interface ParsedExplanationBody {
@@ -79,19 +80,21 @@ export async function getBuyerSmartCartExplanationApiData(
   });
   const fallbackBody = createFallbackExplanationBody(smartCart);
   const fallbackText = JSON.stringify(fallbackBody);
-  const llmResult = options.forceFallback
-    ? createForcedFallbackResult(fallbackText)
-    : await generateLlmText({
-        fallbackText,
-        input: createBuyerSmartCartExplanationInput(smartCart),
-        instructions: createBuyerSmartCartExplanationInstructions(),
-        metadata: {
-          buyer_id: smartCart.request.buyerId ?? defaultBuyerId,
-          intent_type: smartCart.summary.intentType,
-          task: "buyer_smart_cart_explanation",
-        },
-      });
-  const parsed = parseModelExplanation(llmResult.text, fallbackBody);
+  const llmResult = typeof options.modelTextOverride === "string"
+    ? createModelTextOverrideResult(options.modelTextOverride)
+    : options.forceFallback
+      ? createForcedFallbackResult(fallbackText)
+      : await generateLlmText({
+          fallbackText,
+          input: createBuyerSmartCartExplanationInput(smartCart),
+          instructions: createBuyerSmartCartExplanationInstructions(),
+          metadata: {
+            buyer_id: smartCart.request.buyerId ?? defaultBuyerId,
+            intent_type: smartCart.summary.intentType,
+            task: "buyer_smart_cart_explanation",
+          },
+        });
+  const parsed = parseModelExplanation(llmResult.text, fallbackBody, smartCart);
   const status = parsed.usedFallback || llmResult.status === "fallback" ? "fallback" : "generated";
   const fallbackReason = getFallbackReason(llmResult, parsed.usedFallback);
 
@@ -136,6 +139,7 @@ function createBuyerSmartCartExplanationInstructions(): string {
     "CommercePilot buyer smart cart explanation katmanısın.",
     "Sadece verilen JSON context içindeki ürün, uyarı, bütçe, güven ve satıcı sinyali verilerini kullan; veri uydurma.",
     "Çıktıyı Türkçe, kısa, karar güveni odaklı ve alıcının neden bu sepeti görmesi gerektiğini açıklayacak şekilde yaz.",
+    "budget.hasRequestedBudget false ise bütçe limiti, bütçeniz X TL, bütçe içinde/altında veya tolerans iddiası yazma; sadece budgetStatusLabel değerini kullan.",
     "Kesinlikle geçerli JSON dön. Markdown, açıklama veya code fence kullanma.",
     'JSON shape: {"headline":"...","summary":"...","evidenceBullets":["..."],"buyerDecision":"...","riskNote":"...","sellerSignalBridge":"...","cartAdjustment":"..."}',
     "evidenceBullets 3-4 madde olsun; her madde verilen selectedItems, warnings, alternatives veya sellerSignals alanına dayanmalı.",
@@ -146,12 +150,16 @@ function createBuyerSmartCartExplanationInput(smartCart: BuyerSmartCartApiData):
   return JSON.stringify(
     {
       budget: {
-        budget: smartCart.result.budget,
+        budgetGuardrail: smartCart.result.budget
+          ? "Kullanıcı bütçe belirtti; yalnızca requestedBudget ve budgetStatusLabel değerlerine dayan."
+          : "Kullanıcı bütçe belirtmedi; bütçe limiti, bütçeniz X TL, bütçe içinde veya bütçe altında gibi iddialar yazma.",
         budgetStatusLabel: smartCart.summary.budgetStatusLabel,
+        hasRequestedBudget: Boolean(smartCart.result.budget),
         isOverRequestedBudget: smartCart.result.isOverRequestedBudget,
         isOverSoftBudget: smartCart.result.isOverSoftBudget,
-        remainingBudget: smartCart.result.remainingBudget,
-        softBudgetLimit: smartCart.result.softBudgetLimit,
+        remainingBudget: smartCart.result.remainingBudget ?? null,
+        requestedBudget: smartCart.result.budget ?? null,
+        softBudgetLimit: smartCart.result.softBudgetLimit ?? null,
         totalPrice: smartCart.summary.totalPrice,
       },
       buyer: {
@@ -236,9 +244,20 @@ function createForcedFallbackResult(fallbackText: string): LlmTextGenerationResu
   };
 }
 
+function createModelTextOverrideResult(text: string): LlmTextGenerationResult {
+  return {
+    generatedAt: new Date().toISOString(),
+    model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
+    provider: "openai",
+    status: "generated",
+    text,
+  };
+}
+
 function parseModelExplanation(
   text: string,
   fallbackBody: ParsedExplanationBody,
+  smartCart: BuyerSmartCartApiData,
 ): { body: ParsedExplanationBody; usedFallback: boolean } {
   const parsed = parseJsonObject(text);
 
@@ -249,8 +268,8 @@ function parseModelExplanation(
     };
   }
 
-  return {
-    body: {
+  const body = applyContextGuardrails(
+    {
       buyerDecision: normalizeString(parsed.buyerDecision, fallbackBody.buyerDecision),
       cartAdjustment: normalizeString(parsed.cartAdjustment, fallbackBody.cartAdjustment),
       evidenceBullets: normalizeStringArray(parsed.evidenceBullets, fallbackBody.evidenceBullets, 4),
@@ -259,8 +278,97 @@ function parseModelExplanation(
       sellerSignalBridge: normalizeString(parsed.sellerSignalBridge, fallbackBody.sellerSignalBridge),
       summary: normalizeString(parsed.summary, fallbackBody.summary),
     },
+    fallbackBody,
+    smartCart,
+  );
+
+  return {
+    body,
     usedFallback: false,
   };
+}
+
+function applyContextGuardrails(
+  body: ParsedExplanationBody,
+  fallbackBody: ParsedExplanationBody,
+  smartCart: BuyerSmartCartApiData,
+): ParsedExplanationBody {
+  if (smartCart.result.budget) {
+    return body;
+  }
+
+  return {
+    buyerDecision: guardNoBudgetClaim(body.buyerDecision, fallbackBody.buyerDecision),
+    cartAdjustment: guardNoBudgetClaim(body.cartAdjustment, fallbackBody.cartAdjustment),
+    evidenceBullets: mergeSafeEvidenceBullets(body.evidenceBullets, fallbackBody.evidenceBullets),
+    headline: guardNoBudgetClaim(body.headline, fallbackBody.headline),
+    riskNote: guardNoBudgetClaim(body.riskNote, fallbackBody.riskNote),
+    sellerSignalBridge: guardNoBudgetClaim(body.sellerSignalBridge, fallbackBody.sellerSignalBridge),
+    summary: guardNoBudgetClaim(body.summary, fallbackBody.summary),
+  };
+}
+
+function guardNoBudgetClaim(value: string, fallback: string): string {
+  return hasUnsupportedNoBudgetClaim(value) ? fallback : value;
+}
+
+function mergeSafeEvidenceBullets(modelBullets: string[], fallbackBullets: string[]): string[] {
+  const safeModelBullets = modelBullets.filter((bullet) => !hasUnsupportedNoBudgetClaim(bullet));
+  const merged = [...safeModelBullets, ...fallbackBullets].reduce<string[]>((items, bullet) => {
+    if (!items.includes(bullet)) {
+      items.push(bullet);
+    }
+
+    return items;
+  }, []);
+
+  return merged.slice(0, 4);
+}
+
+function hasUnsupportedNoBudgetClaim(value: string): boolean {
+  const normalized = value.toLocaleLowerCase("tr-TR");
+
+  if (!normalized.includes("bütçe")) {
+    return false;
+  }
+
+  const unsafePhrases = [
+    "%5 tolerans",
+    "bütçe altında",
+    "bütçe dahilinde",
+    "bütçe içinde",
+    "bütçe ile uyumlu",
+    "bütçe limit",
+    "bütçe sınır",
+    "bütçe toleransı",
+    "bütçeniz",
+    "bütçeye",
+    "bütçeyi aşıyor",
+    "bütçeyi aşmıyor",
+    "bütçeyi koruyor",
+    "bütçenize",
+    "bütçenizi",
+  ];
+
+  if (unsafePhrases.some((phrase) => normalized.includes(phrase))) {
+    return true;
+  }
+
+  const mentionsBudgetAmount =
+    /bütçe\w*(?:\s+\S+){0,4}\s+(?:₺\s*)?\d[\d.,]*\s*(?:tl)?/i.test(normalized) ||
+    /(?:₺\s*)?\d[\d.,]*\s*(?:tl)?(?:\s+\S+){0,4}\s+bütçe\w*/i.test(normalized);
+
+  if (!mentionsBudgetAmount) {
+    return false;
+  }
+
+  return ![
+    "bütçe belirtilmedi",
+    "bütçe bilgisi yok",
+    "bütçe girilmedi",
+    "bütçe limiti yok",
+    "bütçe sınırı yok",
+  ].some((safePhrase) => normalized.includes(safePhrase));
 }
 
 function parseJsonObject(text: string): Record<string, unknown> | undefined {
