@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getSellerActionsApiData } from "@/lib/api/seller";
 
 export default function SellerActionsPage() {
@@ -40,8 +41,9 @@ export default function SellerActionsPage() {
       <section className="grid gap-5">
         {data.actions.length > 0 ? (
           data.actions.map((action, index) => (
-            <article
+            <Link
               key={action.id}
+              href={`/seller/actions/${action.id}`}
               className="group grid gap-6 rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition hover:border-emerald-200/20 hover:bg-white/[0.055] lg:grid-cols-[1fr_420px] md:p-7"
             >
               <div>
@@ -101,7 +103,7 @@ export default function SellerActionsPage() {
                   ))}
                 </div>
               </div>
-            </article>
+            </Link>
           ))
         ) : (
           <EmptyPanel

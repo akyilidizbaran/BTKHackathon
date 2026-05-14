@@ -1,11 +1,17 @@
 import { buyerSmartCartExamples, getBuyerSmartCartApiData } from "@/lib/api/buyer";
 import { analyzeProductHealthWorkflow, generateSellerActionsWorkflow } from "@/lib/workflows";
-import type { BuyerSellerSignalCandidate, ProductHealthWorkflowResult, SellerGrowthAction } from "@/lib/workflows";
+import type {
+  BuyerSellerSignalCandidate,
+  ProductHealthWorkflowResult,
+  SellerActionOwner,
+  SellerGrowthAction,
+} from "@/lib/workflows";
 import { getProductById, getProductBySlug, getProductDetail, getSellerOverview } from "@/lib/data";
 import { scoreProduct } from "@/lib/scoring";
 import type { Product, ProductCategory } from "@/types/commerce";
 
 export const demoSellerId = "seller-commercepilot";
+export const sellerActionsEndpoint = "/api/seller/actions";
 export const sellerBuyerSignalsEndpoint = "/api/seller/buyer-signals";
 
 export interface SellerApiContractMeta {
@@ -19,6 +25,13 @@ export interface SellerBuyerSignalsApiContractMeta extends SellerApiContractMeta
   source: "buyer-smart-cart-workflow";
   endpoint: typeof sellerBuyerSignalsEndpoint;
   method: "GET";
+}
+
+export interface SellerActionDetailApiContractMeta extends SellerApiContractMeta {
+  source: "mock-workflow";
+  endpoint: string;
+  method: "GET";
+  actionId: string;
 }
 
 export interface SellerSummaryApiData {
@@ -60,6 +73,47 @@ export interface SellerActionsApiData {
   actions: SellerGrowthAction[];
   analyzedProductCount: number;
   actionTypeCoverage: string[];
+}
+
+export interface SellerActionDetailApiData {
+  contract: SellerActionDetailApiContractMeta;
+  seller: SellerSummaryApiData;
+  action: SellerGrowthAction;
+  actionHref: string;
+  affectedProducts: SellerProductApiRow[];
+  relatedBuyerSignals: SellerBuyerSignalApiRow[];
+  executionPreview: SellerActionExecutionPreview;
+  evidenceSnapshot: SellerActionEvidenceSnapshot[];
+  llmReadyContext: SellerGrowthAction["llmReadyContext"];
+}
+
+export interface SellerActionExecutionPreview {
+  title: string;
+  summary: string;
+  primaryOwner: SellerActionOwner;
+  steps: SellerActionExecutionStep[];
+  generatedDrafts: SellerActionGeneratedDraft[];
+}
+
+export interface SellerActionExecutionStep {
+  id: string;
+  title: string;
+  detail: string;
+  owner: SellerActionOwner;
+  priorityLabel: string;
+}
+
+export interface SellerActionGeneratedDraft {
+  label: string;
+  body: string;
+  helper: string;
+}
+
+export interface SellerActionEvidenceSnapshot {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "good" | "calm" | "warning";
 }
 
 export interface SellerProductsApiData {
@@ -235,6 +289,53 @@ export function getSellerActionsApiData(sellerId = demoSellerId): SellerActionsA
     actions: workflow.actions,
     analyzedProductCount: workflow.analyzedProductCount,
     actionTypeCoverage: Array.from(new Set(workflow.actions.map((action) => action.type))),
+  };
+}
+
+export function getSellerActionDetailApiData(
+  actionId: string,
+  sellerId = demoSellerId,
+): SellerActionDetailApiData | undefined {
+  const overview = getSellerOverview(sellerId);
+  const workflow = generateSellerActionsWorkflow(sellerId);
+
+  if (!overview || !workflow) {
+    return undefined;
+  }
+
+  const action = workflow.actions.find((candidate) => candidate.id === actionId);
+
+  if (!action) {
+    return undefined;
+  }
+
+  const sellerProductIds = new Set(overview.products.map((product) => product.id));
+  const affectedProducts = action.productIds
+    .filter((productId) => sellerProductIds.has(productId))
+    .map((productId) => getProductById(productId))
+    .filter((product): product is Product => Boolean(product))
+    .map(createSellerProductRow);
+  const relatedBuyerSignals =
+    getSellerBuyerSignalsApiData(sellerId)?.signals
+      .filter((signal) => isBuyerSignalRelatedToAction(signal, action))
+      .slice(0, 4) ?? [];
+
+  return {
+    contract: {
+      ...createContractMeta(sellerId, workflow.generatedAt, "mock-workflow"),
+      actionId: action.id,
+      endpoint: `${sellerActionsEndpoint}/${action.id}`,
+      method: "GET",
+      source: "mock-workflow",
+    },
+    seller: createSellerSummary(overview.seller),
+    action,
+    actionHref: `/seller/actions/${action.id}`,
+    affectedProducts,
+    relatedBuyerSignals,
+    executionPreview: createSellerActionExecutionPreview(action, affectedProducts, relatedBuyerSignals),
+    evidenceSnapshot: createSellerActionEvidenceSnapshot(action, affectedProducts, relatedBuyerSignals),
+    llmReadyContext: action.llmReadyContext,
   };
 }
 
@@ -447,6 +548,272 @@ function createSellerSummary(seller: NonNullable<ReturnType<typeof getSellerOver
     supportResponseHours: seller.supportResponseHours,
     defaultDeliveryPromiseDays: seller.defaultDeliveryPromiseDays,
   };
+}
+
+function createSellerActionExecutionPreview(
+  action: SellerGrowthAction,
+  affectedProducts: SellerProductApiRow[],
+  relatedBuyerSignals: SellerBuyerSignalApiRow[],
+): SellerActionExecutionPreview {
+  const primaryProduct = affectedProducts[0]?.name ?? "ilgili ürün";
+  const buyerSignalSummary = relatedBuyerSignals[0]?.summary;
+
+  if (action.type === "restock") {
+    return {
+      title: "Stok yenileme taslağı",
+      summary: `${primaryProduct} için stok riski kapanana kadar vitrin baskısı kontrollü tutulur.`,
+      primaryOwner: "stok",
+      steps: [
+        {
+          id: `${action.id}-purchase-order`,
+          title: "Tedarik emri aç",
+          detail: `${primaryProduct} için reorder point altına düşmeden stok yenileme talebi oluştur.`,
+          owner: "stok",
+          priorityLabel: "İlk iş",
+        },
+        {
+          id: `${action.id}-visibility-guard`,
+          title: "Vitrin koruması uygula",
+          detail: "Stok gelene kadar kampanya basıncını düşür, organik görünürlüğü tamamen kapatma.",
+          owner: "operasyon",
+          priorityLabel: "Aynı gün",
+        },
+        {
+          id: `${action.id}-delivery-note`,
+          title: "Teslimat notunu güncelle",
+          detail: "Ürün sayfasında stok ve teslimat beklentisini açık yaz, güven kaybını azalt.",
+          owner: "icerik",
+          priorityLabel: "Kontrol",
+        },
+      ],
+      generatedDrafts: [
+        {
+          label: "Operasyon notu",
+          body: `${primaryProduct} stok yenileme emri açıldıktan sonra kampanya görünürlüğü yeniden değerlendirilecek.`,
+          helper: "İç operasyon mesajı taslağı",
+        },
+        {
+          label: "Ürün sayfası notu",
+          body: "Teslimat süresi stok durumuna göre güncellenir; sipariş öncesi tahmini tarih kontrol edilmelidir.",
+          helper: "PDP güven notu taslağı",
+        },
+      ],
+    };
+  }
+
+  if (action.type === "create_bundle") {
+    return {
+      title: "Bundle uygulama taslağı",
+      summary: `${primaryProduct} çevresinde tek sepetlik tamamlayıcı paket kurgulanır.`,
+      primaryOwner: "pazarlama",
+      steps: [
+        {
+          id: `${action.id}-bundle-products`,
+          title: "Paket ürünlerini sabitle",
+          detail: affectedProducts.map((product) => product.name).join(" + "),
+          owner: "pazarlama",
+          priorityLabel: "Kurgu",
+        },
+        {
+          id: `${action.id}-bundle-margin`,
+          title: "Marj eşiğini kontrol et",
+          detail: "İndirim oranı kârlılığı ezmeden sepet değerini artıracak seviyede tutulur.",
+          owner: "finans",
+          priorityLabel: "Onay",
+        },
+        {
+          id: `${action.id}-bundle-copy`,
+          title: "Paket açıklamasını yaz",
+          detail: buyerSignalSummary ?? "Alıcı kullanım senaryosuna göre paket faydası açıkça anlatılır.",
+          owner: "icerik",
+          priorityLabel: "Yayın",
+        },
+      ],
+      generatedDrafts: [
+        {
+          label: "Bundle başlığı",
+          body: `${primaryProduct} ile çalışma alanını tek sepette tamamla`,
+          helper: "Kampanya başlığı taslağı",
+        },
+        {
+          label: "Kampanya metni",
+          body: "Birlikte kullanılan ürünleri tek pakette topla, kurulum süresini ve karar yükünü azalt.",
+          helper: "Listeleme metni taslağı",
+        },
+      ],
+    };
+  }
+
+  if (action.type === "review_attention") {
+    return {
+      title: "Yorum güveni taslağı",
+      summary: `${primaryProduct} için tekrar eden itirazlar ürün sayfasında önden yanıtlanır.`,
+      primaryOwner: "destek",
+      steps: [
+        {
+          id: `${action.id}-review-cluster`,
+          title: "Yorum temasını ayır",
+          detail: "Negatif yorumlardaki tekrar eden tema tek cümlelik müşteri itirazına çevrilir.",
+          owner: "destek",
+          priorityLabel: "İlk iş",
+        },
+        {
+          id: `${action.id}-pdp-answer`,
+          title: "PDP cevabı ekle",
+          detail: "Ürün açıklaması, sık sorulan soru veya teknik özellik alanı güven notuyla güncellenir.",
+          owner: "icerik",
+          priorityLabel: "Aynı gün",
+        },
+        {
+          id: `${action.id}-support-reply`,
+          title: "Destek yanıtını hazırla",
+          detail: "Yeni gelen benzer şikayetlere tutarlı cevap verilecek kısa yanıt taslağı oluşturulur.",
+          owner: "destek",
+          priorityLabel: "Kontrol",
+        },
+      ],
+      generatedDrafts: [
+        {
+          label: "PDP güven notu",
+          body: `${primaryProduct} için kullanım uyumluluğu ve beklenti notları satın alma öncesi açıkça kontrol edilmelidir.`,
+          helper: "Ürün açıklaması eki",
+        },
+        {
+          label: "Destek yanıtı",
+          body: "Geri bildiriminiz için teşekkürler. Yaşadığınız konuyu ürün açıklaması ve destek akışında netleştiriyoruz.",
+          helper: "Müşteri mesajı taslağı",
+        },
+      ],
+    };
+  }
+
+  if (action.type === "protect_margin") {
+    return {
+      title: "Kârlılık koruma taslağı",
+      summary: `${primaryProduct} için fiyat, reklam ve iade baskısı birlikte kontrol edilir.`,
+      primaryOwner: "finans",
+      steps: [
+        {
+          id: `${action.id}-margin-floor`,
+          title: "Fiyat tabanını belirle",
+          detail: "Birim maliyet, iade baskısı ve reklam harcaması birlikte minimum kâr eşiğine bağlanır.",
+          owner: "finans",
+          priorityLabel: "İlk iş",
+        },
+        {
+          id: `${action.id}-ads-pause`,
+          title: "Verimsiz reklamı kıs",
+          detail: "Marj eşiğini bozan kampanya ve reklam setleri satış kaybı yaratmadan azaltılır.",
+          owner: "pazarlama",
+          priorityLabel: "Aynı gün",
+        },
+        {
+          id: `${action.id}-returns-review`,
+          title: "İade nedenlerini izle",
+          detail: "İade temaları fiyat koruma kararını destekleyecek şekilde haftalık izlenir.",
+          owner: "operasyon",
+          priorityLabel: "İzleme",
+        },
+      ],
+      generatedDrafts: [
+        {
+          label: "Fiyat notu",
+          body: `${primaryProduct} için kampanya yalnızca marj eşiği korunuyorsa açık kalmalı.`,
+          helper: "Finans kontrol notu",
+        },
+        {
+          label: "Operasyon notu",
+          body: "İade baskısı düşmeden reklam ölçekleme yapılmamalı.",
+          helper: "Haftalık takip notu",
+        },
+      ],
+    };
+  }
+
+  return {
+    title: "Büyütme uygulama taslağı",
+    summary: `${primaryProduct} güçlü performansını kaybetmeden kontrollü görünürlük alır.`,
+    primaryOwner: "pazarlama",
+    steps: [
+      {
+        id: `${action.id}-hero-placement`,
+        title: "Vitrin yerleşimini aç",
+        detail: `${primaryProduct} için yüksek performanslı kategori vitrini ve arama sonucu görünürlüğü artırılır.`,
+        owner: "pazarlama",
+        priorityLabel: "Kurgu",
+      },
+      {
+        id: `${action.id}-stock-guard`,
+        title: "Stok güvenliğini doğrula",
+        detail: "Görünürlük artmadan önce eldeki stok ve tedarik süresi kontrol edilir.",
+        owner: "stok",
+        priorityLabel: "Kontrol",
+      },
+      {
+        id: `${action.id}-cross-sell`,
+        title: "Tamamlayıcı ürünü bağla",
+        detail: "Sepet değerini artırmak için uyumlu ürün önerisi aynı sayfada gösterilir.",
+        owner: "pazarlama",
+        priorityLabel: "Yayın",
+      },
+    ],
+    generatedDrafts: [
+      {
+        label: "Vitrin metni",
+        body: `${primaryProduct} yüksek memnuniyet ve güçlü satış sinyaliyle öne çıkarıldı.`,
+        helper: "Kategori vitrini taslağı",
+      },
+      {
+        label: "Cross-sell notu",
+        body: "Bu ürünle birlikte kullanılan tamamlayıcı önerileri sepete eklemeden önce göster.",
+        helper: "Öneri modülü metni",
+      },
+    ],
+  };
+}
+
+function createSellerActionEvidenceSnapshot(
+  action: SellerGrowthAction,
+  affectedProducts: SellerProductApiRow[],
+  relatedBuyerSignals: SellerBuyerSignalApiRow[],
+): SellerActionEvidenceSnapshot[] {
+  const primaryProduct = affectedProducts[0];
+  const metricEvidence = action.metricHighlights.slice(0, 3).map((metric) => ({
+    label: metric.label,
+    value: metric.value,
+    helper: metric.helperText ?? action.timeHorizonLabel,
+    tone: metric.tone === "danger" || metric.tone === "warning" ? "warning" : "calm",
+  }) satisfies SellerActionEvidenceSnapshot);
+
+  return [
+    {
+      label: "Öncelik",
+      value: `${action.priorityScore}/100`,
+      helper: action.expectedOutcome,
+      tone: action.urgency === "critical" ? "warning" : "good",
+    },
+    ...metricEvidence,
+    {
+      label: "Ürün etkisi",
+      value: `${affectedProducts.length} ürün`,
+      helper: primaryProduct ? `${primaryProduct.name} · ${primaryProduct.healthScore}/100 sağlık` : "Ürün eşleşmesi yok",
+      tone: "calm",
+    },
+    {
+      label: "Alıcı sinyali",
+      value: `${relatedBuyerSignals.length} sinyal`,
+      helper: relatedBuyerSignals[0]?.summary ?? "Bu aksiyona bağlı buyer sinyali henüz yok.",
+      tone: relatedBuyerSignals.length > 0 ? "good" : "calm",
+    },
+  ];
+}
+
+function isBuyerSignalRelatedToAction(signal: SellerBuyerSignalApiRow, action: SellerGrowthAction): boolean {
+  if (signal.matchedSellerActions.some((matchedAction) => matchedAction.id === action.id)) {
+    return true;
+  }
+
+  return signal.affectedProducts.some((product) => action.productIds.includes(product.id));
 }
 
 function createBuyerSignalRow({

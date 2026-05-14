@@ -30,6 +30,7 @@ const {
   generateSellerActionsWorkflow,
 } = require("../src/lib/workflows");
 const {
+  getSellerActionDetailApiData,
   getSellerActionsApiData,
   getSellerBuyerSignalsApiData,
   getSellerOverviewApiData,
@@ -75,6 +76,7 @@ console.log(
     `Products: ${products.length}`,
     `Reviews: ${reviews.length}`,
     `Seller actions: ${generateSellerActionsWorkflow("seller-commercepilot")?.actions.length ?? 0}`,
+    `Seller action detail endpoint: ${getSellerActionDetailApiData("restock-ergoflex-calisma-sandalyesi")?.contract.endpoint ?? "missing"}`,
     `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
     `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
     `Buyer API examples: ${buyerSmartCartExamples.length}`,
@@ -282,12 +284,18 @@ function validateSellerApiContracts() {
   const sellerId = "seller-commercepilot";
   const overview = getSellerOverviewApiData(sellerId);
   const actions = getSellerActionsApiData(sellerId);
+  const restockDetail = getSellerActionDetailApiData("restock-ergoflex-calisma-sandalyesi", sellerId);
+  const reviewDetail = getSellerActionDetailApiData("review_attention-connectplus-usb-c-hub", sellerId);
+  const missingActionDetail = getSellerActionDetailApiData("missing-action", sellerId);
   const buyerSignals = getSellerBuyerSignalsApiData(sellerId);
   const productContract = getSellerProductsApiData(sellerId);
   const keyProHealth = getSellerProductHealthApiData("prod-keypro-mekanik-klavye");
 
   assert(Boolean(overview), "seller overview API contract üretilemedi");
   assert(Boolean(actions), "seller actions API contract üretilemedi");
+  assert(Boolean(restockDetail), "seller action detail API contract üretilemedi");
+  assert(Boolean(reviewDetail), "seller review action detail API contract üretilemedi");
+  assert(!missingActionDetail, "olmayan seller action detail undefined dönmeli");
   assert(Boolean(buyerSignals), "seller buyer signals API contract üretilemedi");
   assert(Boolean(productContract), "seller products API contract üretilemedi");
   assert(Boolean(keyProHealth), "seller product health API contract üretilemedi");
@@ -303,6 +311,26 @@ function validateSellerApiContracts() {
     assert(actions.contract.envelope === "success/data/error", "actions envelope contract yanlış");
     assert(actions.actions.length === 5, "actions API top 5 dönmeli");
     assert(actions.actionTypeCoverage.includes("restock"), "actions API restock coverage eksik");
+  }
+
+  if (restockDetail) {
+    assert(restockDetail.contract.envelope === "success/data/error", "action detail envelope contract yanlış");
+    assert(
+      restockDetail.contract.endpoint === "/api/seller/actions/restock-ergoflex-calisma-sandalyesi",
+      "action detail endpoint contract yanlış",
+    );
+    assert(restockDetail.contract.method === "GET", "action detail method contract yanlış");
+    assert(restockDetail.action.id === "restock-ergoflex-calisma-sandalyesi", "action detail id yanlış");
+    assert(restockDetail.actionHref === "/seller/actions/restock-ergoflex-calisma-sandalyesi", "action detail href yanlış");
+    assert(restockDetail.affectedProducts.length > 0, "action detail affected products eksik");
+    assert(restockDetail.executionPreview.steps.length >= 3, "action detail execution steps eksik");
+    assert(restockDetail.executionPreview.generatedDrafts.length >= 2, "action detail generated drafts eksik");
+    assert(restockDetail.evidenceSnapshot.length >= 5, "action detail evidence snapshot eksik");
+    assert(Boolean(restockDetail.llmReadyContext?.facts), "action detail LLM facts eksik");
+  }
+
+  if (reviewDetail) {
+    assert(reviewDetail.relatedBuyerSignals.length > 0, "review action detail buyer sinyaliyle eşleşmeli");
   }
 
   if (buyerSignals) {

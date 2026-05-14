@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için Milestone 6D Buyer-to-Seller Signal Loop tamamlandı; alıcı smart cart örneklerinden seller dashboard'a aksiyon sinyali akıyor.
+  * CommercePilot için Milestone 6E Seller Action Detail + Execution Preview tamamlandı; seller aksiyonları artık detay sayfasında uygulanabilir plana açılıyor.
 * Son değişiklik neydi?
-  * `/api/seller/buyer-signals` route'u, seller buyer signal API contract builder'ı ve `/seller` içindeki buyer-to-seller loop bölümü eklendi.
+  * `/api/seller/actions/[id]` route'u, seller action detail API contract builder'ı ve `/seller/actions/[id]` execution preview UI'ı eklendi.
 * Bir sonraki net adım ne?
-  * 6D review sonrası Milestone 6E için ürün detay/aksiyon drill-down veya LLM/Gemini entegrasyon fazının kapsamını netleştirmek.
+  * 6E review sonrası Milestone 6F için LLM/Gemini açıklama katmanı veya buyer product/cart preview derinleştirmesinin kapsamını netleştirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -124,6 +124,7 @@
 * 2026-05-14 — Karar: Buyer Smart Cart canlı etkileşimi tek API route üzerinden kurulacak: `GET/POST /api/buyer/smart-cart`. | Gerekçe: Demo için kullanıcı komutu canlı çalışmalı ama auth/DB/mutation/LLM kapsamı açılmamalı. | Etki: `src/lib/api/buyer.ts`, route handler ve client workspace eklendi; GET bootstrap örnekleri, POST sepet önerisi döner.
 * 2026-05-14 — Karar: Buyer UI canlı API çağıracak, ilk render ise aynı typed builder ile hydrate edilecek. | Gerekçe: İlk ekran hızlı ve build-safe kalırken kullanıcı submit/preset aksiyonları gerçek route'a gitmeli. | Etki: `/buyer` server component initial contract üretir, `BuyerSmartCartWorkspace` client component POST `/api/buyer/smart-cart` çağırır.
 * 2026-05-14 — Karar: Buyer-to-seller loop yeni seller-facing GET contract olarak kurulacak: `/api/seller/buyer-signals`. | Gerekçe: Buyer workflow zaten `sellerSignalCandidates` üretiyor; bunu seller dashboard'a deterministic, route-testable ve LLM-ready contract olarak taşımak çift taraflı commerce intelligence iddiasını güçlendirir. | Etki: `src/lib/api/seller.ts` buyer smart cart örneklerinden sinyal aggregate eder; `/seller` ekranı alıcı sinyal özetini ve ilgili ürün/action hint'lerini gösterir. | Alternatifler: Buyer UI içinde ayrı loop göstermek veya seller actions workflow'u doğrudan mutasyona uğratmak.
+* 2026-05-14 — Karar: Seller action detayları stable action id ile açılacak: `/seller/actions/[id]` ve `GET /api/seller/actions/[id]`. | Gerekçe: Demo akışında satıcı öneriye tıkladığında kanıt, yapılacak iş ve LLM-ready context'i tek ekranda görmeli. | Etki: `src/lib/api/seller.ts` action detail contract ve deterministic execution preview üretir; seller overview/actions/product detail linkleri aksiyon detayına gider. | Alternatifler: Tek sayfalık action listesinde accordion veya gerçek mutation akışı.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -142,6 +143,7 @@
 * 2026-05-14 — Milestone: Milestone 6B Seller API Contract tamamlandı. | Sonuç: Seller overview/actions/products/product health API endpoint'leri, ortak seller API contract builder'ları, ürün sağlık detay sayfası, loading/error/empty state temelleri ve API validation kontrolleri eklendi.
 * 2026-05-14 — Milestone: Milestone 6C Buyer Smart Cart API + Live Interaction tamamlandı. | Sonuç: `/api/buyer/smart-cart` route'u, buyer API contract builder'ı, canlı `/buyer` komut formu, preset prompt çalıştırma, loading/error/empty state ve buyer API validation kontrolleri eklendi.
 * 2026-05-14 — Milestone: Milestone 6D Buyer-to-Seller Signal Loop tamamlandı. | Sonuç: `/api/seller/buyer-signals` route'u, buyer smart cart örneklerinden seller sinyal aggregation contract'ı, seller dashboard buyer loop bölümü, validation kontrolleri ve runtime UI/API doğrulaması eklendi.
+* 2026-05-14 — Milestone: Milestone 6E Seller Action Detail + Execution Preview tamamlandı. | Sonuç: `/api/seller/actions/[id]` route'u, `/seller/actions/[id]` detay sayfası, action execution preview, evidence snapshot, generated drafts, LLM-ready context görünümü, loading/not-found state ve validation kontrolleri eklendi.
 
 ## 8) Yapılanlar
 
@@ -166,6 +168,7 @@
 * [x] Milestone 6B seller API contract ve ürün sağlık detay akışı tamamlandı.
 * [x] Milestone 6C buyer smart cart API ve canlı komut etkileşimi tamamlandı.
 * [x] Milestone 6D buyer-to-seller signal loop eklendi.
+* [x] Milestone 6E seller action detail ve execution preview eklendi.
 
 ## 9) Yapılacaklar (Next)
 
@@ -194,7 +197,8 @@
 * [x] Milestone 6B seller API route'ları ve seller ekran veri contract'larını oluştur.
 * [x] Milestone 6C buyer API route'u ve buyer smart cart etkileşimini canlı hale getir.
 * [x] 6C review sonrası buyer ürün keşfi/sepet sayfası derinleştirme veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
-* [ ] 6D review sonrası ürün detay/aksiyon drill-down veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
+* [x] 6D review sonrası ürün detay/aksiyon drill-down veya LLM/Gemini entegrasyon fazının kapsamını netleştir.
+* [ ] 6E review sonrası LLM/Gemini açıklama katmanı veya buyer product/cart preview derinleştirmesinin kapsamını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -222,6 +226,7 @@
 * Seller UI artık route handler ile aynı `src/lib/api/seller.ts` builder'larını kullanır; seller workflow alanı değişirse API validation da güncellenmeli.
 * Buyer canlı akışı `src/lib/api/buyer.ts` ve `/api/buyer/smart-cart` üzerinden ilerler; prompt parser veya workflow rol mantığı değişirse API validation da güncellenmeli.
 * Buyer-to-seller loop `src/lib/api/seller.ts` içindeki `getSellerBuyerSignalsApiData` ile buyer smart cart örneklerini çalıştırır; `sellerSignalCandidates` shape'i değişirse seller API validation ve `/seller` loop bölümü birlikte güncellenmeli.
+* Seller action detail `src/lib/api/seller.ts` içindeki `getSellerActionDetailApiData` ile action id üzerinden çalışır; `SellerGrowthAction` id/type/checklist alanları değişirse dynamic route, validation ve `/seller/actions/[id]` birlikte güncellenmeli.
 
 ## 12) Satıcı Paneli Stratejisi
 
@@ -820,6 +825,34 @@
 * Sınırlar:
   * Auth, DB, LLM, LangChain, mutation veya gerçek buyer event persistence yok.
   * Seller actions workflow'u doğrudan buyer sinyalleriyle mutate edilmedi; 6D yalnızca deterministic aggregate/read contract ve dashboard görünürlüğü sağlar.
+
+### 6E Seller Action Detail + Execution Preview
+
+* Amaç:
+  * Seller Growth Action listesindeki her aksiyonu detay sayfasına açıp "neden üretildi / ne yapılacak / hangi kanıta dayanıyor" sorularını tek ekranda cevaplamak.
+  * Demo akışını tamamlamak: seller action -> action detail -> deterministic execution preview -> LLM-ready context.
+* Eklenen API route:
+  * `GET /api/seller/actions/[id]`: stable action id alır, action detail contract'ını `{ success, data, error }` envelope ile döner.
+  * Geçersiz action id `SELLER_ACTION_DETAIL_NOT_FOUND` ile 404 döner.
+* Contract:
+  * `src/lib/api/seller.ts` içinde `SellerActionDetailApiData`, `SellerActionExecutionPreview`, generated drafts, evidence snapshot ve action detail endpoint metadata'sı eklendi.
+  * Execution preview action type'a göre deterministik üretilir: restock, create_bundle, promote_winner, protect_margin, review_attention.
+  * Related buyer signals, action product ids ve matched seller action bağlantılarıyla eşleşir.
+* Eklenen UI:
+  * `/seller/actions/[id]` detay sayfası eklendi.
+  * Üst bölüm action title, contract rail, affected product ve metrik şeridini gösterir.
+  * Orta bölüm execution preview adımları ve kanıt çizgisini gösterir.
+  * Alt bölüm generated drafts, LLM-ready context, buyer bağlamı ve checklist gösterir.
+  * `/seller`, `/seller/actions` ve `/seller/products/[slug]` içindeki related action linkleri action detail route'una bağlandı.
+  * Action detail için loading ve not-found state eklendi.
+* Validation:
+  * `scripts/validate-workflows.js` action detail endpoint, action href, affected products, execution steps, generated drafts, evidence snapshot, missing id ve review action buyer signal eşleşmesi kontrolleriyle genişletildi.
+  * Doğrulanan komutlar: `npm run check`, `npm run build`.
+  * Runtime HTTP doğrulaması: `/api/seller/actions/restock-ergoflex-calisma-sandalyesi` `success: true`, 3 execution step ve 1 affected product döndürdü; missing action 404 döndü.
+  * Browser doğrulaması: `/seller/actions/restock-ergoflex-calisma-sandalyesi` desktop ve mobilde açıldı; title, execution preview, endpoint ve LLM-ready context görünür, yatay overflow yok. `/seller/actions` içinde 5 detail link doğrulandı.
+* Sınırlar:
+  * Auth, DB, LLM, LangChain, mutation ve gerçek aksiyon tamamlama state'i yok.
+  * Generated drafts deterministik taslaktır; model çağrısı veya gerçek kampanya/stok emri oluşturmaz.
 
 ### Güncelleme Kaydı
 

@@ -94,7 +94,7 @@ export default function SellerOverviewPage() {
               {data.topActions.slice(0, 4).map((action) => (
                 <Link
                   key={action.id}
-                  href="/seller/actions"
+                  href={`/seller/actions/${action.id}`}
                   className="group grid gap-4 py-5 transition hover:bg-white/[0.025] md:grid-cols-[1fr_180px]"
                 >
                   <div>

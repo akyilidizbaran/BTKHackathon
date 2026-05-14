@@ -136,7 +136,11 @@ export default async function SellerProductDetailPage({
           <div className="mt-5 divide-y divide-white/10">
             {data.relatedActions.length > 0 ? (
               data.relatedActions.map((action) => (
-                <Link key={action.id} href="/seller/actions" className="block py-4 transition hover:bg-white/[0.025]">
+                <Link
+                  key={action.id}
+                  href={`/seller/actions/${action.id}`}
+                  className="block py-4 transition hover:bg-white/[0.025]"
+                >
                   <p className="text-sm font-medium text-white">{action.title}</p>
                   <p className="mt-2 text-sm leading-6 text-zinc-500">{action.expectedOutcome}</p>
                   <p className="mt-3 font-mono text-xs text-emerald-200/80">{action.priorityScore}/100</p>
