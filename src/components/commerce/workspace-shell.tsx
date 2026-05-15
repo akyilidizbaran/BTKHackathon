@@ -10,7 +10,7 @@ import {
   ListChecks,
   MagnifyingGlass,
   Package,
-  Storefront,
+  Robot,
   ShoppingBagOpen,
   ShoppingCart,
   UserCircle,
@@ -32,26 +32,29 @@ const roleConfig = {
     label: "Satıcı",
     eyebrow: "Satıcı merkezi",
     href: "/seller",
-    alternateHref: "/buyer",
+    alternateHref: "/buyer/products",
     alternateLabel: "Mağazaya geç",
     searchPlaceholder: "Ürün, sipariş veya aksiyon ara",
     nav: [
-      { href: "/seller", label: "Genel Bakış", icon: House },
-      { href: "/seller/actions", label: "Aksiyonlar", icon: ListChecks },
+      { href: "/seller", label: "Ana Sayfa", icon: House },
       { href: "/seller/products", label: "Ürünler", icon: Package },
+      { href: "/seller/actions", label: "Aksiyonlar", icon: ListChecks },
+      { href: "/seller/agent", label: "Agent", icon: Robot },
+      { href: "/seller/profile", label: "Profil", icon: UserCircle },
     ],
   },
   buyer: {
     label: "Alıcı",
     eyebrow: "Marketplace",
-    href: "/buyer",
+    href: "/buyer/products",
     alternateHref: "/seller",
     alternateLabel: "Satıcı merkezine geç",
     searchPlaceholder: "Ürün, kategori veya ihtiyacını ara",
     nav: [
-      { href: "/buyer", label: "Ana sayfa", icon: Storefront },
       { href: "/buyer/products", label: "Ürünler", icon: ShoppingBagOpen },
       { href: "/buyer/cart", label: "Sepet", icon: ShoppingCart },
+      { href: "/buyer/agent", label: "Agent", icon: Robot },
+      { href: "/buyer/profile", label: "Profil", icon: UserCircle },
     ],
   },
 } satisfies Record<WorkspaceRole, {
@@ -68,6 +71,7 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
   const pathname = usePathname();
   const config = roleConfig[role];
   const rootRef = useRef<HTMLDivElement>(null);
+  const profileHref = role === "buyer" ? "/buyer/profile" : "/seller/profile";
 
   useGSAP(
     () => {
@@ -137,13 +141,13 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
             >
               <Bell size={20} weight="duotone" />
             </button>
-            <button
-              type="button"
+            <Link
+              href={profileHref}
               aria-label="Profil"
               className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
             >
               <UserCircle size={22} weight="duotone" />
-            </button>
+            </Link>
           </div>
 
           <nav className="flex gap-2 overflow-x-auto pb-1" aria-label={`${config.label} navigasyonu`}>
@@ -151,7 +155,7 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
               const Icon = item.icon;
               const isActive =
                 pathname === item.href ||
-                (item.href !== config.href && pathname.startsWith(`${item.href}/`));
+                (item.href !== "/seller" && pathname.startsWith(`${item.href}/`));
 
               return (
                 <Link
@@ -179,56 +183,7 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
         </div>
       </div>
 
-      <div className="relative mx-auto grid max-w-[1500px] grid-cols-1 gap-5 px-4 py-5 lg:grid-cols-[240px_1fr] lg:px-5">
-        <aside
-          data-shell-reveal
-          className="hidden rounded-3xl border border-slate-200 bg-white p-4 shadow-[0_18px_54px_-46px_rgba(15,23,42,0.75)] lg:sticky lg:top-5 lg:block lg:h-[calc(100dvh-2.5rem)]"
-        >
-          <div className="flex h-full flex-col">
-            <p className="px-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
-              {role === "buyer" ? "Alışveriş" : "Satıcı araçları"}
-            </p>
-
-            <div className="mt-4 space-y-2">
-              {config.nav.map((item) => {
-                const Icon = item.icon;
-                const isActive =
-                  pathname === item.href ||
-                  (item.href !== config.href && pathname.startsWith(`${item.href}/`));
-
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`group flex min-h-12 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium transition active:translate-y-px ${
-                      isActive
-                        ? "bg-orange-50 text-orange-700 ring-1 ring-orange-200"
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-950"
-                    }`}
-                  >
-                    <Icon size={20} weight={isActive ? "fill" : "duotone"} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-
-            <div className="mt-8 border-t border-slate-200 pt-5">
-              <Link
-                href={config.alternateHref}
-                className="flex items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-medium text-slate-700 transition hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700 active:translate-y-px"
-              >
-                <span>{config.alternateLabel}</span>
-                <ArrowRight size={17} weight="bold" />
-              </Link>
-            </div>
-
-            <div className="mt-auto hidden rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-xs leading-6 text-emerald-800 lg:block">
-              <p>Agent pet sonraki milestone’da bu shell üzerinde yaşayacak.</p>
-            </div>
-          </div>
-        </aside>
-
+      <div className="relative mx-auto max-w-[1500px] px-4 py-5 lg:px-5">
         <section className="min-w-0 pb-10">
           <header
             data-shell-reveal
@@ -240,24 +195,9 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
                 {role === "buyer" ? "CommercePilot alışveriş" : "CommercePilot satıcı merkezi"}
               </h1>
             </div>
-            <div className="grid grid-cols-2 rounded-full border border-slate-200 bg-slate-50 p-1 text-sm">
-              <Link
-                href="/seller"
-                className={`rounded-full px-4 py-2 text-center transition active:translate-y-px ${
-                  role === "seller" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-orange-700"
-                }`}
-              >
-                Satıcı
-              </Link>
-              <Link
-                href="/buyer"
-                className={`rounded-full px-4 py-2 text-center transition active:translate-y-px ${
-                  role === "buyer" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500 hover:text-orange-700"
-                }`}
-              >
-                Alıcı
-              </Link>
-            </div>
+            <span className="inline-flex min-h-10 items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-600">
+              {role === "buyer" ? "Alıcı görünümü" : "Satıcı paneli"}
+            </span>
           </header>
 
           <div data-shell-reveal className="commerce-legacy-light">{children}</div>

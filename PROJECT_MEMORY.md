@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot floating Agent kapsamı netleşti: sağ alt ikon ayrı müşteri temsilcisi değil, route Agent ekranlarıyla aynı runtime/history kullanan tam yetkili mini Agent olacak.
+  * Milestone 8D tamamlandı: buyer/seller IA header-only düzene geçti, duplicate sidebar nav kaldırıldı ve Agent/Profil route iskeletleri açıldı.
 * Son değişiklik neydi?
-  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md` tüm sayfalarda çalışan floating Agent, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri ve Codex pet avatar kararıyla güncellendi.
+  * `/buyer` artık `/buyer/products` deneyimine yönleniyor; `/buyer/products/[slug]` dynamic ürün endpoint'i, `/buyer/agent`, `/buyer/profile`, `/seller/agent`, `/seller/profile` eklendi; seller overview kısa uyarı kartlarına indirildi.
 * Bir sonraki net adım ne?
-  * Milestone 8D IA ve navigasyon reset: buyer header `Ürünler/Sepet/Agent/Profil`, seller header sade, sidebar menü tekrarı yok.
+  * Milestone 8E: buyer katalog verisini marketplace kategorilerine göre büyütmek, gerçek ürün görsel metadata'sı ve fotoğraflı ürün grid/sepete ekle yüzeyini kurmak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -66,8 +66,11 @@
   * `src/lib/llm/*`: provider kontrollü OpenAI Responses API text generation wrapper'ı ve deterministic fallback davranışı.
   * `src/lib/api/seller-action-explanations.ts`: seller action detail context'ini runtime LLM açıklama contract'ına çevirir.
   * `src/lib/api/buyer-smart-cart-explanations.ts`: buyer smart cart context'ini runtime LLM sepet açıklama contract'ına çevirir.
-  * `src/components/commerce/workspace-shell.tsx`: light marketplace header, search, yatay nav, desktop sidebar ve role toggle shell'i.
+  * `src/components/commerce/workspace-shell.tsx`: light marketplace header, search ve header-only yatay nav shell'i; buyer nav `Ürünler/Sepet/Agent/Profil`, seller nav `Ana Sayfa/Ürünler/Aksiyonlar/Agent/Profil`.
   * `src/components/commerce/role-gateway.tsx`: light rol giriş yüzeyi.
+  * `src/app/buyer/products/[slug]/page.tsx`: katalogdaki her mock ürün için dynamic buyer ürün detay endpoint iskeleti.
+  * `src/app/buyer/agent/page.tsx`, `src/app/seller/agent/page.tsx`: buyer/seller agent sohbet route iskeletleri.
+  * `src/app/buyer/profile/page.tsx`, `src/app/seller/profile/page.tsx`: buyer kişiselleştirme ve seller permission/profil route iskeletleri.
   * `src/app/globals.css`: light CommercePilot tokenları ve geçici `commerce-legacy-light` bridge'i.
   * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`: marketplace + agent pet pivot kararları, endpoint haritası ve revize milestone yol haritası.
   * Planlanan sonraki yapı: buyer `products/cart/agent/profile`, seller `overview/products/actions/agent/profile`, `src/lib/agents/prompts/*`, `src/lib/agents/tools/*`, `src/lib/agents/runtime/*`, cart/listing mock mutation ve audit katmanı.
@@ -179,6 +182,7 @@
 * 2026-05-15 — Karar: Floating Agent context-aware ve proactive olacak ama ilk fazda ses kullanmayacak. | Gerekçe: Agent sayfa bağlamını yorumlamalı fakat kullanıcıyı agresif popup/ses ile rahatsız etmemeli. | Etki: Route/ürün/sepet/seller bağlamı runtime'a taşınır; uyarı halinde badge, ünlem, kafa kaldırma veya benzeri sessiz görsel mikro etkileşim kullanılır. | Alternatifler: Sesli bildirim veya otomatik açılan chat.
 * 2026-05-15 — Karar: Floating Agent kullanıcı kontrolleri zorunlu olacak: `Gizle`, `Sessize al`, `Bu sayfada uyarma`. | Gerekçe: Her sayfada görünen agent kullanıcı kontrolü olmadan rahatsız edici olabilir. | Etki: 8Q kapsamında state ve UI kontrolleri tasarlanacak. | Alternatifler: Sadece kapatma ikonu.
 * 2026-05-15 — Karar: Floating Agent ilk fazda web/desktop odaklı olacak ve Codex pet benzeri avatarla başlayacak. | Gerekçe: Kullanıcı bu adımda mobil davranışı önceliklendirmedi; görsel karakter daha sonra değiştirilebilir. | Etki: Mobil bottom sheet veya responsive özel davranış ilk 8Q kapsamına alınmaz. | Alternatifler: Mobil-first widget davranışı veya marka avatarını hemen üretmek.
+* 2026-05-15 — Karar: Milestone 8D yalnızca nav reset ile kalmayıp endpoint iskeletlerini de açacak. | Gerekçe: Kullanıcı siteyi inceleyeceği için header-only IA yanında `/buyer/agent`, `/buyer/profile`, `/seller/agent`, `/seller/profile` ve buyer dynamic product route boş kalmamalı. | Etki: `/buyer` `/buyer/products`'a yönlenir; buyer/seller shell sidebar tekrarını kaldırır; seller overview kısa uyarı kartlarına iner; gerçek cart persistence, fotoğraflı katalog ve agent runtime 8E+ kapsamındadır. | Alternatifler: Sadece shell nav metinlerini değiştirmek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -203,6 +207,7 @@
 * 2026-05-14 — Milestone: Milestone 8A QA hardening tamamlandı. | Sonuç: Buyer explanation no-budget guard eklendi; 5 buyer örneği live OpenAI ile generated döndü, invalid prompt 400 verdi, mobil browser QA ve build/check tekrar geçti.
 * 2026-05-14 — Milestone: Milestone 8B Marketplace + Agent Pet Roadmap tamamlandı. | Sonuç: `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md` ile light marketplace pivotu, agent pet deneyimi, permission modeli ve 17 milestone planı yazıldı.
 * 2026-05-14 — Milestone: Milestone 8C Light Marketplace Design System tamamlandı. | Sonuç: Dark ana tema kaldırıldı; root gateway ve buyer/seller workspace shell klasik light e-ticaret düzenine döndü; scoped legacy theme bridge ile mevcut içerikler okunur hale getirildi; check/build ve Puppeteer desktop/mobil QA geçti.
+* 2026-05-15 — Milestone: Milestone 8D IA ve Navigasyon Reset tamamlandı. | Sonuç: Buyer nav `Ürünler/Sepet/Agent/Profil`, seller nav `Ana Sayfa/Ürünler/Aksiyonlar/Agent/Profil` oldu; sidebar nav tekrarı kaldırıldı; `/buyer` `/buyer/products`'a yönleniyor; `/buyer/products/[slug]`, buyer/seller Agent ve Profil route iskeletleri eklendi; seller overview dört uyarı kartlı kısa panele indi; `npm run check`, `npm run build` ve Puppeteer QA geçti.
 
 ## 8) Yapılanlar
 
@@ -236,6 +241,7 @@
 * [x] 2026-05-15 ürün geri bildirimiyle roadmap gerçek e-ticaret endpoint akışına göre revize edildi.
 * [x] 2026-05-15 ürün detay, kategori, cart, agent ve seller mutation kararları netleştirildi.
 * [x] 2026-05-15 floating Agent mini panel kapsamı netleştirildi.
+* [x] Milestone 8D IA ve navigasyon reset uygulandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -271,7 +277,7 @@
 * [ ] Milestone 8A review sonrası end-to-end demo script/presentation readiness kapsamını netleştir.
 * [ ] Gemini provider swap için mevcut seller/buyer explanation contract'ını koruyacak adapter tasarımını netleştir.
 * [x] Milestone 8C light marketplace design system ve shell'i uygula.
-* [ ] Milestone 8D IA ve navigasyon reset uygula: buyer header-only, seller sade header, sidebar menü tekrarı yok.
+* [x] Milestone 8D IA ve navigasyon reset uygula: buyer header-only, seller sade header, sidebar menü tekrarı yok.
 * [ ] Milestone 8E buyer catalog data ve ürün grid kapsamını `Kadın Giyim/Erkek Giyim/Elektronik/Ev & Yaşam/Kozmetik/Spor/Aksesuar` kategori setiyle uygula.
 * [ ] Milestone 8F buyer product detail + cart state kur: `/buyer/products/[slug]`, satış penceresi, `localStorage` cart, sepete ekle/sil/adet/toplam.
 * [ ] Milestone 8G buyer Agent sayfasında prompt -> görselli ürün önerisi -> sepete ekleme onayı akışını kur.
@@ -300,6 +306,7 @@
   * OpenAI çağrısı sadece runtime endpointte yapılır; API key eksikse, provider desteklenmiyorsa veya ağ/API hatası olursa UI deterministic fallback görmelidir.
 * 8C geçici tema köprüsü:
   * `commerce-legacy-light` mevcut dark utility class'larını light yüzeye çevirir; uzun vadede buyer/seller sayfa içerikleri gerçek marketplace komponentlerine tek tek taşınmalı.
+  * Yeni light sayfalarda koyu buton üstünde beyaz metin gerekiyorsa `text-white` yerine köprüden etkilenmeyen `text-[#fff]` kullanılmalı veya sayfa bridge dışına taşınmalı.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 

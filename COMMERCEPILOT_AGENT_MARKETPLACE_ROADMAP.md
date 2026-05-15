@@ -8,8 +8,8 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B ve 8C tamamlandı.
-  * 8D sonrası milestone sırası revize edildi; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
+  * 8B, 8C ve 8D tamamlandı.
+  * 8E sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
 

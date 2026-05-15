@@ -1,14 +1,5 @@
-import { BuyerSmartCartWorkspace } from "@/components/commerce/buyer-smart-cart-workspace";
-import {
-  buyerSmartCartExamples,
-  getDefaultBuyerSmartCartApiData,
-} from "@/lib/api/buyer";
+import { redirect } from "next/navigation";
 
 export default function BuyerWorkspacePage() {
-  return (
-    <BuyerSmartCartWorkspace
-      examples={buyerSmartCartExamples}
-      initialData={getDefaultBuyerSmartCartApiData()}
-    />
-  );
+  redirect("/buyer/products");
 }
