@@ -67,6 +67,19 @@
   * Sonra izin soracak: `Bunları sepete ekleyeyim mi?`
   * Kullanıcı onaylarsa sepet state'i değişecek.
   * Varsayılan davranış mevcut sepete eklemek olacak; agent ayrıca `mevcut sepeti bununla değiştir` seçeneği sunabilir.
+* Floating Agent mini paneli ayrı bir müşteri temsilcisi widget'ı olmayacak.
+  * `/buyer/agent` ve `/seller/agent` ekranındaki aynı Agent runtime'ın kompakt hali olacak.
+  * Buyer ve seller tarafındaki her sayfada görünebilir.
+  * Kullanıcı sağ alttaki ikona basınca sohbet baloncuğu/panel açılır ve Agent ekranında yapılabilen işleri aynı panelde yapabilir.
+  * Agent ekranına taşıma zorunlu olmayacak; mini panel ürün önerisi, sepet mutation, seller analiz ve seller before/after preview gibi işleri panel içinde yapabilir.
+  * Konuşma geçmişi route Agent sayfası ile floating panel arasında ortak kalacak.
+  * Agent bulunduğu sayfanın bağlamını bilecek: buyer ürün, ürün detay, sepet, profil; seller overview, ürünler, aksiyonlar, profil.
+  * Agent uyarı vermek isterse ikon pasif kalmayacak; ses olmadan küçük badge, ünlem, kafa kaldırma veya benzeri dikkat animasyonu gösterecek.
+  * Kullanıcı ikona bastığında Agent o anki bağlamı yorumlayabilir.
+  * `Gizle`, `Sessize al`, `Bu sayfada uyarma` kontrolleri olacak.
+  * Mini panelde yapılan tüm mutation'lar aynı permission/onay kurallarına tabi olacak.
+  * İlk uygulama web/desktop odaklı olacak; mobil davranış bu adımda öncelik değil.
+  * İlk avatar Codex pet benzeri teknik/sevimli avatar olacak, sonra değiştirilebilir.
 * Buyer cart state ilk fazda `localStorage` ile korunacak.
   * Sayfa değişiminde veya reload sonrası sepet kaybolmayacak.
 * Buyer Profil, agent kişiselleştirme merkezi olacak.
@@ -270,7 +283,14 @@
 
 * Agent UI:
   * Önce route tabanlı agent sayfaları kurulacak: `/buyer/agent`, `/seller/agent`.
-  * Sonra sağ alt pet/chat paneli eklenecek.
+  * Sonra sağ alt floating Agent mini paneli eklenecek.
+  * Floating Agent ayrı bir widget runtime'ı değil, route Agent ekranlarının kompakt UI varyantı olacak.
+  * Floating panel tüm buyer/seller sayfalarında görünebilir ve aynı konuşma geçmişini kullanır.
+  * Floating panel agent'ın tüm temel işlerini yapabilir: ürün önerisi, sepet apply, seller analiz, seller before/after mutation preview.
+  * Floating Agent bulunduğu sayfanın context'ini runtime'a taşır.
+  * Proactive uyarı sinyali ses kullanmaz; badge/ünlem/kafa kaldırma gibi görsel mikro etkileşim kullanır.
+  * Kullanıcı kontrolleri: `Gizle`, `Sessize al`, `Bu sayfada uyarma`.
+  * İlk sürüm web/desktop odaklıdır; mobil bottom sheet davranışı bu fazın kapsamı değildir.
   * Floating pet eklendiğinde header navigasyonunu veya ürün/sepet akışını gölgelemeyecek.
 * Agent runtime:
   * Promptlar merkezi tutulacak: `src/lib/agents/prompts/*`.
@@ -309,7 +329,7 @@
 | 8N | Shared agent runtime | Buyer/seller agent prompt ve tool registry ortaklaştırmak | Agent request contract, prompt registry ve typed tool registry oluşur |
 | 8O | Buyer agent cart mutations | Agent'ın onaylı şekilde sepeti doldurmasını sağlamak | `/buyer/agent` önerisi kullanıcı onayıyla cart state'ine eklenir veya sepeti değiştirir |
 | 8P | Seller mock mutations + audit | Satıcı agent'ın onaylı listing mutation yapması | Önce/sonra preview görünür; satıcı onaylarsa başlık/açıklama/fiyat/kampanya mock state değişir ve audit log görünür |
-| 8Q | Floating pet + proactive bubbles | Route agent oturduktan sonra sağ alt pet deneyimini eklemek | Pet görünür/gizlenir/sürüklenir; kısa proactive balonlar bağlama göre çıkar |
+| 8Q | Floating Agent mini panel + proactive signals | Route agent oturduktan sonra sağ alt Agent deneyimini eklemek | Tüm buyer/seller sayfalarında Codex pet benzeri ikon görünür; panel aynı agent history/runtime ile çalışır; ürün/sepet/seller mutation işleri panel içinde yapılır; context-aware badge/ünlem uyarıları, gizle/sessize al/bu sayfada uyarma kontrolleri çalışır |
 | 8R | End-to-end demo hardening | Buyer ve seller demo akışlarını parlatmak | Browser QA, check/build, demo script ve kritik akışlar temiz geçer |
 | 9A | Gemini/provider finalization | OpenAI geçici provider'dan final Gemini/provider yapısına geçmek | Buyer/seller/agent contract'ları Gemini ile generated döner |
 
@@ -318,11 +338,14 @@
 ### Buyer Demo
 
 * Kullanıcı `/buyer/products` ekranına gelir.
+* Sağ altta Codex pet benzeri floating Agent ikonu görünür.
 * Kategori veya search ile ürünleri gezer.
 * Ürün kartına tıklar ve `/buyer/products/[slug]` satış detay sayfasına gider.
+* Agent bağlamda uyarı görürse ikon ses çıkarmadan badge/ünlem/kafa kaldırma animasyonu yapar.
+* Kullanıcı ikona basar; mini panel ürün bağlamını yorumlar.
 * Ürün detayında `Sepete Ekle` ile sepete ürün ekler.
 * `/buyer/cart` ekranında sade sepeti görür.
-* Kullanıcı `/buyer/agent` ekranına geçer.
+* Kullanıcı floating Agent paneline veya `/buyer/agent` ekranına yazar.
 * Şunu yazar: `3000 TL altı limitli old-money kazak ve pantolon getir`.
 * Agent katalogdaki mevcut ürünlerden ürün kartlarını chat içinde gösterir.
 * Agent sorar: `Bunları sepete ekleyeyim mi?`
@@ -333,15 +356,17 @@
 ### Seller Demo
 
 * Satıcı `/seller` ana sayfasına gelir.
+* Sağ altta aynı floating Agent ikonu görünür.
 * Overview'de kısa uyarı kartları görür:
   * İade artışı.
   * Negatif yorum kümeleri.
   * Satılmayan ürünler.
   * Stok riski.
+* Agent bir seller uyarısı varsa ikon üzerinden sessiz görsel dikkat sinyali verir.
 * Bir uyarıya tıklar ve ilgili endpoint'e gider.
 * `/seller/products` içinde ürünleri fotoğraflı şekilde inceler.
 * `/seller/actions` veya `/seller/actions/[category]` içinde aksiyon kategorilerine bakar.
-* `/seller/agent` ekranında `Satılmayan ürünlerimi sırala` der.
+* Floating Agent panelinde veya `/seller/agent` ekranında `Satılmayan ürünlerimi sırala` der.
 * Agent ürünleri sebep ve oranla sıralar.
 * Satıcı bir ürün için düzenleme ister.
 * Agent önce/sonra preview gösterir.
@@ -352,6 +377,9 @@
 * UI tekrar açıklama dashboard'una dönerse ürün hissi zayıflar; ürün/sepet/profil önce gelmeli.
 * Buyer cart boşken fazla açıklama göstermek kullanıcıyı yorar.
 * Agent her sayfada konuşursa rahatsız edici olur; önce route agent, sonra kontrollü pet/proactive balon.
+* Floating Agent mini paneli tam agent yetkisine sahip olacağı için permission/onay kuralları panel içinde de eksiksiz korunmalı.
+* Proactive ikon davranışı sesli veya agresif popup'a dönmemeli; sessiz, kısa ve kapatılabilir olmalı.
+* Konuşma geçmişi route Agent ve floating panel arasında ayrışırsa kullanıcı deneyimi kırılır.
 * Seller overview tek uzun sayfa olursa yönetim paneli hissi kaybolur; uyarı kartları endpoint'lere dağıtılmalı.
 * Mock ürün görselleri zayıf olursa marketplace hissi oluşmaz; kontrollü görsel seti 8E veya sonrasında üretilmeli.
 * Cart/listing mutation gerçek görünmeli ama kontrolsüz olmamalı; buyer cart onayı, seller before/after preview ve audit zorunlu.
@@ -368,3 +396,11 @@
 * Seller overview ana uyarı kartları: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.
 * Seller mutation hemen uygulanmaz; önce/sonra preview gösterilir, satıcı onaylarsa uygulanır.
 * Ürün görselleri 8E veya sonrasında kontrollü mock/generated görsel setiyle üretilebilir.
+* Floating Agent tüm buyer/seller sayfalarında görünebilir.
+* Floating Agent paneli ayrı müşteri temsilcisi değil, `/buyer/agent` ve `/seller/agent` ekranlarıyla aynı runtime ve konuşma geçmişini kullanan kompakt Agent UI'dır.
+* Floating Agent paneli Agent sayfasına taşımadan ürün önerisi, sepet apply, seller analiz ve seller mutation preview gibi işleri kendi içinde yapabilir.
+* Floating Agent context-aware çalışır; bulunduğu route ve seçili ürün/sepet/seller alanını runtime'a taşır.
+* Proactive uyarı ilk fazda ses kullanmaz; badge, ünlem, kafa kaldırma veya benzeri görsel mikro etkileşimle dikkat çeker.
+* Floating Agent kontrolleri: `Gizle`, `Sessize al`, `Bu sayfada uyarma`.
+* Floating Agent ilk fazda web/desktop odaklıdır; mobil davranış bu adımda kapsam dışıdır.
+* İlk floating avatar Codex pet benzeri teknik/sevimli avatar olabilir ve daha sonra değiştirilebilir.

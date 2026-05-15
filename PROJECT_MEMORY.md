@@ -3,9 +3,9 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * CommercePilot için 2026-05-15 ürün davranışı kararları netleşti: ürün kartı detaya gider, sepete ekleme butonla yapılır, cart localStorage ile korunur, seller mutation onaylı preview ile uygulanır.
+  * CommercePilot floating Agent kapsamı netleşti: sağ alt ikon ayrı müşteri temsilcisi değil, route Agent ekranlarıyla aynı runtime/history kullanan tam yetkili mini Agent olacak.
 * Son değişiklik neydi?
-  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md` ürün detay penceresi, kategori seti, katalog-only agent, localStorage cart, buyer profile tercihleri ve seller before/after mutation kurallarıyla güncellendi.
+  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md` tüm sayfalarda çalışan floating Agent, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri ve Codex pet avatar kararıyla güncellendi.
 * Bir sonraki net adım ne?
   * Milestone 8D IA ve navigasyon reset: buyer header `Ürünler/Sepet/Agent/Profil`, seller header sade, sidebar menü tekrarı yok.
 
@@ -39,6 +39,13 @@
 * Seller overview tek uzun sayfa olmayacak; iade, negatif yorum, satılmayan ürün ve stok uyarıları kısa kartlardan ilgili endpoint'lere gidecek.
 * Seller agent listing mutation'ı hemen uygulamayacak; önce/sonra preview gösterecek, satıcı onaylarsa mock state'e uygulayıp audit log'a yazacak.
 * Agent pet proactive konuşabilir ama susturma/gizleme modları ve izin katmanları olmadan kullanıcı adına mutation yapmamalı.
+* Floating Agent tüm buyer/seller sayfalarında görünebilir; ayrı bir müşteri temsilcisi widget'ı değil, `/buyer/agent` ve `/seller/agent` ekranlarıyla aynı runtime/history kullanan kompakt Agent UI'dır.
+* Floating Agent mini paneli Agent sayfasına taşıma zorunluluğu olmadan ürün önerisi, sepet apply, seller analiz ve seller mutation preview gibi işleri kendi içinde yapabilir.
+* Floating Agent context-aware çalışmalı; bulunduğu route, ürün, sepet veya seller alanı bağlamını bilmelidir.
+* Floating Agent proactive uyarıları ilk fazda ses kullanmaz; badge/ünlem/kafa kaldırma gibi sessiz görsel mikro etkileşim kullanır.
+* Floating Agent için `Gizle`, `Sessize al`, `Bu sayfada uyarma` kontrolleri zorunludur.
+* Floating Agent ilk fazda web/desktop odaklıdır; mobil davranış bu adımda kapsam dışıdır.
+* İlk floating avatar Codex pet benzeri teknik/sevimli avatar olabilir ve sonra değiştirilebilir.
 * UI içinde Gemini çalışıyormuş gibi sahte davranılmayacak; OpenAI geçici provider olarak kalacak, Gemini final provider swap sonraya bırakılacak.
 
 ## 3) Mimari Özet
@@ -168,6 +175,10 @@
 * 2026-05-15 — Karar: Seller overview ana uyarı kartları `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski` olacak. | Gerekçe: Satıcıya hızlı ve eyleme dönük dört problem alanı verir. | Etki: 8I overview endpoint kartları bu dörtlüyle başlar. | Alternatifler: Daha geniş ve dağınık uyarı seti.
 * 2026-05-15 — Karar: Seller mutation önce/sonra preview ve satıcı onayı olmadan uygulanmayacak. | Gerekçe: Satıcı listing değişikliklerinde kontrolü kaybetmemeli. | Etki: Agent önerisi draft/preview olarak görünür; onay sonrası mock state ve audit log güncellenir. | Alternatifler: Agent'ın tam yetkiyle anında uygulaması.
 * 2026-05-15 — Karar: Ürün görselleri 8E veya sonrasında kontrollü mock/generated görsel setiyle üretilebilir. | Gerekçe: Marketplace hissi için ürün görselleri kritik; placeholder kalıcı çözüm olmaz. | Etki: 8E katalog veri/görsel metadata tasarımında görsel seti için alan açılır. | Alternatifler: Kalıcı placeholder kullanmak.
+* 2026-05-15 — Karar: Floating Agent tüm buyer/seller sayfalarında görünecek ve route Agent sayfalarının tam yetkili mini hali olacak. | Gerekçe: Sağ alttaki ikon klasik müşteri temsilcisi değil, CommercePilot Agent'ın her yerde erişilebilir kompakt yüzeyi olmalı. | Etki: `/buyer/agent` ve `/seller/agent` ile aynı runtime/history kullanılır; ürün önerisi, sepet apply, seller analiz ve seller mutation preview panel içinde yapılabilir. | Alternatifler: Sadece Agent sayfasına yönlendiren pasif ikon.
+* 2026-05-15 — Karar: Floating Agent context-aware ve proactive olacak ama ilk fazda ses kullanmayacak. | Gerekçe: Agent sayfa bağlamını yorumlamalı fakat kullanıcıyı agresif popup/ses ile rahatsız etmemeli. | Etki: Route/ürün/sepet/seller bağlamı runtime'a taşınır; uyarı halinde badge, ünlem, kafa kaldırma veya benzeri sessiz görsel mikro etkileşim kullanılır. | Alternatifler: Sesli bildirim veya otomatik açılan chat.
+* 2026-05-15 — Karar: Floating Agent kullanıcı kontrolleri zorunlu olacak: `Gizle`, `Sessize al`, `Bu sayfada uyarma`. | Gerekçe: Her sayfada görünen agent kullanıcı kontrolü olmadan rahatsız edici olabilir. | Etki: 8Q kapsamında state ve UI kontrolleri tasarlanacak. | Alternatifler: Sadece kapatma ikonu.
+* 2026-05-15 — Karar: Floating Agent ilk fazda web/desktop odaklı olacak ve Codex pet benzeri avatarla başlayacak. | Gerekçe: Kullanıcı bu adımda mobil davranışı önceliklendirmedi; görsel karakter daha sonra değiştirilebilir. | Etki: Mobil bottom sheet veya responsive özel davranış ilk 8Q kapsamına alınmaz. | Alternatifler: Mobil-first widget davranışı veya marka avatarını hemen üretmek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -224,6 +235,7 @@
 * [x] Milestone 8C light marketplace design system ve shell uygulandı.
 * [x] 2026-05-15 ürün geri bildirimiyle roadmap gerçek e-ticaret endpoint akışına göre revize edildi.
 * [x] 2026-05-15 ürün detay, kategori, cart, agent ve seller mutation kararları netleştirildi.
+* [x] 2026-05-15 floating Agent mini panel kapsamı netleştirildi.
 
 ## 9) Yapılacaklar (Next)
 
@@ -265,7 +277,7 @@
 * [ ] Milestone 8G buyer Agent sayfasında prompt -> görselli ürün önerisi -> sepete ekleme onayı akışını kur.
 * [ ] Milestone 8H buyer profile tercihleri ve yorumları ekranını kur.
 * [ ] Milestone 8I seller overview endpoint kartlarını kur: iade, negatif yorum, satılmayan ürün, stok riski.
-* [ ] Milestone 8Q sonrası floating draggable agent pet shell'ini buyer/seller sayfalarına yerleştir.
+* [ ] Milestone 8Q floating Agent mini panelini kur: tüm buyer/seller sayfalarında Codex pet ikonu, ortak agent history/runtime, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri.
 * [ ] Milestone 8N sonrası agent prompt/tool/runtime registry katmanını kur.
 * [ ] Milestone 8P için seller before/after preview, onay, audit log ve rollback davranışını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
@@ -1052,6 +1064,13 @@
   * `/seller/profile` mağaza profili ve agent yetki ayarlarını taşır.
 * Görsel kararı:
   * Ürün görselleri 8E veya sonrasında kontrollü mock/generated görsel setiyle üretilebilir.
+* Floating Agent kararı:
+  * Sağ alttaki ikon ayrı müşteri temsilcisi değildir; `/buyer/agent` ve `/seller/agent` ile aynı runtime/history kullanan kompakt Agent UI'dır.
+  * Tüm buyer/seller sayfalarında görünebilir.
+  * Mini panel Agent sayfasına taşımadan ürün önerisi, sepet apply, seller analiz ve seller mutation preview yapabilir.
+  * Bulunduğu sayfa bağlamını bilir ve gerektiğinde ses kullanmadan badge/ünlem/kafa kaldırma gibi mikro etkileşimle dikkat çeker.
+  * Kullanıcı kontrolleri: `Gizle`, `Sessize al`, `Bu sayfada uyarma`.
+  * İlk faz web/desktop odaklıdır; ilk avatar Codex pet benzeri teknik/sevimli avatar olabilir.
 * Güncellenen roadmap dosyası:
   * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`.
 
