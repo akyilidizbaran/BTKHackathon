@@ -43,18 +43,40 @@
 * Buyer ürün kartları gerçek e-ticaret kartı gibi davranacak.
   * Ürün görseli, ad, fiyat, puan, yorum sayısı, satıcı, teslimat/indirim badge'i.
   * Ana aksiyon: sepete ekle.
-  * Detay sayfası varsa ikincil aksiyon olarak kalabilir.
+  * Kart görseli/başlığı/tıklanabilir alanı ürün satış detay penceresine gider.
+  * Her ürünün kendi dynamic endpoint'i olacak: `/buyer/products/[slug]`.
+  * Kataloğa yeni ürün eklendiğinde slug üzerinden otomatik ürün detay route'u açılır.
+* Buyer ürün detay sayfası ekteki referans gibi ürün satış penceresi olacak.
+  * Sol tarafta büyük ürün görsel alanı ve thumbnail şeridi.
+  * Orta alanda kategori badge'i, ürün adı, puan, yorum/soru sayısı, fiyat, `Şimdi Al`, `Sepete Ekle`, favori, teslimat ve öne çıkan özellikler.
+  * Sağ alanda kampanyalar, satıcı kartı, mağazaya git ve koleksiyona ekle alanları.
+  * Aşağıda açıklama, yorumlar, soru-cevap ve benzer ürünler daha sonra eklenebilir.
+* Buyer kategori seti ilk fazda:
+  * `Kadın Giyim`
+  * `Erkek Giyim`
+  * `Elektronik`
+  * `Ev & Yaşam`
+  * `Kozmetik`
+  * `Spor`
+  * `Aksesuar`
 * Buyer Agent ChatGPT benzeri bir sohbet alanı olacak.
   * Kullanıcı örnek komut: `3000 TL altı limitli old-money kazak ve pantolon getir`.
+  * Agent yalnızca katalogdaki mevcut ürünlerden seçim yapacak; katalogda yoksa ürün uydurmayacak.
+  * Eksik kategori/ürün ihtiyacı varsa katalog Milestone 8E veya sonrasında büyütülecek.
   * Agent ürünleri görselleştirip chat içinde listeleyecek.
   * Sonra izin soracak: `Bunları sepete ekleyeyim mi?`
   * Kullanıcı onaylarsa sepet state'i değişecek.
+  * Varsayılan davranış mevcut sepete eklemek olacak; agent ayrıca `mevcut sepeti bununla değiştir` seçeneği sunabilir.
+* Buyer cart state ilk fazda `localStorage` ile korunacak.
+  * Sayfa değişiminde veya reload sonrası sepet kaybolmayacak.
 * Buyer Profil, agent kişiselleştirme merkezi olacak.
   * Kullanıcı kendi isteklerini, stil tercihlerini, hassasiyetlerini ve beklentilerini yazabilecek.
+  * Profil serbest metin ve chip/checkbox tercihleriyle tutulacak.
+  * Örnek chip'ler: hızlı kargo, kolay iade, old-money stil, premium kalite, sentetik kumaş istemem, bütçe hassasiyeti.
   * Kullanıcının ürün yorumları burada sergilenecek.
   * Bu veriler agent önerilerini/fine-tune hissini besleyen profil sinyalleri olarak kullanılacak.
 * Seller overview tek uzun sayfa olmayacak.
-  * Genel bakışta dağılımlar, iade uyarıları, negatif yorum uyarıları, düşük stok ve satılmayan ürün uyarıları kısa kartlar halinde olacak.
+  * Genel bakışta dağılımlar ve 4 ana uyarı kartı olacak: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.
   * Her uyarı kendi endpoint'ine götürecek.
 * Seller aksiyonları alt başlıklara ayrılacak.
   * Satılmayan ürünler.
@@ -65,7 +87,12 @@
   * Bundle/kampanya fırsatları.
 * Seller ürünleri fotoğraflı ürün listesi/grid'i olarak görünecek.
 * Seller Agent, satıcıya açıklama ve aksiyon önerisi veren ana derinleşme katmanı olacak.
+* Seller mutation hemen ürüne yansımayacak.
+  * Agent önce satıcıya `önce/sonra` preview gösterecek.
+  * Satıcı onaylarsa değişiklik mock ürün state'ine uygulanacak.
+  * Uygulanan değişiklik audit log'a yazılacak.
 * Seller Profil, mağaza ayarları, agent yetki tercihleri ve satıcı profil bilgilerini tutacak.
+* Ürün görselleri 8E veya sonrasında kontrollü mock/generated görsel setiyle üretilebilir.
 
 ## 2) Endpoint Haritası
 
@@ -77,8 +104,9 @@
   * Normal alıcıların gezeceği ana ürün/kategori yüzeyi.
   * Header search, kategori şeridi, kampanya/öneri bölümü, ürün grid/list içerir.
 * `/buyer/products/[slug]`
-  * Opsiyonel ürün detay.
-  * Çok açıklama değil; görsel, fiyat, yorumlar, sepete ekle ve kısa agent uyarısı.
+  * Ürün satış detay penceresi.
+  * Görsel galeri, ürün adı, puan, yorum/soru sayısı, fiyat, kampanya, satıcı, teslimat, özellikler, `Şimdi Al`, `Sepete Ekle` ve favori aksiyonlarını içerir.
+  * Katalogdaki her ürün slug ile bu route'ta açılır; yeni ürün eklendiğinde dynamic endpoint otomatik oluşur.
 * `/buyer/cart`
   * Gerçek sepet state'i.
   * Ürün yoksa kısa empty state.
@@ -93,11 +121,11 @@
 ### Buyer API / State
 
 * `GET /api/buyer/catalog`
-  * Ürün listesi, kategori, fiyat, görsel ve badge metadata.
+  * Ürün listesi, kategori, fiyat, görsel, puan, yorum sayısı, satıcı, teslimat ve badge metadata.
 * `GET /api/buyer/products/[id]`
-  * Ürün detay contract'ı.
+  * Ürün satış detay contract'ı: galeri, kampanya, satıcı, özellik, açıklama, yorum ve soru-cevap metadata.
 * `GET /api/buyer/cart`
-  * Mevcut sepet.
+  * Mevcut sepet; ilk fazda client `localStorage` ile korunur.
 * `POST /api/buyer/cart/items`
   * Ürün sepete ekler.
 * `PATCH /api/buyer/cart/items/[id]`
@@ -105,9 +133,10 @@
 * `DELETE /api/buyer/cart/items/[id]`
   * Ürünü sepetten çıkarır.
 * `POST /api/buyer/agent`
-  * Chat mesajı alır, ürün önerisi/cevap/sepete ekleme isteği döner.
+  * Chat mesajı alır, yalnızca katalogdaki mevcut ürünlerden öneri/cevap/sepete ekleme isteği döner.
 * `POST /api/buyer/agent/apply`
   * Kullanıcı onayından sonra agent'ın önerdiği sepet mutation'ını uygular.
+  * Desteklenen stratejiler: mevcut sepete ekle, mevcut sepeti öneriyle değiştir.
 * `GET /api/buyer/profile`
   * Tercih ve yorumları döner.
 * `PATCH /api/buyer/profile`
@@ -148,7 +177,7 @@
 * `GET /api/seller/products/[id]`
   * Ürün yönetim detayı.
 * `PATCH /api/seller/products/[id]`
-  * Mock listing mutation.
+  * Satıcı onayından sonra mock listing mutation uygular.
 * `GET /api/seller/actions`
   * Aksiyon kategorileri ve kısa listeler.
 * `GET /api/seller/actions/[category]`
@@ -159,8 +188,9 @@
   * Negatif yorum analizi.
 * `POST /api/seller/agent`
   * Satıcı agent mesaj/analiz/tool önerisi.
+  * Listing değişikliği gerekiyorsa doğrudan uygulamaz; önce `before/after` preview döner.
 * `POST /api/seller/agent/apply`
-  * Kullanıcı izniyle mock ürün/listing mutation uygular.
+  * Kullanıcı onayıyla preview edilen mock ürün/listing mutation'ını uygular.
 * `GET /api/seller/profile`
   * Mağaza ve agent permission ayarları.
 * `PATCH /api/seller/profile`
@@ -171,23 +201,31 @@
 * Buyer ekranı jüriye açıklama anlatan dashboard gibi olmayacak.
 * Ürünler sayfası normal alışveriş yapan kullanıcının ana alanı olacak.
 * Ürünleri listele:
-  * Kategori şeridi.
+  * Kategori şeridi: `Kadın Giyim`, `Erkek Giyim`, `Elektronik`, `Ev & Yaşam`, `Kozmetik`, `Spor`, `Aksesuar`.
   * Kampanya/öneri chip'leri.
   * Çok ürünlü grid.
   * Sepete ekle butonu.
   * Favori ikonu opsiyonel.
   * Kısa teslimat/indirim/puan sinyali.
+  * Kartın ürün görseli/başlık alanı ürün detayına gider; sepete ekleme yalnızca `Sepete Ekle` aksiyonuyla yapılır.
+* Ürün detay:
+  * Referans alınan satış penceresi yapısı kullanılacak.
+  * Ürün görsel galerisi, fiyat, puan, kampanya, satıcı, teslimat, özellik kartları ve satın alma aksiyonları aynı ekranda okunur olmalı.
 * Sepet:
   * Boşken kısa ve sakin.
   * Doluyken ürün odaklı.
   * Agent yalnızca sepet iyileştirme veya kullanıcı komutu sonrası görünür şekilde devreye girer.
+  * İlk fazda `localStorage` ile route değişimlerinde ve reload sonrasında korunur.
 * Agent:
   * Ayrı `/buyer/agent` sayfasında büyük chat deneyimi.
   * Sağ alt pet/chat sonra eklenebilir ama core akış önce endpoint sayfasında kurulacak.
   * Agent önerdiği ürünleri küçük ürün kartlarıyla gösterir.
+  * Agent yalnızca katalogdaki ürünleri önerebilir; ürün uydurmaz.
   * Sepete ekleme için açık onay ister.
+  * Onay ekranında `sepete ekle` ve gerektiğinde `sepeti değiştir` stratejileri desteklenir.
 * Profil:
   * `Agent beni nasıl tanısın?` alanı.
+  * Serbest metin + chip/checkbox tercihleri.
   * Stil/kalite/bütçe/kargo/iade hassasiyetleri.
   * Kullanıcı yorumları.
 
@@ -197,9 +235,7 @@
 * Overview:
   * Kısa KPI.
   * Ürün dağılımları.
-  * İade uyarıları.
-  * Negatif yorum uyarıları.
-  * Satılmayan ürün uyarısı.
+  * 4 ana uyarı kartı: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.
   * Her uyarı kendi route'una gider.
 * Ürünler:
   * Ürün fotoğrafı şart.
@@ -212,7 +248,8 @@
   * Satıcı agent sohbeti ayrı sayfada çalışır.
   * Ürünleri satılmama oranı ve sebebine göre sıralayabilir.
   * Ürün detail bağlamında değişiklik önerir.
-  * Yetki verilirse mock mutation yapar ve ne yaptığını raporlar.
+  * Değişiklikleri önce/sonra preview olarak gösterir.
+  * Satıcı onaylarsa mock mutation yapar ve audit log'a yazar.
 * Profil:
   * Mağaza bilgileri.
   * Agent yetki modu.
@@ -243,8 +280,11 @@
   * LangChain daha sonra tool orchestration adapter olarak bağlanacak.
 * Cart/listing state:
   * İlk fazda gerçek DB yok.
-  * Buyer cart state local mock store/local storage veya server-side mock contract ile korunacak.
-  * Seller mutation app içi mock state ve audit log üzerinde çalışacak.
+  * Buyer cart state `localStorage` ile korunacak.
+  * Seller mutation önce preview/draft olarak üretilecek; satıcı onayından sonra app içi mock state ve audit log üzerinde uygulanacak.
+* Görseller:
+  * 8E veya sonrasında kontrollü mock/generated ürün görsel seti üretilebilir.
+  * Ürün görselleri marketplace hissi için kritik kabul edilir; placeholder kalıcı çözüm olmayacak.
 * Provider:
   * Şimdilik OpenAI kalacak.
   * `LLM_PROVIDER` provider seçim noktası olarak korunacak.
@@ -257,8 +297,8 @@
 | 8B | Roadmap ve ürün pivot kilidi | Light marketplace + agent pet yönünü sabitlemek | Kararlar ve ilk milestone planı yazılı |
 | 8C | Light marketplace shell | Dark tema yerine light e-ticaret shell'i kurmak | Root, buyer/seller shell light çalışır |
 | 8D | IA ve navigasyon reset | Buyer/seller header/sidebar tekrarını kaldırmak, endpoint haritasını uygulamaya hazırlamak | Buyer header `Ürünler/Sepet/Agent/Profil`; seller header sade; sidebar tekrarı yok |
-| 8E | Buyer catalog data + ürün grid | Çok ürünlü klasik e-ticaret ürünler ekranı kurmak | Kategori şeridi, kampanya chip'leri, fotoğraflı ürün grid'i ve sepete ekle aksiyonu görünür |
-| 8F | Buyer cart state | Sepeti gerçek etkileşimli hale getirmek | Ürün ekle/sil/adet/toplam ve boş/dolu sepet state'i çalışır |
+| 8E | Buyer catalog data + ürün grid | Çok ürünlü klasik e-ticaret ürünler ekranı kurmak | `Kadın Giyim/Erkek Giyim/Elektronik/Ev & Yaşam/Kozmetik/Spor/Aksesuar` kategori şeridi, kampanya chip'leri, fotoğraflı ürün grid'i ve sepete ekle aksiyonu görünür |
+| 8F | Buyer product detail + cart state | Ürün satış detay penceresi ve sepeti gerçek etkileşimli hale getirmek | `/buyer/products/[slug]` dynamic detail, ürün ekle/sil/adet/toplam ve `localStorage` sepet state'i çalışır |
 | 8G | Buyer agent page | ChatGPT benzeri alıcı agent sayfasını kurmak | Prompt -> görselli ürün önerisi -> onay sorusu akışı çalışır |
 | 8H | Buyer profile | Agent kişiselleştirme ve kullanıcı yorumları sayfasını kurmak | Tercihler ve yorumlar profil ekranında görünür/güncellenir |
 | 8I | Seller IA + overview endpoints | Satıcı ana sayfayı kısa uyarı kartları ve endpoint linkleriyle kurmak | Dağılım, iade, negatif yorum, stok ve satılmayan ürün uyarıları route'lara bağlanır |
@@ -267,8 +307,8 @@
 | 8L | Seller agent page | Satıcı agent sohbet ve analiz yüzeyini kurmak | Satılmayan ürün sıralama, sebep analizi ve öneri akışı çalışır |
 | 8M | Seller profile + permissions | Mağaza profili ve agent yetki ayarları | Profil, yetki modu ve bildirim tercihleri görünür/güncellenir |
 | 8N | Shared agent runtime | Buyer/seller agent prompt ve tool registry ortaklaştırmak | Agent request contract, prompt registry ve typed tool registry oluşur |
-| 8O | Buyer agent cart mutations | Agent'ın onaylı şekilde sepeti doldurmasını sağlamak | `/buyer/agent` önerisi kullanıcı onayıyla cart state'ine uygulanır |
-| 8P | Seller mock mutations + audit | Satıcı agent'ın izinli listing mutation yapması | Başlık/açıklama/fiyat/kampanya mock state değişir, audit log görünür |
+| 8O | Buyer agent cart mutations | Agent'ın onaylı şekilde sepeti doldurmasını sağlamak | `/buyer/agent` önerisi kullanıcı onayıyla cart state'ine eklenir veya sepeti değiştirir |
+| 8P | Seller mock mutations + audit | Satıcı agent'ın onaylı listing mutation yapması | Önce/sonra preview görünür; satıcı onaylarsa başlık/açıklama/fiyat/kampanya mock state değişir ve audit log görünür |
 | 8Q | Floating pet + proactive bubbles | Route agent oturduktan sonra sağ alt pet deneyimini eklemek | Pet görünür/gizlenir/sürüklenir; kısa proactive balonlar bağlama göre çıkar |
 | 8R | End-to-end demo hardening | Buyer ve seller demo akışlarını parlatmak | Browser QA, check/build, demo script ve kritik akışlar temiz geçer |
 | 9A | Gemini/provider finalization | OpenAI geçici provider'dan final Gemini/provider yapısına geçmek | Buyer/seller/agent contract'ları Gemini ile generated döner |
@@ -279,11 +319,12 @@
 
 * Kullanıcı `/buyer/products` ekranına gelir.
 * Kategori veya search ile ürünleri gezer.
-* Ürün kartından sepete ürün ekler.
+* Ürün kartına tıklar ve `/buyer/products/[slug]` satış detay sayfasına gider.
+* Ürün detayında `Sepete Ekle` ile sepete ürün ekler.
 * `/buyer/cart` ekranında sade sepeti görür.
 * Kullanıcı `/buyer/agent` ekranına geçer.
 * Şunu yazar: `3000 TL altı limitli old-money kazak ve pantolon getir`.
-* Agent ürün kartlarını chat içinde gösterir.
+* Agent katalogdaki mevcut ürünlerden ürün kartlarını chat içinde gösterir.
 * Agent sorar: `Bunları sepete ekleyeyim mi?`
 * Kullanıcı onaylar.
 * Sepet güncellenir.
@@ -303,7 +344,8 @@
 * `/seller/agent` ekranında `Satılmayan ürünlerimi sırala` der.
 * Agent ürünleri sebep ve oranla sıralar.
 * Satıcı bir ürün için düzenleme ister.
-* Yetki verirse agent mock mutation uygular ve audit log'a yazar.
+* Agent önce/sonra preview gösterir.
+* Satıcı onaylarsa agent mock mutation uygular ve audit log'a yazar.
 
 ## 9) Öncelikli Riskler
 
@@ -311,14 +353,18 @@
 * Buyer cart boşken fazla açıklama göstermek kullanıcıyı yorar.
 * Agent her sayfada konuşursa rahatsız edici olur; önce route agent, sonra kontrollü pet/proactive balon.
 * Seller overview tek uzun sayfa olursa yönetim paneli hissi kaybolur; uyarı kartları endpoint'lere dağıtılmalı.
-* Mock ürün görselleri zayıf olursa marketplace hissi oluşmaz.
-* Cart/listing mutation gerçek görünmeli ama kontrolsüz olmamalı; onay ve audit zorunlu.
+* Mock ürün görselleri zayıf olursa marketplace hissi oluşmaz; kontrollü görsel seti 8E veya sonrasında üretilmeli.
+* Cart/listing mutation gerçek görünmeli ama kontrolsüz olmamalı; buyer cart onayı, seller before/after preview ve audit zorunlu.
 
-## 10) Varsayımlar ve Açık Sorular
+## 10) Netleşen Kararlar
 
-* Varsayım: Buyer ürün kartında ana aksiyon `Sepete ekle`; ürün detay ayrı tıklama alanı olarak kalabilir.
-* Varsayım: `/buyer` route'u ürünler ekranına yönlenecek veya aynı içeriği gösterecek.
-* Varsayım: Satıcı tarafında tek navigasyon kaynağı header olacak; ihtiyaç olursa sol alan yalnızca filtre/özet için kullanılacak, menü tekrarı olmayacak.
-* Açık soru: Ürün görselleri ilk fazda AI generated asset mi, kontrollü placeholder/mock görsel mi olacak?
-* Açık soru: Buyer cart state local storage ile mi, server-side in-memory mock store ile mi korunacak?
-* Açık soru: Ürün kartının herhangi bir yerine tıklamak direkt sepete mi eklemeli, yoksa yalnızca `Sepete ekle` butonu mu bunu yapmalı?
+* Ürün kartı ana tıklama davranışı ürün detayına gider; sepete ekleme `Sepete Ekle` aksiyonuyla yapılır.
+* Her ürün için dynamic `/buyer/products/[slug]` satış detay sayfası açılır.
+* Buyer kategori seti: `Kadın Giyim`, `Erkek Giyim`, `Elektronik`, `Ev & Yaşam`, `Kozmetik`, `Spor`, `Aksesuar`.
+* Buyer agent yalnızca katalogdaki mevcut ürünlerden seçim yapar; katalog dışı ürün uydurmaz.
+* Buyer cart state ilk fazda `localStorage` ile korunur.
+* Buyer agent onay sonrası mevcut sepete ekleyebilir veya kullanıcı seçerse sepeti öneriyle değiştirebilir.
+* Buyer profil serbest metin + chip/checkbox tercihleriyle tutulur.
+* Seller overview ana uyarı kartları: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.
+* Seller mutation hemen uygulanmaz; önce/sonra preview gösterilir, satıcı onaylarsa uygulanır.
+* Ürün görselleri 8E veya sonrasında kontrollü mock/generated görsel setiyle üretilebilir.
