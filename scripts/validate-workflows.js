@@ -44,6 +44,12 @@ const {
   getDefaultBuyerSmartCartApiData,
   validateBuyerSmartCartRequest,
 } = require("../src/lib/api/buyer");
+const {
+  getBuyerAgentApiData,
+  getBuyerAgentApplyApiData,
+  getDefaultBuyerAgentApiData,
+  validateBuyerAgentApplyRequest,
+} = require("../src/lib/api/buyer-agent");
 const { getBuyerCatalogApiData } = require("../src/lib/api/buyer-catalog");
 const { getBuyerSmartCartExplanationApiData } = require("../src/lib/api/buyer-smart-cart-explanations");
 
@@ -74,6 +80,7 @@ async function main() {
   validateBuyerWorkflows();
   validateBuyerApiContracts();
   validateBuyerCatalogApiContracts();
+  validateBuyerAgentApiContracts();
   await validateBuyerSmartCartExplanationApiContracts();
 
   if (failures.length > 0) {
@@ -107,6 +114,7 @@ async function main() {
       `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
       `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
       `Buyer catalog products: ${getBuyerCatalogApiData().products.length}`,
+      `Buyer agent endpoint: ${getDefaultBuyerAgentApiData().contract.endpoint}`,
       `Buyer API examples: ${buyerSmartCartExamples.length}`,
       "Buyer prompts: 7",
     ].join("\n"),
@@ -573,6 +581,53 @@ function validateBuyerCatalogApiContracts() {
     priceSorted.products.every((product, index, list) => index === 0 || list[index - 1].price <= product.price),
     "buyer catalog fiyat sıralaması bozuk",
   );
+}
+
+function validateBuyerAgentApiContracts() {
+  const data = getBuyerAgentApiData({
+    buyerId: "buyer-aylin",
+    prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
+  });
+  const defaultData = getDefaultBuyerAgentApiData();
+  const applyData = getBuyerAgentApplyApiData({
+    items: data.recommendations.map((recommendation) => ({
+      productId: recommendation.product.id,
+      quantity: recommendation.item.quantity,
+    })),
+    strategy: "append",
+  });
+  const invalidStrategy = validateBuyerAgentApplyRequest({
+    items: [{ productId: "prod-clearcam-webcam", quantity: 1 }],
+    strategy: "merge",
+  });
+  const emptyItems = validateBuyerAgentApplyRequest({
+    items: [],
+    strategy: "append",
+  });
+
+  assert(defaultData.contract.endpoint === "/api/buyer/agent", "buyer agent endpoint yanlış");
+  assert(defaultData.contract.method === "POST", "buyer agent method yanlış");
+  assert(data.contract.envelope === "success/data/error", "buyer agent envelope contract yanlış");
+  assert(data.contract.source === "buyer-agent-smart-cart", "buyer agent source yanlış");
+  assert(data.summary.itemCount === data.recommendations.length, "buyer agent itemCount uyumsuz");
+  assert(data.summary.itemCount > 0, "buyer agent öneri dönmeli");
+  assert(data.message.content.length > 0, "buyer agent mesajı eksik");
+  assert(data.message.confirmationQuestion.includes("sepete"), "buyer agent onay sorusu eksik");
+  assert(
+    data.recommendations.every((recommendation) => recommendation.product.image.src === "/catalog/buyer-product-sprite.png"),
+    "buyer agent ürün görsel contract yanlış",
+  );
+  assert(
+    data.recommendations.every((recommendation) => recommendation.product.href.startsWith("/buyer/products/")),
+    "buyer agent ürün href contract yanlış",
+  );
+  assert(applyData.contract.endpoint === "/api/buyer/agent/apply", "buyer agent apply endpoint yanlış");
+  assert(applyData.strategy === "append", "buyer agent apply strategy yanlış");
+  assert(applyData.items.length === data.recommendations.length, "buyer agent apply ürün sayısı uyumsuz");
+  assert(applyData.summary.itemCount >= data.recommendations.length, "buyer agent apply itemCount eksik");
+  assert(applyData.summary.totalPrice > 0, "buyer agent apply total eksik");
+  assert(!invalidStrategy.ok && invalidStrategy.code === "INVALID_STRATEGY", "buyer agent invalid strategy validation yanlış");
+  assert(!emptyItems.ok && emptyItems.code === "ITEMS_REQUIRED", "buyer agent empty item validation yanlış");
 }
 
 async function validateBuyerSmartCartExplanationApiContracts() {

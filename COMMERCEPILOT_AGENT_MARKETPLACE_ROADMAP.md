@@ -8,9 +8,9 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C, 8D, 8E ve 8F tamamlandı.
-  * Sıradaki net adım 8G: buyer Agent sayfasında prompt -> görselli ürün önerisi -> onaylı sepete ekleme akışını kurmak.
-  * 8G sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
+  * 8B, 8C, 8D, 8E, 8F ve 8G tamamlandı.
+  * Sıradaki net adım 8H: buyer profile tercihleri, agent kişiselleştirme ve kullanıcı yorumları ekranını kurmak.
+  * 8H sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
 
@@ -147,9 +147,9 @@
 * `DELETE /api/buyer/cart/items/[id]`
   * Ürünü sepetten çıkarır.
 * `POST /api/buyer/agent`
-  * Chat mesajı alır, yalnızca katalogdaki mevcut ürünlerden öneri/cevap/sepete ekleme isteği döner.
+  * Tamamlandı: Chat mesajı alır, smart-cart workflow'u katalog ürün kartlarıyla birleştirir ve yalnızca mevcut katalog ürünlerinden öneri/cevap/sepete ekleme isteği döner.
 * `POST /api/buyer/agent/apply`
-  * Kullanıcı onayından sonra agent'ın önerdiği sepet mutation'ını uygular.
+  * Tamamlandı: Kullanıcı onayından sonra agent'ın önerdiği sepet mutation payload'unu doğrular; client tarafı bunu `localStorage` cart helper'ıyla uygular.
   * Desteklenen stratejiler: mevcut sepete ekle, mevcut sepeti öneriyle değiştir.
 * `GET /api/buyer/profile`
   * Tercih ve yorumları döner.
@@ -294,6 +294,9 @@
   * İlk sürüm web/desktop odaklıdır; mobil bottom sheet davranışı bu fazın kapsamı değildir.
   * Floating pet eklendiğinde header navigasyonunu veya ürün/sepet akışını gölgelemeyecek.
 * Agent runtime:
+  * 8G'de route tabanlı buyer Agent için geçici typed contract eklendi: `src/lib/api/buyer-agent.ts`.
+  * `/api/buyer/agent` öneri üretir; `/api/buyer/agent/apply` onaylanan ürün/adet/strateji payload'unu doğrular.
+  * Cart apply'in gerçek yazımı ilk fazda tarayıcıda `src/lib/cart/buyer-cart.ts` helper'larıyla yapılır.
   * Promptlar merkezi tutulacak: `src/lib/agents/prompts/*`.
   * Tool contract'ları merkezi tutulacak: `src/lib/agents/tools/*`.
   * Runtime orchestration merkezi tutulacak: `src/lib/agents/runtime/*`.
@@ -320,7 +323,7 @@
 | 8D | IA ve navigasyon reset | Buyer/seller header/sidebar tekrarını kaldırmak, endpoint haritasını uygulamaya hazırlamak | Buyer header `Ürünler/Sepet/Agent/Profil`; seller header sade; sidebar tekrarı yok |
 | 8E | Buyer catalog data + ürün grid | Çok ürünlü klasik e-ticaret ürünler ekranı kurmak | Tamamlandı: 7 görselli kategori, kampanya chip'leri, `GET /api/buyer/catalog`, 48 fotoğraflı ürün kartı ve görünür sepete ekle aksiyonu |
 | 8F | Buyer product detail + cart state | Ürün satış detay penceresi ve sepeti gerçek etkileşimli hale getirmek | Tamamlandı: `/buyer/products/[slug]` detail, ürün ekle/sil/adet/toplam, checkout mock ve `localStorage` sepet state'i çalışır |
-| 8G | Buyer agent page | ChatGPT benzeri alıcı agent sayfasını kurmak | Prompt -> görselli ürün önerisi -> onay sorusu akışı çalışır |
+| 8G | Buyer agent page | ChatGPT benzeri alıcı agent sayfasını kurmak | Tamamlandı: Prompt -> görselli ürün önerisi -> onay sorusu -> sepete ekle/değiştir akışı çalışır |
 | 8H | Buyer profile | Agent kişiselleştirme ve kullanıcı yorumları sayfasını kurmak | Tercihler ve yorumlar profil ekranında görünür/güncellenir |
 | 8I | Seller IA + overview endpoints | Satıcı ana sayfayı kısa uyarı kartları ve endpoint linkleriyle kurmak | Dağılım, iade, negatif yorum, stok ve satılmayan ürün uyarıları route'lara bağlanır |
 | 8J | Seller products | Fotoğraflı satıcı ürün yönetimi ekranı | Ürünler fotoğraf, stok, satış, fiyat, yorum ve risk sinyaliyle listelenir |
@@ -328,7 +331,7 @@
 | 8L | Seller agent page | Satıcı agent sohbet ve analiz yüzeyini kurmak | Satılmayan ürün sıralama, sebep analizi ve öneri akışı çalışır |
 | 8M | Seller profile + permissions | Mağaza profili ve agent yetki ayarları | Profil, yetki modu ve bildirim tercihleri görünür/güncellenir |
 | 8N | Shared agent runtime | Buyer/seller agent prompt ve tool registry ortaklaştırmak | Agent request contract, prompt registry ve typed tool registry oluşur |
-| 8O | Buyer agent cart mutations | Agent'ın onaylı şekilde sepeti doldurmasını sağlamak | `/buyer/agent` önerisi kullanıcı onayıyla cart state'ine eklenir veya sepeti değiştirir |
+| 8O | Shared buyer agent cart mutations | 8G'deki onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştırmak | Floating panel ve route agent aynı apply contract'ını kullanarak cart state'ine ekler veya sepeti değiştirir |
 | 8P | Seller mock mutations + audit | Satıcı agent'ın onaylı listing mutation yapması | Önce/sonra preview görünür; satıcı onaylarsa başlık/açıklama/fiyat/kampanya mock state değişir ve audit log görünür |
 | 8Q | Floating Agent mini panel + proactive signals | Route agent oturduktan sonra sağ alt Agent deneyimini eklemek | Tüm buyer/seller sayfalarında Codex pet benzeri ikon görünür; panel aynı agent history/runtime ile çalışır; ürün/sepet/seller mutation işleri panel içinde yapılır; context-aware badge/ünlem uyarıları, gizle/sessize al/bu sayfada uyarma kontrolleri çalışır |
 | 8R | End-to-end demo hardening | Buyer ve seller demo akışlarını parlatmak | Browser QA, check/build, demo script ve kritik akışlar temiz geçer |
@@ -393,6 +396,7 @@
 * Buyer agent yalnızca katalogdaki mevcut ürünlerden seçim yapar; katalog dışı ürün uydurmaz.
 * Buyer cart state ilk fazda `localStorage` ile korunur.
 * 8F cart helper'ı `src/lib/cart/buyer-cart.ts` içindedir; katalog grid, ürün detay ve sepet aynı client-only state'i kullanır.
+* 8G buyer Agent contract'ı `src/lib/api/buyer-agent.ts` içindedir; `/api/buyer/agent` ve `/api/buyer/agent/apply` route'ları aynı typed builder/validation ile çalışır.
 * Buyer agent onay sonrası mevcut sepete ekleyebilir veya kullanıcı seçerse sepeti öneriyle değiştirebilir.
 * Buyer profil serbest metin + chip/checkbox tercihleriyle tutulur.
 * Seller overview ana uyarı kartları: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.
