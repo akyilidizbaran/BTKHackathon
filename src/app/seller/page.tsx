@@ -3,12 +3,17 @@ import { getSellerOverviewApiData, getSellerProductsApiData } from "@/lib/api/se
 import type { ProductCategory } from "@/types/commerce";
 
 const categoryLabels: Record<ProductCategory, string> = {
+  aksesuar: "Aksesuar",
   "elektronik-aksesuar": "Elektronik",
+  "erkek-giyim": "Erkek Giyim",
   "ev-ofis": "Ev & Yaşam",
   "hediye-yasam-tarzi": "Aksesuar",
   "kahve-ekipmanlari": "Ev & Yaşam",
+  "kadin-giyim": "Kadın Giyim",
+  kozmetik: "Kozmetik",
   "kucuk-ev-yasam": "Ev & Yaşam",
   "masa-calisma-alani": "Ev & Yaşam",
+  spor: "Spor",
 };
 
 export default function SellerOverviewPage() {

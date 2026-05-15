@@ -1,11 +1,16 @@
 export type Currency = "TRY";
 
 export type ProductCategory =
+  | "aksesuar"
   | "ev-ofis"
   | "elektronik-aksesuar"
+  | "erkek-giyim"
   | "kahve-ekipmanlari"
+  | "kadin-giyim"
+  | "kozmetik"
   | "masa-calisma-alani"
   | "kucuk-ev-yasam"
+  | "spor"
   | "hediye-yasam-tarzi";
 
 export type DemoStoryFlag =

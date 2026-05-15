@@ -44,6 +44,7 @@ const {
   getDefaultBuyerSmartCartApiData,
   validateBuyerSmartCartRequest,
 } = require("../src/lib/api/buyer");
+const { getBuyerCatalogApiData } = require("../src/lib/api/buyer-catalog");
 const { getBuyerSmartCartExplanationApiData } = require("../src/lib/api/buyer-smart-cart-explanations");
 
 const validSellerActionTones = new Set(["positive", "neutral", "warning", "danger"]);
@@ -72,6 +73,7 @@ async function main() {
   await validateSellerActionExplanationApiContracts();
   validateBuyerWorkflows();
   validateBuyerApiContracts();
+  validateBuyerCatalogApiContracts();
   await validateBuyerSmartCartExplanationApiContracts();
 
   if (failures.length > 0) {
@@ -104,6 +106,7 @@ async function main() {
       `Buyer smart cart explanation endpoint: ${buyerExplanation.contract.endpoint}`,
       `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
       `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
+      `Buyer catalog products: ${getBuyerCatalogApiData().products.length}`,
       `Buyer API examples: ${buyerSmartCartExamples.length}`,
       "Buyer prompts: 7",
     ].join("\n"),
@@ -548,6 +551,28 @@ function validateBuyerApiContracts() {
   assert(meetingData.result.selectedItems.some((item) => item.cartRoleKey === "camera"), "buyer API meeting camera rolü eksik");
   assert(!emptyValidation.ok && emptyValidation.code === "PROMPT_REQUIRED", "buyer API boş prompt validation yanlış");
   assert(!longValidation.ok && longValidation.code === "PROMPT_TOO_LONG", "buyer API uzun prompt validation yanlış");
+}
+
+function validateBuyerCatalogApiContracts() {
+  const catalog = getBuyerCatalogApiData();
+  const women = getBuyerCatalogApiData({ category: "kadin-giyim" });
+  const priceSorted = getBuyerCatalogApiData({ sort: "price-asc" });
+
+  assert(catalog.contract.endpoint === "/api/buyer/catalog", "buyer catalog endpoint uyumsuz");
+  assert(catalog.categories.length === 7, "buyer catalog kategori sayısı 7 olmalı");
+  assert(catalog.categories.every((category) => category.image.src === "/catalog/buyer-product-sprite.png"), "buyer catalog kategori görsel sprite uyumsuz");
+  assert(catalog.products.length === products.length, "buyer catalog ürün sayısı mock products ile uyumsuz");
+  assert(catalog.products.every((product) => product.href.startsWith("/buyer/products/")), "buyer catalog href formatı bozuk");
+  assert(catalog.products.every((product) => product.image.src === "/catalog/buyer-product-sprite.png"), "buyer catalog image sprite uyumsuz");
+  assert(women.products.length > 0, "buyer catalog Kadın Giyim kategorisi boş olmamalı");
+  assert(
+    women.products.every((product) => product.categoryId === "kadin-giyim"),
+    "buyer catalog kategori filtresi yanlış ürün döndürdü",
+  );
+  assert(
+    priceSorted.products.every((product, index, list) => index === 0 || list[index - 1].price <= product.price),
+    "buyer catalog fiyat sıralaması bozuk",
+  );
 }
 
 async function validateBuyerSmartCartExplanationApiContracts() {

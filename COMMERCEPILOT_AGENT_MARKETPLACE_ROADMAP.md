@@ -8,8 +8,9 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C ve 8D tamamlandı.
-  * 8E sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
+  * 8B, 8C, 8D ve 8E tamamlandı.
+  * Sıradaki net adım 8F: ürün detay/satış penceresini derinleştirmek ve `localStorage` sepet state'ini çalışır hale getirmek.
+  * 8F sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
 
@@ -303,8 +304,8 @@
   * Buyer cart state `localStorage` ile korunacak.
   * Seller mutation önce preview/draft olarak üretilecek; satıcı onayından sonra app içi mock state ve audit log üzerinde uygulanacak.
 * Görseller:
-  * 8E veya sonrasında kontrollü mock/generated ürün görsel seti üretilebilir.
-  * Ürün görselleri marketplace hissi için kritik kabul edilir; placeholder kalıcı çözüm olmayacak.
+  * 8E'de kontrollü mock/generated ürün görsel seti tek sprite olarak başlatıldı.
+  * Ürün görselleri marketplace hissi için kritik kabul edilir; sprite yeterli kalmazsa ürün bazlı görsel seti sonraki milestone'larda genişletilebilir.
 * Provider:
   * Şimdilik OpenAI kalacak.
   * `LLM_PROVIDER` provider seçim noktası olarak korunacak.
@@ -317,7 +318,7 @@
 | 8B | Roadmap ve ürün pivot kilidi | Light marketplace + agent pet yönünü sabitlemek | Kararlar ve ilk milestone planı yazılı |
 | 8C | Light marketplace shell | Dark tema yerine light e-ticaret shell'i kurmak | Root, buyer/seller shell light çalışır |
 | 8D | IA ve navigasyon reset | Buyer/seller header/sidebar tekrarını kaldırmak, endpoint haritasını uygulamaya hazırlamak | Buyer header `Ürünler/Sepet/Agent/Profil`; seller header sade; sidebar tekrarı yok |
-| 8E | Buyer catalog data + ürün grid | Çok ürünlü klasik e-ticaret ürünler ekranı kurmak | `Kadın Giyim/Erkek Giyim/Elektronik/Ev & Yaşam/Kozmetik/Spor/Aksesuar` kategori şeridi, kampanya chip'leri, fotoğraflı ürün grid'i ve sepete ekle aksiyonu görünür |
+| 8E | Buyer catalog data + ürün grid | Çok ürünlü klasik e-ticaret ürünler ekranı kurmak | Tamamlandı: 7 görselli kategori, kampanya chip'leri, `GET /api/buyer/catalog`, 48 fotoğraflı ürün kartı ve görünür sepete ekle aksiyonu |
 | 8F | Buyer product detail + cart state | Ürün satış detay penceresi ve sepeti gerçek etkileşimli hale getirmek | `/buyer/products/[slug]` dynamic detail, ürün ekle/sil/adet/toplam ve `localStorage` sepet state'i çalışır |
 | 8G | Buyer agent page | ChatGPT benzeri alıcı agent sayfasını kurmak | Prompt -> görselli ürün önerisi -> onay sorusu akışı çalışır |
 | 8H | Buyer profile | Agent kişiselleştirme ve kullanıcı yorumları sayfasını kurmak | Tercihler ve yorumlar profil ekranında görünür/güncellenir |
@@ -381,7 +382,7 @@
 * Proactive ikon davranışı sesli veya agresif popup'a dönmemeli; sessiz, kısa ve kapatılabilir olmalı.
 * Konuşma geçmişi route Agent ve floating panel arasında ayrışırsa kullanıcı deneyimi kırılır.
 * Seller overview tek uzun sayfa olursa yönetim paneli hissi kaybolur; uyarı kartları endpoint'lere dağıtılmalı.
-* Mock ürün görselleri zayıf olursa marketplace hissi oluşmaz; kontrollü görsel seti 8E veya sonrasında üretilmeli.
+* Mock ürün görselleri zayıf kalırsa marketplace hissi düşer; 8E sprite seti gerekirse ürün bazlı görsellerle büyütülmeli.
 * Cart/listing mutation gerçek görünmeli ama kontrolsüz olmamalı; buyer cart onayı, seller before/after preview ve audit zorunlu.
 
 ## 10) Netleşen Kararlar
@@ -396,6 +397,7 @@
 * Seller overview ana uyarı kartları: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.
 * Seller mutation hemen uygulanmaz; önce/sonra preview gösterilir, satıcı onaylarsa uygulanır.
 * Ürün görselleri 8E veya sonrasında kontrollü mock/generated görsel setiyle üretilebilir.
+* 8E katalog contract'ı `src/lib/api/buyer-catalog.ts` üzerinden yürür; kategori, ürün kartı, görsel metadata ve `/api/buyer/catalog` aynı typed builder'dan beslenir.
 * Floating Agent tüm buyer/seller sayfalarında görünebilir.
 * Floating Agent paneli ayrı müşteri temsilcisi değil, `/buyer/agent` ve `/seller/agent` ekranlarıyla aynı runtime ve konuşma geçmişini kullanan kompakt Agent UI'dır.
 * Floating Agent paneli Agent sayfasına taşımadan ürün önerisi, sepet apply, seller analiz ve seller mutation preview gibi işleri kendi içinde yapabilir.

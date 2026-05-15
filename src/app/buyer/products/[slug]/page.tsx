@@ -1,16 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getBuyerCatalogProductBySlug } from "@/lib/api/buyer-catalog";
 import { getProductBySlug, getProducts } from "@/lib/data";
-import type { ProductCategory } from "@/types/commerce";
-
-const categoryLabels: Record<ProductCategory, string> = {
-  "elektronik-aksesuar": "Elektronik",
-  "ev-ofis": "Ev & Yaşam",
-  "hediye-yasam-tarzi": "Aksesuar",
-  "kahve-ekipmanlari": "Ev & Yaşam",
-  "kucuk-ev-yasam": "Ev & Yaşam",
-  "masa-calisma-alani": "Ev & Yaşam",
-};
 
 export function generateStaticParams(): Array<{ slug: string }> {
   return getProducts().map((product) => ({ slug: product.slug }));
@@ -28,6 +19,7 @@ export default async function BuyerProductDetailPage({
     notFound();
   }
 
+  const catalogProduct = getBuyerCatalogProductBySlug(slug);
   const availableStock = product.stock.onHand - product.stock.reserved;
   const specs = Object.entries(product.specs).slice(0, 6);
 
@@ -40,15 +32,26 @@ export default async function BuyerProductDetailPage({
       <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr_340px]">
         <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)]">
           <div className="aspect-[4/5] rounded-lg bg-slate-100 p-5">
-            <div className="grid h-full place-items-center rounded-md border border-slate-200 bg-white">
-              <span className="text-7xl font-semibold tracking-[-0.08em] text-slate-300">
-                {product.brand.slice(0, 2).toUpperCase()}
-              </span>
-            </div>
+            <div
+              aria-label={catalogProduct?.image.alt ?? product.name}
+              className="h-full rounded-md border border-slate-200 bg-white bg-[length:500%_400%] bg-no-repeat"
+              role="img"
+              style={{
+                backgroundImage: catalogProduct ? `url(${catalogProduct.image.src})` : undefined,
+                backgroundPosition: catalogProduct?.image.position,
+              }}
+            />
           </div>
           <div className="mt-3 grid grid-cols-4 gap-2">
             {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="aspect-square rounded-md border border-slate-200 bg-slate-50" />
+              <div
+                key={index}
+                className="aspect-square rounded-md border border-slate-200 bg-slate-50 bg-[length:500%_400%] bg-no-repeat"
+                style={{
+                  backgroundImage: catalogProduct ? `url(${catalogProduct.image.src})` : undefined,
+                  backgroundPosition: catalogProduct?.image.position,
+                }}
+              />
             ))}
           </div>
         </div>
@@ -56,7 +59,7 @@ export default async function BuyerProductDetailPage({
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)]">
           <div className="flex flex-wrap items-center gap-2">
             <span className="rounded-full bg-orange-50 px-3 py-1 text-xs font-semibold text-orange-700">
-              {categoryLabels[product.category]}
+              {catalogProduct?.categoryLabel ?? product.category}
             </span>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
               {product.subcategory}
