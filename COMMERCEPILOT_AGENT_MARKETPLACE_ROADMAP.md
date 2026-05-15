@@ -2,15 +2,15 @@
 
 ## 0) Durum
 
-* Son güncelleme: 2026-05-15
+* Son güncelleme: 2026-05-16
 * Roadmap kararı:
   * CommercePilot önce gerçek bir e-ticaret ürünü gibi davranacak.
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C, 8D ve 8E tamamlandı.
-  * Sıradaki net adım 8F: ürün detay/satış penceresini derinleştirmek ve `localStorage` sepet state'ini çalışır hale getirmek.
-  * 8F sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
+  * 8B, 8C, 8D, 8E ve 8F tamamlandı.
+  * Sıradaki net adım 8G: buyer Agent sayfasında prompt -> görselli ürün önerisi -> onaylı sepete ekleme akışını kurmak.
+  * 8G sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
 
@@ -319,7 +319,7 @@
 | 8C | Light marketplace shell | Dark tema yerine light e-ticaret shell'i kurmak | Root, buyer/seller shell light çalışır |
 | 8D | IA ve navigasyon reset | Buyer/seller header/sidebar tekrarını kaldırmak, endpoint haritasını uygulamaya hazırlamak | Buyer header `Ürünler/Sepet/Agent/Profil`; seller header sade; sidebar tekrarı yok |
 | 8E | Buyer catalog data + ürün grid | Çok ürünlü klasik e-ticaret ürünler ekranı kurmak | Tamamlandı: 7 görselli kategori, kampanya chip'leri, `GET /api/buyer/catalog`, 48 fotoğraflı ürün kartı ve görünür sepete ekle aksiyonu |
-| 8F | Buyer product detail + cart state | Ürün satış detay penceresi ve sepeti gerçek etkileşimli hale getirmek | `/buyer/products/[slug]` dynamic detail, ürün ekle/sil/adet/toplam ve `localStorage` sepet state'i çalışır |
+| 8F | Buyer product detail + cart state | Ürün satış detay penceresi ve sepeti gerçek etkileşimli hale getirmek | Tamamlandı: `/buyer/products/[slug]` detail, ürün ekle/sil/adet/toplam, checkout mock ve `localStorage` sepet state'i çalışır |
 | 8G | Buyer agent page | ChatGPT benzeri alıcı agent sayfasını kurmak | Prompt -> görselli ürün önerisi -> onay sorusu akışı çalışır |
 | 8H | Buyer profile | Agent kişiselleştirme ve kullanıcı yorumları sayfasını kurmak | Tercihler ve yorumlar profil ekranında görünür/güncellenir |
 | 8I | Seller IA + overview endpoints | Satıcı ana sayfayı kısa uyarı kartları ve endpoint linkleriyle kurmak | Dağılım, iade, negatif yorum, stok ve satılmayan ürün uyarıları route'lara bağlanır |
@@ -392,6 +392,7 @@
 * Buyer kategori seti: `Kadın Giyim`, `Erkek Giyim`, `Elektronik`, `Ev & Yaşam`, `Kozmetik`, `Spor`, `Aksesuar`.
 * Buyer agent yalnızca katalogdaki mevcut ürünlerden seçim yapar; katalog dışı ürün uydurmaz.
 * Buyer cart state ilk fazda `localStorage` ile korunur.
+* 8F cart helper'ı `src/lib/cart/buyer-cart.ts` içindedir; katalog grid, ürün detay ve sepet aynı client-only state'i kullanır.
 * Buyer agent onay sonrası mevcut sepete ekleyebilir veya kullanıcı seçerse sepeti öneriyle değiştirebilir.
 * Buyer profil serbest metin + chip/checkbox tercihleriyle tutulur.
 * Seller overview ana uyarı kartları: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.

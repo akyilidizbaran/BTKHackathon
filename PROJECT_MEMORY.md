@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Milestone 8E tamamlandı: buyer katalog verisi marketplace kategori setine genişledi, görselli kategori şeridi ve fotoğraflı ürün grid'i kuruldu.
+  * Milestone 8F tamamlandı: ürün detay satış penceresi derinleşti ve buyer sepeti `localStorage` ile gerçek etkileşimli hale geldi.
 * Son değişiklik neydi?
-  * `GET /api/buyer/catalog`, `src/lib/api/buyer-catalog.ts`, ürün sprite görselleri, kategori filtre/sıralama contract'ı ve GSAP giriş animasyonlu `BuyerCatalogGrid` eklendi; ürün sayısı 48'e çıktı.
+  * `src/lib/cart/buyer-cart.ts`, `BuyerCartWorkspace` ve `BuyerProductPurchasePanel` eklendi; katalog grid, ürün detay ve sepet aynı cart state'ine bağlandı.
 * Bir sonraki net adım ne?
-  * Milestone 8F: ürün satış detay penceresini derinleştirmek ve `localStorage` tabanlı gerçek sepet state'ini kurmak.
+  * Milestone 8G: buyer Agent sayfasında prompt -> görselli ürün önerisi -> onaylı sepete ekleme akışını kurmak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -69,6 +69,9 @@
   * `src/lib/api/buyer-catalog.ts`: buyer marketplace kategori, sıralama, görsel metadata ve ürün kartı contract'ını üretir.
   * `src/app/api/buyer/catalog/route.ts`: buyer katalog contract'ını `success/data/error` envelope ile döndürür.
   * `src/components/commerce/buyer-catalog-grid.tsx`: fotoğraflı ürün kartları, puan/yorum/teslimat/indirim sinyalleri ve görünür `Sepete Ekle` aksiyonunu render eder.
+  * `src/lib/cart/buyer-cart.ts`: buyer sepetini `localStorage` üzerinde okur/yazar; ekleme, adet güncelleme, silme ve clear helper'larını sağlar.
+  * `src/components/commerce/buyer-product-purchase-panel.tsx`: ürün detayındaki adet, `Şimdi Al`, `Sepete Ekle` ve favori aksiyon yüzeyi.
+  * `src/components/commerce/buyer-cart-workspace.tsx`: sepet satırları, adet/sil/temizle, toplam hesaplama, empty state ve checkout mock yüzeyi.
   * `src/components/commerce/workspace-shell.tsx`: light marketplace header, search ve header-only yatay nav shell'i; buyer nav `Ürünler/Sepet/Agent/Profil`, seller nav `Ana Sayfa/Ürünler/Aksiyonlar/Agent/Profil`.
   * `src/components/commerce/role-gateway.tsx`: light rol giriş yüzeyi.
   * `src/app/buyer/products/[slug]/page.tsx`: katalogdaki her mock ürün için dynamic buyer ürün detay endpoint iskeleti.
@@ -188,6 +191,7 @@
 * 2026-05-15 — Karar: Floating Agent ilk fazda web/desktop odaklı olacak ve Codex pet benzeri avatarla başlayacak. | Gerekçe: Kullanıcı bu adımda mobil davranışı önceliklendirmedi; görsel karakter daha sonra değiştirilebilir. | Etki: Mobil bottom sheet veya responsive özel davranış ilk 8Q kapsamına alınmaz. | Alternatifler: Mobil-first widget davranışı veya marka avatarını hemen üretmek.
 * 2026-05-15 — Karar: Milestone 8D yalnızca nav reset ile kalmayıp endpoint iskeletlerini de açacak. | Gerekçe: Kullanıcı siteyi inceleyeceği için header-only IA yanında `/buyer/agent`, `/buyer/profile`, `/seller/agent`, `/seller/profile` ve buyer dynamic product route boş kalmamalı. | Etki: `/buyer` `/buyer/products`'a yönlenir; buyer/seller shell sidebar tekrarını kaldırır; seller overview kısa uyarı kartlarına iner; gerçek cart persistence, fotoğraflı katalog ve agent runtime 8E+ kapsamındadır. | Alternatifler: Sadece shell nav metinlerini değiştirmek.
 * 2026-05-15 — Karar: Milestone 8E buyer katalog contract'ı `src/lib/api/buyer-catalog.ts` üzerinden typed builder olarak kurulacak ve tüm ürün/kategori görselleri tek kontrollü sprite üzerinden beslenecek. | Gerekçe: Yeni ürün eklendiğinde kategori, ürün kartı, API ve dynamic detail route aynı veri kaynağından otomatik yürümeli; marketplace hissi için placeholder yerine görsel metadata gerekli. | Etki: `GET /api/buyer/catalog`, `BuyerCatalogGrid`, `public/catalog/buyer-product-sprite.png`, kategori filtre/sıralama validation ve 48 ürünlü katalog oluştu. | Alternatifler: Sayfa içinde ad hoc ürün map'i veya harici fotoğraf URL'leri.
+* 2026-05-16 — Karar: Buyer cart ilk fazda client-only `localStorage` helper'ı ile yönetilecek; grid, ürün detay ve sepet aynı helper üzerinden konuşacak. | Gerekçe: DB/auth olmadan reload ve route geçişinde sepet davranışı gerçek görünmeli; 8G Agent apply bu helper'a bağlanabilmeli. | Etki: `src/lib/cart/buyer-cart.ts`, `BuyerProductPurchasePanel`, `BuyerCartWorkspace` eklendi; `Sepete Ekle`, `Şimdi Al`, adet artır/azalt, sil, temizle, toplam ve checkout mock çalışır. | Alternatifler: Server memory store veya cart state'i sadece sepet sayfasında tutmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -214,6 +218,7 @@
 * 2026-05-14 — Milestone: Milestone 8C Light Marketplace Design System tamamlandı. | Sonuç: Dark ana tema kaldırıldı; root gateway ve buyer/seller workspace shell klasik light e-ticaret düzenine döndü; scoped legacy theme bridge ile mevcut içerikler okunur hale getirildi; check/build ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-15 — Milestone: Milestone 8D IA ve Navigasyon Reset tamamlandı. | Sonuç: Buyer nav `Ürünler/Sepet/Agent/Profil`, seller nav `Ana Sayfa/Ürünler/Aksiyonlar/Agent/Profil` oldu; sidebar nav tekrarı kaldırıldı; `/buyer` `/buyer/products`'a yönleniyor; `/buyer/products/[slug]`, buyer/seller Agent ve Profil route iskeletleri eklendi; seller overview dört uyarı kartlı kısa panele indi; `npm run check`, `npm run build` ve Puppeteer QA geçti.
 * 2026-05-15 — Milestone: Milestone 8E Buyer Catalog Data + Ürün Grid tamamlandı. | Sonuç: 48 ürünlü buyer catalog contract'ı, 7 görselli marketplace kategorisi, kampanya/Agent üst alanı, fotoğraflı ürün grid'i, görünür `Sepete Ekle` aksiyonu, `GET /api/buyer/catalog` route'u, sprite görselleri ve validation kontrolleri eklendi; `npm run check`, `npm run build` ve Puppeteer QA geçti.
+* 2026-05-16 — Milestone: Milestone 8F Buyer Product Detail + Cart State tamamlandı. | Sonuç: Ürün detay satış penceresinde adet, `Şimdi Al`, `Sepete Ekle`, kampanya/satıcı/Agent alanları çalışır hale geldi; `/buyer/cart` localStorage sepet satırları, adet/sil/temizle/toplam/checkout mock ve empty state içeriyor; `npm run check`, `npm run build` ve Puppeteer QA geçti.
 
 ## 8) Yapılanlar
 
@@ -249,6 +254,7 @@
 * [x] 2026-05-15 floating Agent mini panel kapsamı netleştirildi.
 * [x] Milestone 8D IA ve navigasyon reset uygulandı.
 * [x] Milestone 8E buyer catalog data, görselli kategori şeridi ve fotoğraflı ürün grid'i uygulandı.
+* [x] Milestone 8F ürün detay satın alma paneli ve `localStorage` sepet state'i uygulandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -286,7 +292,7 @@
 * [x] Milestone 8C light marketplace design system ve shell'i uygula.
 * [x] Milestone 8D IA ve navigasyon reset uygula: buyer header-only, seller sade header, sidebar menü tekrarı yok.
 * [x] Milestone 8E buyer catalog data ve ürün grid kapsamını `Kadın Giyim/Erkek Giyim/Elektronik/Ev & Yaşam/Kozmetik/Spor/Aksesuar` kategori setiyle uygula.
-* [ ] Milestone 8F buyer product detail + cart state kur: `/buyer/products/[slug]`, satış penceresi, `localStorage` cart, sepete ekle/sil/adet/toplam.
+* [x] Milestone 8F buyer product detail + cart state kur: `/buyer/products/[slug]`, satış penceresi, `localStorage` cart, sepete ekle/sil/adet/toplam.
 * [ ] Milestone 8G buyer Agent sayfasında prompt -> görselli ürün önerisi -> sepete ekleme onayı akışını kur.
 * [ ] Milestone 8H buyer profile tercihleri ve yorumları ekranını kur.
 * [ ] Milestone 8I seller overview endpoint kartlarını kur: iade, negatif yorum, satılmayan ürün, stok riski.
@@ -316,6 +322,8 @@
   * Yeni light sayfalarda koyu buton üstünde beyaz metin gerekiyorsa `text-white` yerine köprüden etkilenmeyen `text-[#fff]` kullanılmalı veya sayfa bridge dışına taşınmalı.
 * 8E katalog görselleri:
   * Ürün/kategori görselleri tek sprite üzerinden geliyor; yeni ürün eklenirse `productSpriteIndexOverrides` veya kategori sprite index'i görsel uyum için kontrol edilmeli.
+* 8F cart state:
+  * Sepet client-only `localStorage` ile çalışır; server route veya build sırasında `window` erişimi yapılmamalı. Yeni cart mutation'ları `src/lib/cart/buyer-cart.ts` helper'larını kullanmalı.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 
@@ -331,6 +339,7 @@
 * Seller action explanation `src/lib/api/seller-action-explanations.ts` ile çalışır; validation canlı OpenAI çağırmaz, `forceFallback: true` ile contract'ı doğrular.
 * Buyer smart cart explanation `src/lib/api/buyer-smart-cart-explanations.ts` ile çalışır; validation canlı OpenAI çağırmaz, `forceFallback: true` ile contract'ı doğrular.
 * Buyer katalog UI/API `src/lib/api/buyer-catalog.ts` üzerinden çalışır; kategori seti, sıralama, ürün href'i veya görsel contract'ı değişirse `scripts/validate-workflows.js` içindeki buyer catalog kontrolleri birlikte güncellenmeli.
+* Buyer sepet UI `src/components/commerce/buyer-cart-workspace.tsx` ve `src/lib/cart/buyer-cart.ts` üzerinden çalışır; 8G Agent apply akışı append/replace stratejisini bu helper'lara bağlamalı.
 * Buyer explanation no-budget guard: kullanıcı bütçe belirtmediyse model `bütçeniz`, `%5 tolerans`, `bütçe içinde/altında` gibi iddiaları UI contract'ına geçirmemeli; bu kontrol `scripts/validate-workflows.js` içinde sentetik model çıktısıyla korunur.
 * 8B sonrası roadmap tek kaynak: `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`. Milestone sırası değişirse bu dosya ve `PROJECT_MEMORY.md` birlikte güncellenmeli.
 * 8C theme bridge sadece `WorkspaceShell` içindeki children wrapper'ında çalışmalı; body seviyesine taşınırsa header/nav/CTA gibi bilinçli koyu kontrast alanları bozulur.
@@ -1093,4 +1102,4 @@
 
 ### Güncelleme Kaydı
 
-* Son güncelleme: 2026-05-15
+* Son güncelleme: 2026-05-16

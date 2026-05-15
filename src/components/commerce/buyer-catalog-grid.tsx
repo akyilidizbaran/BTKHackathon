@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Heart,
   ShoppingCartSimple,
@@ -10,12 +10,15 @@ import {
 } from "@phosphor-icons/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { addBuyerCartItem } from "@/lib/cart/buyer-cart";
 import type { BuyerCatalogProductCard } from "@/lib/api/buyer-catalog";
 
 gsap.registerPlugin(useGSAP);
 
 export function BuyerCatalogGrid({ products }: { products: BuyerCatalogProductCard[] }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<Record<string, number>>({});
+  const [addedProductId, setAddedProductId] = useState<string | undefined>();
 
   useGSAP(
     () => {
@@ -29,6 +32,28 @@ export function BuyerCatalogGrid({ products }: { products: BuyerCatalogProductCa
     },
     { scope: rootRef, dependencies: [products.length] },
   );
+
+  useEffect(() => {
+    const timers = timerRef.current;
+
+    return () => {
+      Object.values(timers).forEach((timer) => window.clearTimeout(timer));
+    };
+  }, []);
+
+  function handleAddToCart(productId: string) {
+    addBuyerCartItem(productId, 1);
+    setAddedProductId(productId);
+
+    if (timerRef.current[productId]) {
+      window.clearTimeout(timerRef.current[productId]);
+    }
+
+    timerRef.current[productId] = window.setTimeout(() => {
+      setAddedProductId((currentProductId) => (currentProductId === productId ? undefined : currentProductId));
+      delete timerRef.current[productId];
+    }, 1400);
+  }
 
   if (products.length === 0) {
     return (
@@ -111,10 +136,12 @@ export function BuyerCatalogGrid({ products }: { products: BuyerCatalogProductCa
               </div>
               <button
                 type="button"
+                aria-label={`${product.name} sepete ekle`}
                 className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-4 text-sm font-semibold text-[#fff] transition hover:bg-orange-600 active:scale-[0.98]"
+                onClick={() => handleAddToCart(product.id)}
               >
                 <ShoppingCartSimple size={18} weight="bold" />
-                Sepete Ekle
+                {addedProductId === product.id ? "Sepete Eklendi" : "Sepete Ekle"}
               </button>
             </div>
           </div>
