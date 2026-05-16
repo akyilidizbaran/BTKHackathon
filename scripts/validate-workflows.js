@@ -784,7 +784,20 @@ function validateBuyerAgentApiContracts() {
     data.runtime.toolPlan.some((tool) => tool.id === "buyer.agent.cart.apply.preview" && tool.requiresApproval),
     "buyer agent apply approval tool plan eksik",
   );
-  assert(data.runtime.handoff.nextMilestone === "8O", "buyer agent runtime handoff 8O olmalı");
+  assert(data.runtime.handoff.nextMilestone === "8Q", "buyer agent runtime handoff 8Q olmalı");
+  assert(data.applyPreview.toolId === "buyer.agent.cart.apply.preview", "buyer agent apply preview tool id yanlış");
+  assert(data.applyPreview.endpoint === "/api/buyer/agent/apply", "buyer agent apply preview endpoint yanlış");
+  assert(data.applyPreview.requiresApproval, "buyer agent apply preview onay sınırı eksik");
+  assert(data.applyPreview.items.length === data.recommendations.length, "buyer agent apply preview item sayısı uyumsuz");
+  assert(
+    data.applyPreview.strategies.some((strategy) => strategy.strategy === "append") &&
+      data.applyPreview.strategies.some((strategy) => strategy.strategy === "replace"),
+    "buyer agent apply preview append/replace stratejileri eksik",
+  );
+  assert(
+    data.applyPreview.sharedSurfaces.includes("route") && data.applyPreview.sharedSurfaces.includes("floating"),
+    "buyer agent apply preview shared surfaces eksik",
+  );
   assert(data.summary.itemCount === data.recommendations.length, "buyer agent itemCount uyumsuz");
   assert(data.summary.itemCount > 0, "buyer agent öneri dönmeli");
   assert(data.message.content.length > 0, "buyer agent mesajı eksik");
@@ -799,6 +812,16 @@ function validateBuyerAgentApiContracts() {
   );
   assert(applyData.contract.endpoint === "/api/buyer/agent/apply", "buyer agent apply endpoint yanlış");
   assert(applyData.strategy === "append", "buyer agent apply strategy yanlış");
+  assert(applyData.sharedMutation.toolId === "buyer.agent.cart.apply.preview", "buyer agent shared mutation tool id yanlış");
+  assert(applyData.sharedMutation.requiresApproval, "buyer agent shared mutation onay sınırı eksik");
+  assert(applyData.sharedMutation.clientAction.helper === "applyBuyerAgentCartMutation", "buyer agent shared mutation client helper yanlış");
+  assert(applyData.sharedMutation.stateTarget.storageKey === "commercepilot.buyerCart.v1", "buyer agent shared mutation storage key yanlış");
+  assert(applyData.sharedMutation.clientAction.eventName === "commercepilot:buyer-cart-updated", "buyer agent shared mutation event yanlış");
+  assert(
+    applyData.sharedMutation.sharedSurfaces.includes("route") &&
+      applyData.sharedMutation.sharedSurfaces.includes("floating"),
+    "buyer agent shared mutation route/floating surface eksik",
+  );
   assert(applyData.items.length === data.recommendations.length, "buyer agent apply ürün sayısı uyumsuz");
   assert(applyData.summary.itemCount >= data.recommendations.length, "buyer agent apply itemCount eksik");
   assert(applyData.summary.totalPrice > 0, "buyer agent apply total eksik");
@@ -909,7 +932,7 @@ function validateSharedAgentRuntimeContracts() {
     buyerSnapshot.toolPlan.some((tool) => tool.id === "buyer.agent.cart.apply.preview" && tool.requiresApproval),
     "buyer runtime apply approval tool eksik",
   );
-  assert(buyerSnapshot.handoff.nextMilestone === "8O", "buyer runtime handoff 8O olmalı");
+  assert(buyerSnapshot.handoff.nextMilestone === "8Q", "buyer runtime handoff 8Q olmalı");
   assert(sellerSnapshot.request.routeContext === "/seller/agent", "seller runtime routeContext yanlış");
   assert(sellerSnapshot.promptTemplate.id === "seller-growth-route", "seller runtime prompt id yanlış");
   assert(sellerSnapshot.toolPlan.some((tool) => tool.id === "seller.profile.permissions"), "seller runtime permission tool eksik");

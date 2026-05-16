@@ -14,6 +14,20 @@ import {
   createAgentRuntimeSnapshot,
   type AgentRuntimeSnapshot,
 } from "@/lib/agents/runtime";
+import {
+  buyerAgentApplyEndpoint,
+  createBuyerAgentApplyPreview,
+  getBuyerAgentApplyApiData,
+  validateBuyerAgentApplyRequest,
+  type BuyerAgentApplyApiData,
+  type BuyerAgentApplyPreview,
+  type BuyerAgentApplyRequest,
+  type BuyerAgentApplyRequestItem,
+  type BuyerAgentApplyStrategy,
+  type BuyerAgentApplyValidationError,
+  type BuyerAgentApplyValidationResult,
+  type BuyerAgentApplyValidationSuccess,
+} from "@/lib/agents/buyer-cart-apply";
 import type {
   BuyerCartWarning,
   BuyerProductSuggestion,
@@ -21,9 +35,17 @@ import type {
 } from "@/lib/workflows";
 
 export const buyerAgentEndpoint = "/api/buyer/agent";
-export const buyerAgentApplyEndpoint = "/api/buyer/agent/apply";
-
-export type BuyerAgentApplyStrategy = "append" | "replace";
+export { buyerAgentApplyEndpoint, getBuyerAgentApplyApiData, validateBuyerAgentApplyRequest };
+export type {
+  BuyerAgentApplyApiData,
+  BuyerAgentApplyPreview,
+  BuyerAgentApplyRequest,
+  BuyerAgentApplyRequestItem,
+  BuyerAgentApplyStrategy,
+  BuyerAgentApplyValidationError,
+  BuyerAgentApplyValidationResult,
+  BuyerAgentApplyValidationSuccess,
+};
 
 export interface BuyerAgentApiContractMeta {
   envelope: "success/data/error";
@@ -55,6 +77,7 @@ export interface BuyerAgentApiData {
   complementarySuggestions: BuyerAgentSuggestion[];
   sourceSmartCart: BuyerSmartCartApiData;
   runtime: AgentRuntimeSnapshot;
+  applyPreview: BuyerAgentApplyPreview;
 }
 
 export interface BuyerAgentRecommendation {
@@ -68,54 +91,6 @@ export interface BuyerAgentSuggestion {
   suggestion: BuyerProductSuggestion;
   product?: BuyerCatalogProductCard;
 }
-
-export interface BuyerAgentApplyRequestItem {
-  productId: string;
-  quantity?: number;
-}
-
-export interface BuyerAgentApplyRequest {
-  strategy: BuyerAgentApplyStrategy;
-  items: BuyerAgentApplyRequestItem[];
-}
-
-export interface BuyerAgentApplyApiData {
-  contract: {
-    envelope: "success/data/error";
-    source: "buyer-agent-cart-apply";
-    generatedAt: string;
-    endpoint: typeof buyerAgentApplyEndpoint;
-    method: "POST";
-  };
-  strategy: BuyerAgentApplyStrategy;
-  items: Array<{
-    product: BuyerCatalogProductCard;
-    productId: string;
-    quantity: number;
-  }>;
-  summary: {
-    itemCount: number;
-    productCount: number;
-    totalPrice: number;
-  };
-  message: string;
-}
-
-export interface BuyerAgentApplyValidationError {
-  ok: false;
-  code: string;
-  message: string;
-  status: number;
-}
-
-export interface BuyerAgentApplyValidationSuccess {
-  ok: true;
-  value: BuyerAgentApplyRequest;
-}
-
-export type BuyerAgentApplyValidationResult =
-  | BuyerAgentApplyValidationError
-  | BuyerAgentApplyValidationSuccess;
 
 export function getDefaultBuyerAgentApiData(): BuyerAgentApiData {
   const defaultExample = buyerSmartCartExamples[0];
@@ -150,6 +125,19 @@ export function getBuyerAgentApiData(request: BuyerSmartCartApiRequest): BuyerAg
       };
     })
     .filter((item): item is BuyerAgentRecommendation => Boolean(item));
+  const runtime = createAgentRuntimeSnapshot({
+    actorId: sourceSmartCart.request.buyerId ?? "buyer-aylin",
+    prompt: sourceSmartCart.request.prompt,
+    role: "buyer",
+    routeContext: "/buyer/agent",
+    surface: "route",
+  });
+  const applyPreview = createBuyerAgentApplyPreview({
+    items: recommendations.map((recommendation) => ({
+      productId: recommendation.product.id,
+      quantity: recommendation.item.quantity,
+    })),
+  });
 
   return {
     contract: {
@@ -176,110 +164,10 @@ export function getBuyerAgentApiData(request: BuyerSmartCartApiRequest): BuyerAg
     recommendations,
     warnings: sourceSmartCart.result.warnings,
     alternatives: mapSuggestions(sourceSmartCart.result.alternatives, productById),
+    applyPreview,
     complementarySuggestions: mapSuggestions(sourceSmartCart.result.complementarySuggestions, productById),
     sourceSmartCart,
-    runtime: createAgentRuntimeSnapshot({
-      actorId: sourceSmartCart.request.buyerId ?? "buyer-aylin",
-      prompt: sourceSmartCart.request.prompt,
-      role: "buyer",
-      routeContext: "/buyer/agent",
-      surface: "route",
-    }),
-  };
-}
-
-export function validateBuyerAgentApplyRequest(rawInput: unknown): BuyerAgentApplyValidationResult {
-  if (!isRecord(rawInput)) {
-    return {
-      ok: false,
-      code: "INVALID_BODY",
-      message: "İstek gövdesi JSON object olmalı.",
-      status: 400,
-    };
-  }
-
-  const strategy = rawInput.strategy;
-
-  if (strategy !== "append" && strategy !== "replace") {
-    return {
-      ok: false,
-      code: "INVALID_STRATEGY",
-      message: "Sepet uygulama stratejisi append veya replace olmalı.",
-      status: 400,
-    };
-  }
-
-  if (!Array.isArray(rawInput.items) || rawInput.items.length === 0) {
-    return {
-      ok: false,
-      code: "ITEMS_REQUIRED",
-      message: "Sepete uygulanacak en az bir ürün olmalı.",
-      status: 400,
-    };
-  }
-
-  const items = rawInput.items
-    .map((item) => normalizeApplyItem(item))
-    .filter((item): item is BuyerAgentApplyRequestItem => Boolean(item));
-
-  if (items.length === 0) {
-    return {
-      ok: false,
-      code: "INVALID_ITEMS",
-      message: "Ürün id ve adet bilgisi geçerli olmalı.",
-      status: 400,
-    };
-  }
-
-  return {
-    ok: true,
-    value: {
-      items,
-      strategy,
-    },
-  };
-}
-
-export function getBuyerAgentApplyApiData(request: BuyerAgentApplyRequest): BuyerAgentApplyApiData {
-  const catalogProducts = getBuyerCatalogApiData().products;
-  const productById = new Map(catalogProducts.map((product) => [product.id, product]));
-  const mergedItems = mergeApplyItems(request.items)
-    .map((item) => {
-      const product = productById.get(item.productId);
-
-      if (!product) {
-        return undefined;
-      }
-
-      return {
-        product,
-        productId: item.productId,
-        quantity: item.quantity ?? 1,
-      };
-    })
-    .filter((item): item is BuyerAgentApplyApiData["items"][number] => Boolean(item));
-  const itemCount = mergedItems.reduce((sum, item) => sum + item.quantity, 0);
-  const totalPrice = mergedItems.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
-
-  return {
-    contract: {
-      envelope: "success/data/error",
-      source: "buyer-agent-cart-apply",
-      generatedAt: "2026-05-16",
-      endpoint: buyerAgentApplyEndpoint,
-      method: "POST",
-    },
-    strategy: request.strategy,
-    items: mergedItems,
-    summary: {
-      itemCount,
-      productCount: mergedItems.length,
-      totalPrice: Math.round(totalPrice),
-    },
-    message:
-      request.strategy === "replace"
-        ? "Mevcut sepet önerilen seçkiyle değiştirilmeye hazır."
-        : "Önerilen seçki mevcut sepete eklenmeye hazır.",
+    runtime,
   };
 }
 
@@ -302,40 +190,4 @@ function mapSuggestions(
     product: productById.get(suggestion.productId),
     suggestion,
   }));
-}
-
-function mergeApplyItems(items: BuyerAgentApplyRequestItem[]): BuyerAgentApplyRequestItem[] {
-  const quantityByProductId = new Map<string, number>();
-
-  items.forEach((item) => {
-    quantityByProductId.set(item.productId, (quantityByProductId.get(item.productId) ?? 0) + clampQuantity(item.quantity ?? 1));
-  });
-
-  return Array.from(quantityByProductId, ([productId, quantity]) => ({
-    productId,
-    quantity: clampQuantity(quantity),
-  }));
-}
-
-function normalizeApplyItem(value: unknown): BuyerAgentApplyRequestItem | undefined {
-  if (!isRecord(value) || typeof value.productId !== "string" || !value.productId.trim()) {
-    return undefined;
-  }
-
-  return {
-    productId: value.productId.trim(),
-    quantity: clampQuantity(Number(value.quantity ?? 1)),
-  };
-}
-
-function clampQuantity(quantity: number): number {
-  if (!Number.isFinite(quantity)) {
-    return 1;
-  }
-
-  return Math.min(99, Math.max(1, Math.round(quantity)));
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }

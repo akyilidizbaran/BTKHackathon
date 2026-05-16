@@ -1,4 +1,5 @@
 import { buyerCatalogEndpoint } from "@/lib/api/buyer-catalog";
+import { buyerAgentApplyEndpoint } from "@/lib/agents/buyer-cart-apply";
 import {
   sellerActionsEndpoint,
   sellerBuyerSignalsEndpoint,
@@ -7,7 +8,6 @@ import { sellerProfileEndpoint } from "@/lib/api/seller-profile";
 
 export const sharedAgentRuntimeEndpoint = "/api/agent/runtime";
 const buyerAgentEndpoint = "/api/buyer/agent";
-const buyerAgentApplyEndpoint = "/api/buyer/agent/apply";
 const sellerAgentEndpoint = "/api/seller/agent";
 const sellerProductsEndpoint = "/api/seller/products";
 
@@ -125,10 +125,10 @@ export const agentPromptTemplates: AgentPromptTemplate[] = [
     id: "buyer-smart-cart-route",
     label: "Buyer smart cart",
     maxPromptLength: 280,
-    responseContract: "recommendations + confirmationQuestion + apply preview boundary",
+    responseContract: "recommendations + confirmationQuestion + shared apply preview boundary",
     role: "buyer",
     systemInstruction: "Sadece CommercePilot katalog ürünlerinden seç; kullanıcı onayı olmadan sepete ürün ekleme.",
-    version: "8N.1",
+    version: "8O.1",
   },
   {
     endpoint: sellerAgentEndpoint,
@@ -175,14 +175,14 @@ export const agentToolRegistry: AgentToolDefinition[] = [
     scope: "profile",
   },
   {
-    description: "Cart mutation payload'unu temizler; client apply kullanıcı onayıyla yapılır.",
+    description: "Cart mutation payload'unu ortak contract'a çevirir; route Agent ve Pet Panel aynı client helper ile uygular.",
     endpoint: buyerAgentApplyEndpoint,
     id: "buyer.agent.cart.apply.preview",
     inputContract: "{ strategy: append|replace, items: { productId, quantity? }[] }",
     label: "Cart apply preview",
     method: "POST",
     mutationKind: "apply",
-    outputContract: "BuyerAgentApplyApiData",
+    outputContract: "BuyerAgentApplyApiData + BuyerAgentCartMutationContract",
     requiresApproval: true,
     role: "buyer",
     scope: "cart",
@@ -388,8 +388,8 @@ function createGuardrails(role: AgentRole): string[] {
 function createHandoff(role: AgentRole): AgentRuntimeSnapshot["handoff"] {
   if (role === "buyer") {
     return {
-      nextMilestone: "8O",
-      summary: "Cart apply preview ortak runtime'a taşınacak; route ve floating panel aynı apply contract'ını kullanacak.",
+      nextMilestone: "8Q",
+      summary: "Cart apply artık shared contract ve client helper üzerinden çalışır; floating panel aynı apply yolunu kullanmaya hazır.",
     };
   }
 

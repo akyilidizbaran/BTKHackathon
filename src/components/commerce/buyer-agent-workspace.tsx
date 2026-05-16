@@ -24,11 +24,10 @@ import {
   type BuyerAgentRecommendation,
 } from "@/lib/api/buyer-agent";
 import {
-  addBuyerCartItem,
   buyerCartUpdatedEvent,
-  clearBuyerCartItems,
   readBuyerCartItems,
 } from "@/lib/cart/buyer-cart";
+import { applyBuyerAgentCartMutation } from "@/lib/agents/buyer-cart-apply-client";
 import { AgentRuntimePanel } from "@/components/commerce/agent-runtime-panel";
 
 gsap.registerPlugin(useGSAP);
@@ -42,7 +41,17 @@ type RequestState = "idle" | "loading" | "error";
 type ApplyState =
   | { status: "idle"; message?: undefined; strategy?: undefined; itemCount?: undefined }
   | { status: "loading"; message?: undefined; strategy: BuyerAgentApplyStrategy; itemCount?: undefined }
-  | { status: "applied"; message: string; strategy: BuyerAgentApplyStrategy; itemCount: number }
+  | {
+      cartItemCount: number;
+      itemCount: number;
+      message: string;
+      productCount: number;
+      status: "applied";
+      storageEvent: string;
+      strategy: BuyerAgentApplyStrategy;
+      strategyLabel: string;
+      toolId: string;
+    }
   | { status: "error"; message: string; strategy?: undefined; itemCount?: undefined };
 
 export function BuyerAgentWorkspace({ examples, initialData }: BuyerAgentWorkspaceProps) {
@@ -66,10 +75,7 @@ export function BuyerAgentWorkspace({ examples, initialData }: BuyerAgentWorkspa
 
   const isLoading = requestState === "loading";
   const hasRecommendations = data.recommendations.length > 0;
-  const applyItems = data.recommendations.map((recommendation) => ({
-    productId: recommendation.product.id,
-    quantity: recommendation.item.quantity,
-  }));
+  const applyItems = data.applyPreview.items;
 
   useEffect(() => {
     function syncCartCount() {
@@ -161,8 +167,11 @@ export function BuyerAgentWorkspace({ examples, initialData }: BuyerAgentWorkspa
     try {
       const response = await fetch(buyerAgentApplyEndpoint, {
         body: JSON.stringify({
+          actorId: data.request.buyerId,
           items: applyItems,
+          sourceRuntimeId: data.runtime.runtimeId,
           strategy,
+          surface: "route",
         }),
         headers: {
           "Content-Type": "application/json",
@@ -175,22 +184,18 @@ export function BuyerAgentWorkspace({ examples, initialData }: BuyerAgentWorkspa
         throw new Error(envelope.error?.message ?? "Sepet uygulanamadı.");
       }
 
-      if (strategy === "replace") {
-        clearBuyerCartItems();
-      }
-
-      envelope.data.items.forEach((item) => {
-        addBuyerCartItem(item.productId, item.quantity);
-      });
+      const result = applyBuyerAgentCartMutation(envelope.data, { surface: "route" });
 
       setApplyState({
-        itemCount: envelope.data.summary.itemCount,
-        message:
-          strategy === "replace"
-            ? "Sepet önerilen seçkiyle değiştirildi."
-            : "Önerilen seçki sepete eklendi.",
+        cartItemCount: result.cartItemCount,
+        itemCount: result.itemCount,
+        message: result.message,
+        productCount: result.productCount,
         status: "applied",
-        strategy,
+        storageEvent: result.storageEvent,
+        strategy: result.strategy,
+        strategyLabel: result.strategyLabel,
+        toolId: result.toolId,
       });
     } catch (error) {
       setApplyState({
@@ -482,6 +487,10 @@ function ApplyPanel({
   onApply: (strategy: BuyerAgentApplyStrategy) => void;
 }) {
   const isApplying = applyState.status === "loading";
+  const previewRows = data.applyPreview.items.slice(0, 3).map((item) => ({
+    item,
+    recommendation: data.recommendations.find((recommendation) => recommendation.product.id === item.productId),
+  }));
 
   return (
     <aside
@@ -498,6 +507,56 @@ function ApplyPanel({
         <SummaryRow label="Toplam" value={formatTry(data.summary.totalPrice)} />
         <SummaryRow label="Bütçe" value={data.summary.budgetStatusLabel} />
         <SummaryRow label="Güven" value={`${data.summary.confidenceScore}/100`} />
+      </div>
+
+      <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-slate-950">Ortak apply</p>
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              Route Agent ve Pet Panel aynı mutation sözleşmesini kullanır.
+            </p>
+          </div>
+          <span className="max-w-[150px] truncate rounded-full bg-white px-3 py-1 font-mono text-[11px] font-semibold text-orange-700 ring-1 ring-orange-100">
+            {data.applyPreview.toolId}
+          </span>
+        </div>
+
+        <div className="mt-4 grid grid-flow-dense gap-2 md:grid-cols-2">
+          {data.applyPreview.strategies.map((option) => (
+            <div
+              key={option.strategy}
+              className={
+                option.tone === "primary"
+                  ? "rounded-lg bg-slate-950 p-3 text-[#fff]"
+                  : "rounded-lg border border-slate-200 bg-white p-3 text-slate-950"
+              }
+            >
+              <p className="text-sm font-semibold">{option.label}</p>
+              <p className={option.tone === "primary" ? "mt-1 text-xs leading-5 text-slate-300" : "mt-1 text-xs leading-5 text-slate-500"}>
+                {option.description}
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-4 divide-y divide-slate-200 border-y border-slate-200">
+          {previewRows.map(({ item, recommendation }) => (
+            <div key={item.productId} className="flex items-center justify-between gap-3 py-3">
+              <div className="min-w-0">
+                <p className="truncate text-xs font-semibold text-slate-950">
+                  {recommendation?.product.name ?? item.productId}
+                </p>
+                <p className="mt-1 text-[11px] text-slate-500">Onay bekleyen payload</p>
+              </div>
+              <span className="shrink-0 rounded-full bg-white px-2.5 py-1 font-mono text-xs font-semibold text-slate-700 ring-1 ring-slate-200">
+                x{item.quantity ?? 1}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <p className="mt-3 text-xs leading-5 text-slate-500">{data.applyPreview.guardrails[0]}</p>
       </div>
 
       <div className="mt-5 grid gap-3">
@@ -526,8 +585,13 @@ function ApplyPanel({
             <CheckCircle size={20} weight="fill" className="mt-0.5 shrink-0 text-emerald-700" />
             <div>
               <p className="text-sm font-semibold text-emerald-900">{applyState.message}</p>
-              <p className="mt-1 text-xs leading-5 text-emerald-700">{applyState.itemCount} ürün güncellendi.</p>
+              <p className="mt-1 text-xs leading-5 text-emerald-700">
+                {applyState.itemCount} adet, {applyState.productCount} ürün güncellendi. Sepette toplam {applyState.cartItemCount} adet var.
+              </p>
             </div>
+          </div>
+          <div className="mt-3 break-words rounded-lg bg-white/70 p-3 text-xs leading-5 text-emerald-800 ring-1 ring-emerald-100">
+            {applyState.strategyLabel} · {applyState.toolId} · {applyState.storageEvent}
           </div>
           <Link
             href="/buyer/cart"

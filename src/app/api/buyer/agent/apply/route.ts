@@ -2,7 +2,7 @@ import { apiError, apiOk } from "@/lib/api/responses";
 import {
   getBuyerAgentApplyApiData,
   validateBuyerAgentApplyRequest,
-} from "@/lib/api/buyer-agent";
+} from "@/lib/agents/buyer-cart-apply";
 
 export async function POST(request: Request): Promise<Response> {
   let body: unknown;
