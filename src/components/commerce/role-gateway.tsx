@@ -73,6 +73,9 @@ export function RoleGateway() {
             </span>
           </Link>
           <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white p-1 text-sm text-slate-600 shadow-sm sm:flex">
+            <Link className="rounded-full px-4 py-2 transition hover:bg-orange-50 hover:text-orange-700 active:translate-y-px" href="/demo">
+              Demo
+            </Link>
             <Link className="rounded-full px-4 py-2 transition hover:bg-orange-50 hover:text-orange-700 active:translate-y-px" href="/seller">
               Satıcı
             </Link>
@@ -99,6 +102,13 @@ export function RoleGateway() {
               <MagnifyingGlass size={20} weight="bold" className="text-slate-400" />
               <span className="text-sm text-slate-500">Ürün, kategori veya agent komutu ara</span>
             </div>
+            <Link
+              href="/demo"
+              className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-orange-500 active:translate-y-px"
+            >
+              8R demo provasını aç
+              <ArrowRight size={16} weight="bold" />
+            </Link>
           </div>
 
           <div data-gateway-reveal className="grid gap-4 md:grid-cols-2 lg:gap-5">

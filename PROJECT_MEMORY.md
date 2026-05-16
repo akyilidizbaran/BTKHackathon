@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Milestone 8Q tamamlandı: floating Agent mini paneli tüm buyer/seller sayfalarında ortak runtime/history, route context ve onaylı buyer/seller mutation helper'larıyla çalışıyor.
+  * Milestone 8R tamamlandı: end-to-end demo rehearsal yüzeyi, typed runbook contract'ı ve QA checklist `/demo` altında çalışıyor.
 * Son değişiklik neydi?
-  * `src/lib/agents/floating-agent.ts`, `src/lib/agents/floating-agent-client.ts` ve `FloatingAgentPanel` eklendi; buyer sepet apply ve seller listing apply/rollback mini panelden aynı shared helper'larla çalışıyor.
+  * `src/lib/demo/rehearsal.ts`, `DemoRehearsalWorkspace` ve `/demo` route'u eklendi; ana gateway'den demo provasına geçiş var, runbook validation script'e bağlandı.
 * Bir sonraki net adım ne?
-  * Milestone 8R: end-to-end demo hardening, demo script, kritik buyer/seller akış polish ve sunum hazırlığı.
+  * Milestone 9A: Gemini/provider finalization; mevcut buyer/seller agent contract'larını bozmadan final provider swap.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -77,6 +77,7 @@
   * `src/lib/agents/runtime.ts`: buyer/seller Agent prompt template registry, typed tool registry, request contract, runtime snapshot, guardrail ve 8R handoff metadata için ortak kaynak.
   * `src/lib/agents/floating-agent.ts`: floating Agent route context, proactive mesaj, runtime snapshot, capability ve control contract'ları için tek kaynak.
   * `src/lib/agents/floating-agent-client.ts`: floating Agent `localStorage` history/control state okuma-yazma, route snooze ve sync event helper'ları.
+  * `src/lib/demo/rehearsal.ts`: 8R demo runbook, proof card, QA checklist ve CTA route contract'ları için tek kaynak.
   * `src/lib/api/seller-profile.ts`: seller profile, Agent permission mode, capability matrix, notification channels, risk thresholds, quiet hours, proactive controls, audit trail ve PATCH validation contract'ını üretir.
   * `src/lib/api/seller.ts`: seller overview/actions/products/product health/buyer signal contract builder'larını üretir; 8K itibarıyla actions contract'ı kategori/focus segmentleri, action card ürün kanıtları, category route metadata ve seller product sprite image metadata taşır.
   * `src/app/api/buyer/agent/route.ts`: agent prompt'unu alır, katalogdaki mevcut ürünlerden görselli öneri ve onay mesajı döndürür.
@@ -96,6 +97,7 @@
   * `src/components/commerce/seller-agent-workspace.tsx`: `/seller/agent` için prompt composer, ürün kanıt sırası, before/after listing preview, onaylı apply, audit log ve rollback akışını render eder.
   * `src/components/commerce/agent-runtime-panel.tsx`: buyer/seller Agent ekranlarında ortak runtime prompt/tool plan, guardrail ve registry linkini gösterir.
   * `src/components/commerce/floating-agent-panel.tsx`: tüm buyer/seller sayfalarında sağ alt Codex pet avatarı, context-aware mini panel, shared history, buyer cart apply, seller listing apply/rollback ve mute/snooze/gizle kontrollerini render eder.
+  * `src/components/commerce/demo-rehearsal-workspace.tsx`: `/demo` için art-directed 8R demo command center; buyer/seller/floating Agent runbook, proof stack, QA checklist ve CTA yüzeyini render eder.
   * `src/components/commerce/buyer-profile-workspace.tsx`: `/buyer/profile` için profil notu, tercih checkbox'ları, bütçe/renk kontrolü, yorum geçmişi, öğrenilen sinyal paneli ve kaydetme akışını render eder.
   * `src/components/commerce/seller-profile-workspace.tsx`: `/seller/profile` için mağaza bilgisi, Agent permission mode, capability toggles, notification channels, risk thresholds, quiet hours, proactive controls, audit trail ve kaydetme akışını render eder.
   * `src/components/commerce/seller-overview-workspace.tsx`: `/seller` için seller karar başlığı, 4 risk endpoint kartı, öncelik sırası rail'i, kategori dağılımı ve düşük sağlık ürün listesi render eder.
@@ -107,6 +109,7 @@
   * `src/app/seller/agent/page.tsx`: seller Agent analiz workspace'ini server-side initial agent contract ile açar.
   * `src/app/buyer/profile/page.tsx`: server-side default buyer profile contract'ını `BuyerProfileWorkspace` client component'ine verir.
   * `src/app/seller/profile/page.tsx`: server-side default seller profile contract'ını `SellerProfileWorkspace` client component'ine verir.
+  * `src/app/demo/page.tsx`: 8R demo rehearsal workspace'ini typed runbook contract ile açar.
   * `public/catalog/buyer-product-sprite.png`: 8E buyer katalog ve kategori görselleri için kontrollü mock ürün sprite'ı.
   * `src/app/globals.css`: light CommercePilot tokenları ve geçici `commerce-legacy-light` bridge'i.
   * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`: marketplace + agent pet pivot kararları, endpoint haritası ve revize milestone yol haritası.
@@ -233,6 +236,7 @@
 * 2026-05-16 — Karar: Buyer cart apply validation/API contract ve client-side sepet yazımı route component içinde kalmayacak; shared Agent apply modüllerine taşınacak. | Gerekçe: 8Q floating Agent aynı append/replace contract'ını ve aynı `localStorage` mutation helper'ını kullanmalı. | Etki: `src/lib/agents/buyer-cart-apply.ts`, `src/lib/agents/buyer-cart-apply-client.ts`, `BuyerAgentApiData.applyPreview`, `BuyerAgentApplyApiData.sharedMutation`, `/api/buyer/agent/apply` ve `BuyerAgentWorkspace` güncellendi. | Alternatifler: Route Agent component içinde doğrudan `clearBuyerCartItems`/`addBuyerCartItem` çağırmaya devam etmek.
 * 2026-05-16 — Karar: Seller listing apply validation/API contract, audit yazımı ve rollback route component içinde kalmayacak; shared Agent apply modüllerine taşınacak. | Gerekçe: 8Q floating Agent aynı before/after contract'ını, aynı `localStorage` audit store'unu ve aynı rollback helper'ını kullanmalı. | Etki: `src/lib/agents/seller-listing-apply.ts`, `src/lib/agents/seller-listing-apply-client.ts`, `SellerAgentDraftPreview` shared apply metadata, `/api/seller/agent/apply`, seller runtime apply tool'u ve `SellerAgentWorkspace` güncellendi. | Alternatifler: `/seller/agent` içinde doğrudan audit localStorage yazmak veya mutation'ı yalnızca görsel preview olarak bırakmak.
 * 2026-05-16 — Karar: Floating Agent mini panel route Agent'lardan ayrı widget runtime'ı oluşturmayacak; aynı `AgentRuntimeSnapshot`, buyer/seller API route'ları ve shared apply helper'larını kullanacak. | Gerekçe: Her sayfada görünen Agent ile `/buyer/agent` ve `/seller/agent` arasında yetki, audit ve ürün seçimi ayrışmamalı. | Etki: `FloatingAgentPanel`, `createFloatingAgentContext`, `commercepilot.floatingAgent.v1` history/control store'u, buyer cart apply ve seller listing apply/rollback mini panelde çalışır; runtime template versiyonları `8Q.1`, handoff `8R` oldu. | Alternatifler: Floating paneli yalnızca link veren pasif ikon yapmak veya ayrı localStorage/audit yazımı oluşturmak.
+* 2026-05-16 — Karar: 8R demo hardening ayrı bir `/demo` rehearsal route'u ve typed runbook contract'ı olarak tutulacak. | Gerekçe: Jüri demosunda buyer, seller, floating Agent ve QA kanıtları tek yerden başlatılmalı; sunum akışı uygulama içinde izlenebilir olmalı. | Etki: `src/lib/demo/rehearsal.ts`, `src/components/commerce/demo-rehearsal-workspace.tsx`, `/demo`, gateway demo link'i ve validation kontrolleri eklendi. | Alternatifler: Demo script'i sadece dokümanda tutmak veya mevcut root gateway'i daha fazla sıkıştırmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -271,6 +275,7 @@
 * 2026-05-16 — Milestone: Milestone 8O Shared Buyer Agent Cart Mutations tamamlandı. | Sonuç: Buyer Agent apply preview ve apply API shared route/floating mutation contract'ı taşıyor; route UI aynı `applyBuyerAgentCartMutation` helper'ı ile localStorage cart state'ini güncelliyor; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8P Seller Mock Mutations + Audit tamamlandı. | Sonuç: Seller Agent draft preview başlık/açıklama/fiyat/kampanya before-after contract'ı taşıyor; `/api/seller/agent/apply` shared listing mutation ve audit preview döndürüyor; route UI aynı `applySellerListingMutation`/`rollbackSellerListingMutation` helper'ları ile localStorage listing override, audit log ve rollback akışını çalıştırıyor; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8Q Floating Agent Mini Panel tamamlandı. | Sonuç: `WorkspaceShell` tüm buyer/seller sayfalarında Codex pet avatarlı floating panel render eder; panel route context'e göre prompt/proactive mesaj seçer, ortak runtime/history taşır, buyer cart apply ve seller listing apply/rollback shared helper'larını kullanır, `Gizle`/`Sessize al`/`Bu sayfada uyarma` kontrollerini localStorage'da korur; hydration-safe state, deterministic seller compact currency, validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
+* 2026-05-16 — Milestone: Milestone 8R End-to-End Demo Hardening tamamlandı. | Sonuç: `/demo` demo rehearsal command center eklendi; buyer/seller/floating Agent runbook, proof stack, QA checklist, gateway demo link'i ve workflow validation contract'ı çalışır; `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 
 ## 8) Yapılanlar
 
@@ -318,6 +323,7 @@
 * [x] Milestone 8O shared buyer Agent cart mutation contract ve client apply helper uygulandı.
 * [x] Milestone 8P seller listing apply, audit log ve rollback helper uygulandı.
 * [x] Milestone 8Q floating Agent mini panel, shared history/runtime, context-aware uyarı ve mute/snooze kontrolleri uygulandı.
+* [x] Milestone 8R demo rehearsal route, typed runbook ve QA checklist uygulandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -350,8 +356,8 @@
 * [x] 6E review sonrası LLM/Gemini açıklama katmanı veya buyer product/cart preview derinleştirmesinin kapsamını netleştir.
 * [x] Milestone 7 review sonrası Gemini provider swap için route/prompt contract'ının korunup korunmayacağını netleştir.
 * [x] Buyer product/cart preview derinleştirmesinin demo değerini OpenAI/Gemini açıklama katmanıyla karşılaştır.
-* [ ] Milestone 8A review sonrası end-to-end demo script/presentation readiness kapsamını netleştir.
-* [ ] Gemini provider swap için mevcut seller/buyer explanation contract'ını koruyacak adapter tasarımını netleştir.
+* [x] Milestone 8A review sonrası end-to-end demo script/presentation readiness kapsamını netleştir.
+* [ ] Gemini provider swap için mevcut seller/buyer/agent contract'larını koruyacak adapter tasarımını netleştir.
 * [x] Milestone 8C light marketplace design system ve shell'i uygula.
 * [x] Milestone 8D IA ve navigasyon reset uygula: buyer header-only, seller sade header, sidebar menü tekrarı yok.
 * [x] Milestone 8E buyer catalog data ve ürün grid kapsamını `Kadın Giyim/Erkek Giyim/Elektronik/Ev & Yaşam/Kozmetik/Spor/Aksesuar` kategori setiyle uygula.
@@ -367,7 +373,8 @@
 * [x] Milestone 8O shared buyer agent cart mutations: 8G onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştır.
 * [x] Milestone 8P için seller before/after preview, onay, audit log ve rollback davranışını netleştir.
 * [x] Milestone 8Q floating Agent mini panelini kur: tüm buyer/seller sayfalarında Codex pet ikonu, ortak agent history/runtime, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri.
-* [ ] Milestone 8R end-to-end demo hardening yap: buyer/seller kritik akışlarını demo script'e bağla, görsel polish ve smoke QA tekrarını tamamla.
+* [x] Milestone 8R end-to-end demo hardening yap: buyer/seller kritik akışlarını demo script'e bağla, görsel polish ve smoke QA tekrarını tamamla.
+* [ ] Milestone 9A Gemini/provider finalization yap: OpenAI fallback korunarak Gemini adapter ve contract uyumu doğrula.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
@@ -427,6 +434,11 @@
   * Buyer apply için `applyBuyerAgentCartMutation`, seller apply/rollback için `applySellerListingMutation` ve `rollbackSellerListingMutation` kullanılmalı; panel kendi cart/listing/audit yazımını icat etmemeli.
   * Buyer ve seller runtime template versiyonları `8Q.1`, handoff `8R`; `/api/agent/runtime` ve validation bu geçişi doğrular.
   * Seller products compact currency formatı SSR/client locale farkı yaratmamak için deterministik `₺90 B` biçiminde tutulur.
+* 8R demo rehearsal:
+  * `/demo` route'u sunum provası içindir; gerçek buyer/seller akışlarını değiştirmez, sadece doğru route'lara götürür.
+  * Demo runbook ve QA checklist `src/lib/demo/rehearsal.ts` içinden gelir; yeni demo adımı eklenirse `scripts/validate-workflows.js` içindeki `validateDemoRehearsalContracts` güncellenmeli.
+  * `/demo` görsel yüzeyi client component ve GSAP kullanır; browser-only davranışlar server component'e taşınmamalı.
+  * Gateway'deki `/demo` link'i jüri/sunum girişidir; buyer/seller role kartlarının yerine geçmez.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 

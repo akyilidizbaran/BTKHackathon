@@ -90,6 +90,10 @@ const {
   floatingAgentUpdatedEvent,
   normalizeFloatingAgentPathname,
 } = require("../src/lib/agents/floating-agent");
+const {
+  demoRehearsalRoute,
+  getDemoRehearsalData,
+} = require("../src/lib/demo/rehearsal");
 const { getBuyerCatalogApiData } = require("../src/lib/api/buyer-catalog");
 const { getBuyerSmartCartExplanationApiData } = require("../src/lib/api/buyer-smart-cart-explanations");
 
@@ -125,6 +129,7 @@ async function main() {
   validateSellerListingMutationApplyContracts();
   validateSharedAgentRuntimeContracts();
   validateFloatingAgentContracts();
+  validateDemoRehearsalContracts();
   validateSellerProfileApiContracts();
   validateBuyerProfileApiContracts();
   await validateBuyerSmartCartExplanationApiContracts();
@@ -1094,6 +1099,36 @@ function validateFloatingAgentContracts() {
     sellerContext.sharedMutationNotes.some((note) => note.includes("audit")),
     "floating seller audit shared mutation notu eksik",
   );
+}
+
+function validateDemoRehearsalContracts() {
+  const demo = getDemoRehearsalData();
+  const laneIds = new Set(demo.runbook.map((lane) => lane.id));
+  const qaIds = new Set(demo.qaChecks.map((check) => check.id));
+
+  assert(demoRehearsalRoute === "/demo", "demo rehearsal route yanlış");
+  assert(demo.milestone === "8R", "demo milestone 8R olmalı");
+  assert(demo.nextMilestone === "9A", "demo next milestone 9A olmalı");
+  assert(demo.headline.includes("Demo akışı"), "demo headline eksik");
+  assert(demo.ctas.buyer === "/buyer/products", "demo buyer CTA yanlış");
+  assert(demo.ctas.seller === "/seller", "demo seller CTA yanlış");
+  assert(demo.ctas.qa === "/demo#qa", "demo QA CTA yanlış");
+  assert(demo.runbook.length === 3, "demo runbook üç lane olmalı");
+  assert(laneIds.has("buyer") && laneIds.has("seller") && laneIds.has("floating"), "demo runbook lane eksik");
+  demo.runbook.forEach((lane) => {
+    assert(lane.steps.length === 3, `${lane.id}: demo lane üç adım olmalı`);
+    lane.steps.forEach((step) => {
+      assert(step.href.startsWith("/"), `${step.id}: demo href route olmalı`);
+      assert(step.command.length > 12, `${step.id}: demo command kısa`);
+      assert(step.expected.length > 18, `${step.id}: demo expected kısa`);
+    });
+  });
+  assert(demo.proofCards.length === 3, "demo proof card üç adet olmalı");
+  assert(demo.qaChecks.length >= 4, "demo QA checklist eksik");
+  assert(qaIds.has("qa-check") && qaIds.has("qa-build") && qaIds.has("qa-runtime") && qaIds.has("qa-browser"), "demo QA id eksik");
+  assert(demo.qaChecks.some((check) => check.command === "npm run check"), "demo npm run check kanıtı eksik");
+  assert(demo.qaChecks.some((check) => check.command === "npm run build"), "demo npm run build kanıtı eksik");
+  assert(demo.marquee.some((item) => item.includes("Runtime 8Q.1")), "demo runtime marquee eksik");
 }
 
 function validateSellerProfileApiContracts() {

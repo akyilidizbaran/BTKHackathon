@@ -8,8 +8,8 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J, 8K, 8L, 8M, 8N, 8O, 8P ve 8Q tamamlandı.
-  * Sıradaki net adım 8R: end-to-end demo hardening, demo script, kritik buyer/seller akış polish ve sunum hazırlığı.
+  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J, 8K, 8L, 8M, 8N, 8O, 8P, 8Q ve 8R tamamlandı.
+  * Sıradaki net adım 9A: Gemini/provider finalization; mevcut contract'ları bozmadan final provider swap.
   * 8K ve sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
@@ -283,6 +283,7 @@
 ## 6) Teknik Yön
 
 * Agent UI:
+  * 8R'de `/demo` rehearsal command center eklendi; buyer, seller ve floating Agent yolları tek runbook/QA yüzeyinden başlatılır.
   * Route tabanlı agent sayfaları kuruldu: `/buyer/agent`, `/seller/agent`.
   * 8Q'da sağ alt floating Agent mini paneli eklendi.
   * Floating Agent ayrı bir widget runtime'ı değil, route Agent ekranlarının kompakt UI varyantıdır.
@@ -307,6 +308,7 @@
   * 8Q'da floating Agent route context/state contract'ı `src/lib/agents/floating-agent.ts` ve `src/lib/agents/floating-agent-client.ts` üzerinden eklendi.
   * `FloatingAgentPanel`, `/api/buyer/agent`, `/api/buyer/agent/apply`, `/api/seller/agent`, `/api/seller/agent/apply`, `applyBuyerAgentCartMutation`, `applySellerListingMutation` ve `rollbackSellerListingMutation` ile aynı onay/audit sınırlarını kullanır.
   * Runtime template versiyonları `8Q.1`, handoff `8R`; `/api/agent/runtime` validation bu contract'ı doğrular.
+  * 8R demo runbook contract'ı `src/lib/demo/rehearsal.ts` içindedir; `/demo` ve validation script aynı kaynağı okur.
   * Promptlar/tool contract'ları ileride `src/lib/agents/prompts/*` ve `src/lib/agents/tools/*` altına ayrılabilir, fakat mevcut tek kaynak `src/lib/agents/runtime.ts` olmalıdır.
   * İlk aşamada typed internal tool runner kullanılacak.
   * LangChain daha sonra tool orchestration adapter olarak bağlanacak.
@@ -342,13 +344,14 @@
 | 8O | Shared buyer agent cart mutations | 8G'deki onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştırmak | Tamamlandı: route Agent ve floating panel aynı apply preview, `sharedMutation` contract'ı ve `applyBuyerAgentCartMutation` helper'ı üzerinden cart state'e ekler veya sepeti değiştirir |
 | 8P | Seller mock mutations + audit | Satıcı agent'ın onaylı listing mutation yapması | Tamamlandı: `/seller/agent` before/after listing preview gösterir; `/api/seller/agent/apply` shared mutation/audit contract'ı döndürür; route UI `applySellerListingMutation` ve `rollbackSellerListingMutation` ile localStorage mock state, audit log ve rollback çalıştırır |
 | 8Q | Floating Agent mini panel + proactive signals | Route agent oturduktan sonra sağ alt Agent deneyimini eklemek | Tamamlandı: tüm buyer/seller sayfalarında Codex pet benzeri ikon görünür; panel `8Q.1` runtime, shared history/control state, buyer cart apply, seller listing apply/rollback, context-aware badge/balon ve `Gizle`/`Sessize al`/`Bu sayfada uyarma` kontrolleriyle çalışır |
-| 8R | End-to-end demo hardening | Buyer ve seller demo akışlarını parlatmak | Browser QA, check/build, demo script ve kritik akışlar temiz geçer |
+| 8R | End-to-end demo hardening | Buyer ve seller demo akışlarını parlatmak | Tamamlandı: `/demo` rehearsal command center, typed runbook contract, QA checklist, gateway demo link'i, browser QA, check/build ve validation çalışır |
 | 9A | Gemini/provider finalization | OpenAI geçici provider'dan final Gemini/provider yapısına geçmek | Buyer/seller/agent contract'ları Gemini ile generated döner |
 
 ## 8) Demo Senaryoları
 
 ### Buyer Demo
 
+* İsteğe bağlı olarak `/demo` açılır ve buyer demo CTA'sından akış başlatılır.
 * Kullanıcı `/buyer/products` ekranına gelir.
 * Sağ altta Codex pet benzeri floating Agent ikonu görünür.
 * Kategori veya search ile ürünleri gezer.
@@ -367,6 +370,7 @@
 
 ### Seller Demo
 
+* İsteğe bağlı olarak `/demo` açılır ve seller demo CTA'sından akış başlatılır.
 * Satıcı `/seller` ana sayfasına gelir.
 * Sağ altta aynı floating Agent ikonu görünür.
 * Overview'de kısa uyarı kartları görür:
@@ -396,6 +400,7 @@
 * Buyer cart mutation için yeni surface eklenirse `sharedSurfaces`, client helper ve validation birlikte güncellenmeli; panel kendi localStorage yazımını yeniden icat etmemeli.
 * Floating Agent SSR/hydration sırasında `localStorage` okursa Next recoverable hydration issue üretir; store default başlar, mount sonrası senkronlanır.
 * Seller compact currency formatı server/client locale farkı yaratırsa dev overlay issue görünür; satıcı ürün listesinde deterministik `₺90 B` biçimi korunmalı.
+* `/demo` route'u demo runbook kaynağıdır; buradaki rotalar veya expected result metinleri değişirse validation contract da aynı committe güncellenmeli.
 * Seller overview tek uzun sayfa olursa yönetim paneli hissi kaybolur; uyarı kartları endpoint'lere dağıtılmalı.
 * Mock ürün görselleri zayıf kalırsa marketplace hissi düşer; 8E sprite seti gerekirse ürün bazlı görsellerle büyütülmeli.
 * Cart/listing mutation gerçek görünmeli ama kontrolsüz olmamalı; buyer cart onayı, seller before/after preview ve audit zorunlu.
@@ -413,6 +418,7 @@
 * 8O buyer cart apply contract'ı `src/lib/agents/buyer-cart-apply.ts` içindedir; client yazım `src/lib/agents/buyer-cart-apply-client.ts` içindeki `applyBuyerAgentCartMutation` ile yapılır.
 * 8P seller listing apply contract'ı `src/lib/agents/seller-listing-apply.ts` içindedir; client yazım ve rollback `src/lib/agents/seller-listing-apply-client.ts` içindeki `applySellerListingMutation` ve `rollbackSellerListingMutation` ile yapılır.
 * 8Q floating Agent context/state contract'ı `src/lib/agents/floating-agent.ts` ve `src/lib/agents/floating-agent-client.ts` içindedir; UI `src/components/commerce/floating-agent-panel.tsx` üzerinden tüm buyer/seller sayfalarına `WorkspaceShell` içinde bağlanır.
+* 8R demo rehearsal contract'ı `src/lib/demo/rehearsal.ts` içindedir; `/demo` UI ve `scripts/validate-workflows.js` aynı contract'ı doğrular.
 * Buyer agent onay sonrası mevcut sepete ekleyebilir veya kullanıcı seçerse sepeti öneriyle değiştirebilir.
 * Buyer profil serbest metin + chip/checkbox tercihleriyle tutulur.
 * Seller overview ana uyarı kartları: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.
