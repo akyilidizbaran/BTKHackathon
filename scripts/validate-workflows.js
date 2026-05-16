@@ -333,6 +333,8 @@ function validateSellerApiContracts() {
   const missingActionDetail = getSellerActionDetailApiData("missing-action", sellerId);
   const buyerSignals = getSellerBuyerSignalsApiData(sellerId);
   const productContract = getSellerProductsApiData(sellerId);
+  const stockFocusedProductContract = getSellerProductsApiData(sellerId, { focus: "stock-risk" });
+  const returnFocusedProductContract = getSellerProductsApiData(sellerId, { focus: "return-risk" });
   const keyProHealth = getSellerProductHealthApiData("prod-keypro-mekanik-klavye");
 
   assert(Boolean(overview), "seller overview API contract üretilemedi");
@@ -342,6 +344,8 @@ function validateSellerApiContracts() {
   assert(!missingActionDetail, "olmayan seller action detail undefined dönmeli");
   assert(Boolean(buyerSignals), "seller buyer signals API contract üretilemedi");
   assert(Boolean(productContract), "seller products API contract üretilemedi");
+  assert(Boolean(stockFocusedProductContract), "seller products stock focus contract üretilemedi");
+  assert(Boolean(returnFocusedProductContract), "seller products return focus contract üretilemedi");
   assert(Boolean(keyProHealth), "seller product health API contract üretilemedi");
 
   if (overview) {
@@ -415,9 +419,40 @@ function validateSellerApiContracts() {
 
   if (productContract) {
     assert(productContract.contract.envelope === "success/data/error", "products envelope contract yanlış");
+    assert(productContract.activeFocus === "all", "products API default focus all olmalı");
     assert(productContract.products.length === products.length, "products API ürün sayısı yanlış");
+    assert(productContract.summary.visibleProductCount === productContract.products.length, "products visible count yanlış");
     assert(productContract.summary.averageHealthScore > 0, "products API ortalama sağlık skoru eksik");
+    assert(productContract.segments.length === 6, "products segment sayısı yanlış");
+    assert(
+      ["all", "at-risk", "negative-reviews", "return-risk", "slow-movers", "stock-risk"].every((id) =>
+        productContract.segments.some((segment) => segment.id === id),
+      ),
+      "products segment id coverage eksik",
+    );
+    assert(
+      productContract.segments.every((segment) => segment.href.startsWith("/seller/products")),
+      "products segment href contract yanlış",
+    );
+    assert(
+      productContract.segments.every((segment) => segment.apiEndpoint.startsWith("/api/seller/products")),
+      "products segment api endpoint contract yanlış",
+    );
+    assert(productContract.categoryBreakdown.length > 0, "products category breakdown boş");
+    assert(Boolean(productContract.spotlightProduct), "products spotlight product eksik");
     assert(productContract.products.every((product) => product.href.startsWith("/seller/products/")), "products API href contract yanlış");
+    assert(
+      productContract.products.every((product) => product.categoryLabel.length > 0 && product.focusTags.includes("all")),
+      "products kategori label veya focus tag contract yanlış",
+    );
+    assert(
+      productContract.products.some((product) => product.riskSignals.some((signal) => signal.id === "stock-risk")),
+      "products stock risk sinyali eksik",
+    );
+    assert(
+      productContract.products.some((product) => product.linkedAction?.href.startsWith("/seller/actions/")),
+      "products linked action contract eksik",
+    );
     assert(
       productContract.products.every((product) => product.image.src === "/catalog/buyer-product-sprite.png"),
       "products API görsel sprite contract yanlış",
@@ -425,6 +460,24 @@ function validateSellerApiContracts() {
     assert(
       productContract.products.every((product) => product.apiHealthEndpoint.startsWith("/api/seller/products/")),
       "products API health endpoint contract yanlış",
+    );
+  }
+
+  if (stockFocusedProductContract) {
+    assert(stockFocusedProductContract.activeFocus === "stock-risk", "stock focused products activeFocus yanlış");
+    assert(stockFocusedProductContract.products.length > 0, "stock focused products boş olmamalı");
+    assert(
+      stockFocusedProductContract.products.every((product) => product.focusTags.includes("stock-risk")),
+      "stock focused products filtre dışı ürün döndü",
+    );
+  }
+
+  if (returnFocusedProductContract) {
+    assert(returnFocusedProductContract.activeFocus === "return-risk", "return focused products activeFocus yanlış");
+    assert(returnFocusedProductContract.products.length > 0, "return focused products boş olmamalı");
+    assert(
+      returnFocusedProductContract.products.every((product) => product.focusTags.includes("return-risk")),
+      "return focused products filtre dışı ürün döndü",
     );
   }
 

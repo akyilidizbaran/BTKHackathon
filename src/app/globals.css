@@ -62,6 +62,20 @@ body {
   position: absolute;
 }
 
+.seller-products-marquee {
+  animation: seller-products-marquee 28s linear infinite;
+}
+
+@keyframes seller-products-marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
 .commerce-legacy-light {
   color: #111827;
 }

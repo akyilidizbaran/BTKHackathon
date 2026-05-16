@@ -8,9 +8,9 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C, 8D, 8E, 8F, 8G, 8H ve 8I tamamlandı.
-  * Sıradaki net adım 8J: seller products ekranını fotoğraflı ürün yönetimi yüzeyine dönüştürmek.
-  * 8J ve sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
+  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I ve 8J tamamlandı.
+  * Sıradaki net adım 8K: seller actions ekranını kategori/focus endpoint'lerine bölmek.
+  * 8K ve sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
 
@@ -326,7 +326,7 @@
 | 8G | Buyer agent page | ChatGPT benzeri alıcı agent sayfasını kurmak | Tamamlandı: Prompt -> görselli ürün önerisi -> onay sorusu -> sepete ekle/değiştir akışı çalışır |
 | 8H | Buyer profile | Agent kişiselleştirme ve kullanıcı yorumları sayfasını kurmak | Tamamlandı: Profil notu, tercih checkbox'ları, bütçe/renk kontrolleri, yorum geçmişi, learned signals ve `localStorage` taslak persistence çalışır |
 | 8I | Seller IA + overview endpoints | Satıcı ana sayfayı kısa uyarı kartları ve endpoint linkleriyle kurmak | Tamamlandı: 4 alert card, priority queue, route/API hedefleri, ürün görselleri ve validation kontrolleri çalışır |
-| 8J | Seller products | Fotoğraflı satıcı ürün yönetimi ekranı | Ürünler fotoğraf, stok, satış, fiyat, yorum ve risk sinyaliyle listelenir |
+| 8J | Seller products | Fotoğraflı satıcı ürün yönetimi ekranı | Tamamlandı: Fotoğraflı ürün listesi, segment/search/sort filtreleri, focus query, risk sinyalleri, linked action ve validation kontrolleri çalışır |
 | 8K | Seller actions by category | Aksiyonları alt başlık endpoint'lerine bölmek | `/seller/actions/[category]` listeleri çalışır |
 | 8L | Seller agent page | Satıcı agent sohbet ve analiz yüzeyini kurmak | Satılmayan ürün sıralama, sebep analizi ve öneri akışı çalışır |
 | 8M | Seller profile + permissions | Mağaza profili ve agent yetki ayarları | Profil, yetki modu ve bildirim tercihleri görünür/güncellenir |

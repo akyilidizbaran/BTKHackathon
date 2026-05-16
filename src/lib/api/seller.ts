@@ -170,14 +170,45 @@ export interface SellerActionEvidenceSnapshot {
 export interface SellerProductsApiData {
   contract: SellerApiContractMeta;
   seller: SellerSummaryApiData;
+  activeFocus: SellerProductsFocusKey;
   products: SellerProductApiRow[];
+  segments: SellerProductsSegment[];
+  categoryBreakdown: SellerProductCategoryBreakdown[];
+  spotlightProduct?: SellerProductApiRow;
   summary: {
     productCount: number;
+    visibleProductCount: number;
     averageHealthScore: number;
     lowStockProductCount: number;
     riskyProductCount: number;
     categoryCount: number;
   };
+}
+
+export type SellerProductsFocusKey =
+  | "all"
+  | "at-risk"
+  | "negative-reviews"
+  | "return-risk"
+  | "slow-movers"
+  | "stock-risk";
+
+export interface SellerProductsSegment {
+  id: SellerProductsFocusKey;
+  label: string;
+  helper: string;
+  productCount: number;
+  href: string;
+  apiEndpoint: string;
+}
+
+export interface SellerProductCategoryBreakdown {
+  category: ProductCategory;
+  label: string;
+  productCount: number;
+  riskCount: number;
+  averageHealthScore: number;
+  revenue30d: number;
 }
 
 export interface SellerProductApiRow {
@@ -187,6 +218,7 @@ export interface SellerProductApiRow {
   name: string;
   brand: string;
   category: ProductCategory;
+  categoryLabel: string;
   subcategory: string;
   price: number;
   currency: "TRY";
@@ -203,8 +235,36 @@ export interface SellerProductApiRow {
   reviewCount: number;
   demoStoryFlags: string[];
   image: BuyerCatalogImage;
+  focusTags: SellerProductsFocusKey[];
+  riskSignals: SellerProductRiskSignal[];
+  linkedAction?: SellerProductLinkedAction;
   href: string;
   apiHealthEndpoint: string;
+}
+
+export type SellerProductRiskSignalId =
+  | "listing-gap"
+  | "margin-watch"
+  | "negative-reviews"
+  | "return-risk"
+  | "slow-movers"
+  | "stock-risk";
+
+export interface SellerProductRiskSignal {
+  id: SellerProductRiskSignalId;
+  label: string;
+  helper: string;
+  tone: "calm" | "danger" | "warning";
+}
+
+export interface SellerProductLinkedAction {
+  id: string;
+  title: string;
+  href: string;
+  type: SellerActionType;
+  priorityScore: number;
+  ownerLabel: SellerActionOwner;
+  timeHorizonLabel: string;
 }
 
 export interface SellerProductHealthApiData {
@@ -292,6 +352,88 @@ export interface SellerBuyerSignalMatchedAction {
   timeHorizonLabel: string;
 }
 
+const sellerProductsFocusKeys = new Set<SellerProductsFocusKey>([
+  "all",
+  "at-risk",
+  "negative-reviews",
+  "return-risk",
+  "slow-movers",
+  "stock-risk",
+]);
+
+const sellerProductsFocusAliases: Record<string, SellerProductsFocusKey> = {
+  negative_reviews: "negative-reviews",
+  "negative-review": "negative-reviews",
+  return_risk: "return-risk",
+  "return-risk-products": "return-risk",
+  risk: "at-risk",
+  slow_mover: "slow-movers",
+  slow_movers: "slow-movers",
+  "slow-mover": "slow-movers",
+  stock_risk: "stock-risk",
+};
+
+const productCategoryLabels: Record<ProductCategory, string> = {
+  aksesuar: "Aksesuar",
+  "elektronik-aksesuar": "Elektronik",
+  "erkek-giyim": "Erkek Giyim",
+  "ev-ofis": "Ev & Yaşam",
+  "hediye-yasam-tarzi": "Aksesuar",
+  "kahve-ekipmanlari": "Ev & Yaşam",
+  "kadin-giyim": "Kadın Giyim",
+  kozmetik: "Kozmetik",
+  "kucuk-ev-yasam": "Ev & Yaşam",
+  "masa-calisma-alani": "Ev & Yaşam",
+  spor: "Spor",
+};
+
+const sellerProductSegmentMeta: Record<
+  SellerProductsFocusKey,
+  { label: string; helper: string }
+> = {
+  all: {
+    label: "Tümü",
+    helper: "Tüm aktif SKU",
+  },
+  "at-risk": {
+    label: "Riskli",
+    helper: "Skor veya sinyal var",
+  },
+  "negative-reviews": {
+    label: "Yorum",
+    helper: "Destek yanıtı gerekir",
+  },
+  "return-risk": {
+    label: "İade",
+    helper: "Beklenti farkı var",
+  },
+  "slow-movers": {
+    label: "Satılmayan",
+    helper: "Satış hızı düşük",
+  },
+  "stock-risk": {
+    label: "Stok",
+    helper: "Eşik altında",
+  },
+};
+
+export function normalizeSellerProductsFocus(
+  value?: string | string[] | null,
+): SellerProductsFocusKey {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const normalizedValue = rawValue?.trim().toLowerCase();
+
+  if (!normalizedValue) {
+    return "all";
+  }
+
+  const aliasedValue = sellerProductsFocusAliases[normalizedValue] ?? normalizedValue;
+
+  return sellerProductsFocusKeys.has(aliasedValue as SellerProductsFocusKey)
+    ? (aliasedValue as SellerProductsFocusKey)
+    : "all";
+}
+
 export function getSellerOverviewApiData(sellerId = demoSellerId): SellerOverviewApiData | undefined {
   const overview = getSellerOverview(sellerId);
   const workflow = generateSellerActionsWorkflow(sellerId);
@@ -300,7 +442,7 @@ export function getSellerOverviewApiData(sellerId = demoSellerId): SellerOvervie
     return undefined;
   }
 
-  const products = overview.products.map(createSellerProductRow);
+  const products = overview.products.map((product) => createSellerProductRow(product, workflow.actions));
   const lowStockProducts = products.filter((product) => product.stockStatus === "risk");
   const attentionActions = workflow.actions.filter((action) => action.timeHorizon === "today");
   const reviewAttentionCount = workflow.actions.filter((action) => action.type === "review_attention").length;
@@ -370,7 +512,7 @@ export function getSellerActionDetailApiData(
     .filter((productId) => sellerProductIds.has(productId))
     .map((productId) => getProductById(productId))
     .filter((product): product is Product => Boolean(product))
-    .map(createSellerProductRow);
+    .map((product) => createSellerProductRow(product, workflow.actions));
   const relatedBuyerSignals =
     getSellerBuyerSignalsApiData(sellerId)?.signals
       .filter((signal) => isBuyerSignalRelatedToAction(signal, action))
@@ -395,7 +537,10 @@ export function getSellerActionDetailApiData(
   };
 }
 
-export function getSellerProductsApiData(sellerId = demoSellerId): SellerProductsApiData | undefined {
+export function getSellerProductsApiData(
+  sellerId = demoSellerId,
+  options: { focus?: string | string[] | null } = {},
+): SellerProductsApiData | undefined {
   const overview = getSellerOverview(sellerId);
   const workflow = generateSellerActionsWorkflow(sellerId);
 
@@ -403,21 +548,28 @@ export function getSellerProductsApiData(sellerId = demoSellerId): SellerProduct
     return undefined;
   }
 
-  const products = overview.products.map(createSellerProductRow);
+  const allProducts = overview.products.map((product) => createSellerProductRow(product, workflow.actions));
+  const activeFocus = normalizeSellerProductsFocus(options.focus);
+  const products = filterSellerProductsByFocus(allProducts, activeFocus);
   const averageHealthScore =
-    products.length > 0
-      ? Math.round(products.reduce((sum, product) => sum + product.healthScore, 0) / products.length)
+    allProducts.length > 0
+      ? Math.round(allProducts.reduce((sum, product) => sum + product.healthScore, 0) / allProducts.length)
       : 0;
-  const riskyProductCount = products.filter((product) => product.healthScore < 70).length;
-  const lowStockProductCount = products.filter((product) => product.stockStatus === "risk").length;
-  const categoryCount = new Set(products.map((product) => product.category)).size;
+  const riskyProductCount = allProducts.filter((product) => product.focusTags.includes("at-risk")).length;
+  const lowStockProductCount = allProducts.filter((product) => product.focusTags.includes("stock-risk")).length;
+  const categoryCount = new Set(allProducts.map((product) => product.category)).size;
 
   return {
     contract: createContractMeta(sellerId, workflow.generatedAt),
     seller: createSellerSummary(overview.seller),
+    activeFocus,
     products,
+    segments: createSellerProductSegments(allProducts),
+    categoryBreakdown: createSellerProductCategoryBreakdown(allProducts),
+    spotlightProduct: createSellerProductSpotlight(products),
     summary: {
-      productCount: products.length,
+      productCount: allProducts.length,
+      visibleProductCount: products.length,
       averageHealthScore,
       lowStockProductCount,
       riskyProductCount,
@@ -438,12 +590,12 @@ export function getSellerProductHealthApiData(productId: string): SellerProductH
   const relatedProducts = detail.relatedProducts
     .filter((product) => product.sellerId === detail.product.sellerId)
     .slice(0, 4)
-    .map(createSellerProductRow);
+    .map((product) => createSellerProductRow(product, actions));
   const relatedActions = actions.filter((action) => action.productIds.includes(productId));
 
   return {
     contract: createContractMeta(detail.product.sellerId),
-    product: createSellerProductRow(detail.product),
+    product: createSellerProductRow(detail.product, actions),
     scorecard: health.scorecard,
     topInsights: health.topInsights,
     relatedProducts,
@@ -562,11 +714,22 @@ export function getSellerBuyerSignalsApiData(sellerId = demoSellerId): SellerBuy
   };
 }
 
-function createSellerProductRow(product: Product): SellerProductApiRow {
+function createSellerProductRow(
+  product: Product,
+  actions: SellerGrowthAction[] = [],
+): SellerProductApiRow {
   const detail = getProductDetail(product.id);
   const scorecard = detail ? scoreProduct(detail) : undefined;
   const availableStock = getAvailableStock(product);
   const stockStatus = getStockStatus(availableStock, product.stock.reorderPoint);
+  const healthScore = scorecard?.health.score ?? 0;
+  const riskSignals = createSellerProductRiskSignals({
+    actions,
+    availableStock,
+    healthScore,
+    product,
+    stockStatus,
+  });
 
   return {
     id: product.id,
@@ -575,6 +738,7 @@ function createSellerProductRow(product: Product): SellerProductApiRow {
     name: product.name,
     brand: product.brand,
     category: product.category,
+    categoryLabel: productCategoryLabels[product.category],
     subcategory: product.subcategory,
     price: product.price,
     currency: product.currency,
@@ -582,7 +746,7 @@ function createSellerProductRow(product: Product): SellerProductApiRow {
     reorderPoint: product.stock.reorderPoint,
     stockStatus,
     stockStatusLabel: getStockStatusLabel(stockStatus),
-    healthScore: scorecard?.health.score ?? 0,
+    healthScore,
     healthLabel: scorecard?.health.label ?? "Skor yok",
     orders30d: product.metrics.orders30d,
     revenue30d: Math.round(product.metrics.revenue30d),
@@ -591,9 +755,192 @@ function createSellerProductRow(product: Product): SellerProductApiRow {
     reviewCount: product.metrics.reviewCount,
     demoStoryFlags: product.demoStoryFlags,
     image: getSellerProductImage(product.id, product.name),
+    focusTags: createSellerProductFocusTags(healthScore, riskSignals),
+    riskSignals,
+    linkedAction: createSellerProductLinkedAction(product.id, actions),
     href: `/seller/products/${product.slug}`,
     apiHealthEndpoint: `/api/seller/products/${product.id}/health`,
   };
+}
+
+function createSellerProductRiskSignals({
+  actions,
+  availableStock,
+  healthScore,
+  product,
+  stockStatus,
+}: {
+  actions: SellerGrowthAction[];
+  availableStock: number;
+  healthScore: number;
+  product: Product;
+  stockStatus: SellerProductApiRow["stockStatus"];
+}): SellerProductRiskSignal[] {
+  const productActions = actions.filter((action) => action.productIds.includes(product.id));
+  const actionTypes = new Set(productActions.map((action) => action.type));
+  const signals: SellerProductRiskSignal[] = [];
+
+  if (stockStatus === "risk" || product.demoStoryFlags.includes("low_stock")) {
+    signals.push({
+      helper: `${availableStock}/${product.stock.reorderPoint} adet`,
+      id: "stock-risk",
+      label: "Stok riski",
+      tone: "danger",
+    });
+  }
+
+  if (product.demoStoryFlags.includes("negative_review_theme") || actionTypes.has("review_attention")) {
+    signals.push({
+      helper: `${product.metrics.reviewCount} yorum · ${formatDecimal(product.metrics.ratingAverage)} puan`,
+      id: "negative-reviews",
+      label: "Negatif yorum",
+      tone: "danger",
+    });
+  }
+
+  if (product.demoStoryFlags.includes("return_risk") || actionTypes.has("reduce_return_risk")) {
+    signals.push({
+      helper: `${formatPercentValue(product.metrics.returnRate)} iade oranı`,
+      id: "return-risk",
+      label: "İade riski",
+      tone: "warning",
+    });
+  }
+
+  if (product.demoStoryFlags.includes("slow_mover") || (healthScore < 66 && product.metrics.orders30d < 16)) {
+    signals.push({
+      helper: `${product.metrics.orders30d} sipariş · ${formatPercentValue(product.metrics.conversionRate)} dönüşüm`,
+      id: "slow-movers",
+      label: "Satış yavaş",
+      tone: "warning",
+    });
+  }
+
+  if (product.demoStoryFlags.includes("listing_quality_issue") || actionTypes.has("fix_listing")) {
+    signals.push({
+      helper: `${product.listing.qualityScore}/100 listeleme`,
+      id: "listing-gap",
+      label: "Listeleme açığı",
+      tone: "calm",
+    });
+  }
+
+  if (product.demoStoryFlags.includes("margin_pressure") || actionTypes.has("protect_margin")) {
+    signals.push({
+      helper: `${formatTryCompact(Math.max(0, product.price - product.unitCost))} brüt fark`,
+      id: "margin-watch",
+      label: "Marj baskısı",
+      tone: "warning",
+    });
+  }
+
+  return signals;
+}
+
+function createSellerProductFocusTags(
+  healthScore: number,
+  riskSignals: SellerProductRiskSignal[],
+): SellerProductsFocusKey[] {
+  const tags = new Set<SellerProductsFocusKey>(["all"]);
+
+  if (healthScore < 70 || riskSignals.length > 0) {
+    tags.add("at-risk");
+  }
+
+  riskSignals.forEach((signal) => {
+    if (sellerProductsFocusKeys.has(signal.id as SellerProductsFocusKey)) {
+      tags.add(signal.id as SellerProductsFocusKey);
+    }
+  });
+
+  return Array.from(tags);
+}
+
+function createSellerProductLinkedAction(
+  productId: string,
+  actions: SellerGrowthAction[],
+): SellerProductLinkedAction | undefined {
+  const action = actions
+    .filter((candidate) => candidate.productIds.includes(productId))
+    .sort((first, second) => second.priorityScore - first.priorityScore)[0];
+
+  if (!action) {
+    return undefined;
+  }
+
+  return {
+    href: `/seller/actions/${action.id}`,
+    id: action.id,
+    ownerLabel: action.todayChecklist[0]?.owner ?? "operasyon",
+    priorityScore: action.priorityScore,
+    timeHorizonLabel: action.timeHorizonLabel,
+    title: action.title,
+    type: action.type,
+  };
+}
+
+function filterSellerProductsByFocus(
+  products: SellerProductApiRow[],
+  focus: SellerProductsFocusKey,
+): SellerProductApiRow[] {
+  if (focus === "all") {
+    return products;
+  }
+
+  return products.filter((product) => product.focusTags.includes(focus));
+}
+
+function createSellerProductSegments(products: SellerProductApiRow[]): SellerProductsSegment[] {
+  return Array.from(sellerProductsFocusKeys).map((id) => {
+    const href = id === "all" ? "/seller/products" : `/seller/products?focus=${id}`;
+
+    return {
+      apiEndpoint: id === "all" ? "/api/seller/products" : `/api/seller/products?focus=${id}`,
+      helper: sellerProductSegmentMeta[id].helper,
+      href,
+      id,
+      label: sellerProductSegmentMeta[id].label,
+      productCount: filterSellerProductsByFocus(products, id).length,
+    };
+  });
+}
+
+function createSellerProductCategoryBreakdown(
+  products: SellerProductApiRow[],
+): SellerProductCategoryBreakdown[] {
+  const categoryGroups = products.reduce((map, product) => {
+    const group = map.get(product.category) ?? [];
+    group.push(product);
+    map.set(product.category, group);
+    return map;
+  }, new Map<ProductCategory, SellerProductApiRow[]>());
+
+  return Array.from(categoryGroups.entries())
+    .map(([category, categoryProducts]) => ({
+      averageHealthScore: Math.round(averageValues(categoryProducts.map((product) => product.healthScore))),
+      category,
+      label: productCategoryLabels[category],
+      productCount: categoryProducts.length,
+      revenue30d: Math.round(sumValues(categoryProducts.map((product) => product.revenue30d))),
+      riskCount: categoryProducts.filter((product) => product.focusTags.includes("at-risk")).length,
+    }))
+    .sort((first, second) => second.riskCount - first.riskCount || second.revenue30d - first.revenue30d);
+}
+
+function createSellerProductSpotlight(
+  products: SellerProductApiRow[],
+): SellerProductApiRow | undefined {
+  return products
+    .slice()
+    .sort((first, second) => getSellerProductSpotlightScore(second) - getSellerProductSpotlightScore(first))[0];
+}
+
+function getSellerProductSpotlightScore(product: SellerProductApiRow): number {
+  const stockWeight = product.focusTags.includes("stock-risk") ? 18 : 0;
+  const actionWeight = product.linkedAction ? 12 : 0;
+  const signalWeight = product.riskSignals.length * 7;
+
+  return 100 - product.healthScore + stockWeight + actionWeight + signalWeight;
 }
 
 function createSellerOverviewAlertCards(
@@ -809,6 +1156,13 @@ function formatDecimal(value: number): string {
   return new Intl.NumberFormat("tr-TR", {
     maximumFractionDigits: 1,
     minimumFractionDigits: 1,
+  }).format(value);
+}
+
+function formatPercentValue(value: number): string {
+  return new Intl.NumberFormat("tr-TR", {
+    maximumFractionDigits: 1,
+    style: "percent",
   }).format(value);
 }
 
