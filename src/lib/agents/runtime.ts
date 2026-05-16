@@ -1,6 +1,10 @@
 import { buyerCatalogEndpoint } from "@/lib/api/buyer-catalog";
 import { buyerAgentApplyEndpoint } from "@/lib/agents/buyer-cart-apply";
 import {
+  sellerAgentApplyEndpoint,
+  sellerAgentListingApplyToolId,
+} from "@/lib/agents/seller-listing-apply";
+import {
   sellerActionsEndpoint,
   sellerBuyerSignalsEndpoint,
 } from "@/lib/api/seller";
@@ -24,6 +28,7 @@ export type AgentToolId =
   | "buyer.catalog.search"
   | "buyer.profile.read"
   | "seller.actions.suggest"
+  | "seller.agent.listing.apply"
   | "seller.agent.listing.preview"
   | "seller.buyer-signals.read"
   | "seller.products.rank"
@@ -140,10 +145,10 @@ export const agentPromptTemplates: AgentPromptTemplate[] = [
     id: "seller-growth-route",
     label: "Seller growth analysis",
     maxPromptLength: 360,
-    responseContract: "productFindings + actionSuggestions + draftPreview boundary",
+    responseContract: "productFindings + actionSuggestions + draftPreview + shared apply/audit boundary",
     role: "seller",
     systemInstruction: "Ürün ve action contract'larını kanıt olarak oku; satıcı onayı olmadan mutation uygulama.",
-    version: "8N.1",
+    version: "8P.1",
   },
 ];
 
@@ -252,6 +257,19 @@ export const agentToolRegistry: AgentToolDefinition[] = [
     role: "seller",
     scope: "seller-products",
   },
+  {
+    description: "Onaylanan seller listing mutation payload'unu audit log'a yazılabilir ortak apply contract'ına çevirir.",
+    endpoint: sellerAgentApplyEndpoint,
+    id: sellerAgentListingApplyToolId,
+    inputContract: "{ productId, mutation: { title, description, price, campaignLabel }, before? }",
+    label: "Listing apply",
+    method: "POST",
+    mutationKind: "apply",
+    outputContract: "SellerListingMutationApplyApiData + SellerListingMutationContract",
+    requiresApproval: true,
+    role: "seller",
+    scope: "seller-products",
+  },
 ];
 
 const defaultToolIdsByRole: Record<AgentRole, AgentToolId[]> = {
@@ -266,6 +284,7 @@ const defaultToolIdsByRole: Record<AgentRole, AgentToolId[]> = {
     "seller.buyer-signals.read",
     "seller.profile.permissions",
     "seller.agent.listing.preview",
+    "seller.agent.listing.apply",
   ],
 };
 
@@ -329,7 +348,7 @@ export function createAgentRuntimeSnapshot(input: {
       surface: input.surface ?? "route",
     },
     role: input.role,
-    runtimeId: `${input.role}-${input.surface ?? "route"}-8n`,
+    runtimeId: `${input.role}-${input.surface ?? "route"}-${input.role === "seller" ? "8p" : "8o"}`,
     surface: input.surface ?? "route",
     toolPlan,
   };
@@ -394,7 +413,7 @@ function createHandoff(role: AgentRole): AgentRuntimeSnapshot["handoff"] {
   }
 
   return {
-    nextMilestone: "8P",
-    summary: "Seller listing mutation before/after preview ve audit apply akışı ortak runtime üzerinden genişleyecek.",
+    nextMilestone: "8Q",
+    summary: "Seller listing apply artık shared contract, audit helper ve rollback sınırıyla çalışır; floating panel aynı yolu kullanmaya hazır.",
   };
 }

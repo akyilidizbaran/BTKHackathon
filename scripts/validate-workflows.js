@@ -59,6 +59,14 @@ const {
   validateSellerAgentRequest,
 } = require("../src/lib/api/seller-agent");
 const {
+  getSellerListingMutationApplyApiData,
+  sellerAgentApplyEndpoint,
+  sellerAgentListingApplyToolId,
+  sellerListingMutationStorageKey,
+  sellerListingMutationUpdatedEvent,
+  validateSellerListingMutationApplyRequest,
+} = require("../src/lib/agents/seller-listing-apply");
+const {
   getBuyerProfileApiData,
   getDefaultBuyerProfileApiData,
   validateBuyerProfilePatchRequest,
@@ -107,6 +115,7 @@ async function main() {
   validateBuyerCatalogApiContracts();
   validateBuyerAgentApiContracts();
   validateSellerAgentApiContracts();
+  validateSellerListingMutationApplyContracts();
   validateSharedAgentRuntimeContracts();
   validateSellerProfileApiContracts();
   validateBuyerProfileApiContracts();
@@ -858,7 +867,7 @@ function validateSellerAgentApiContracts() {
   assert(defaultData.runtime.promptTemplate.id === "seller-growth-route", "seller agent prompt registry id yanlış");
   assert(defaultData.runtime.toolPlan.some((tool) => tool.id === "seller.products.rank"), "seller agent products tool plan eksik");
   assert(defaultData.runtime.toolPlan.some((tool) => tool.requiresApproval), "seller agent approval tool plan eksik");
-  assert(defaultData.runtime.handoff.nextMilestone === "8P", "seller agent runtime handoff 8P olmalı");
+  assert(defaultData.runtime.handoff.nextMilestone === "8Q", "seller agent runtime handoff 8Q olmalı");
   assert(defaultData.message.safetyNote.includes("Onay"), "seller agent safety note onay sınırı eksik");
   assert(slowMoverData.activeFocus === "slow-movers", "seller agent slow movers focus yanlış");
   assert(
@@ -868,6 +877,10 @@ function validateSellerAgentApiContracts() {
   assert(
     slowMoverData.runtime.toolPlan.some((tool) => tool.id === "seller.agent.listing.preview" && tool.requiresApproval),
     "seller agent preview approval tool plan eksik",
+  );
+  assert(
+    slowMoverData.runtime.toolPlan.some((tool) => tool.id === sellerAgentListingApplyToolId && tool.requiresApproval),
+    "seller agent apply approval tool plan eksik",
   );
   assert(slowMoverData.productFindings.length > 0, "seller agent product finding eksik");
   assert(slowMoverData.actionSuggestions.length > 0, "seller agent action suggestion eksik");
@@ -888,10 +901,86 @@ function validateSellerAgentApiContracts() {
     "seller agent approval boundary next step eksik",
   );
   assert(Boolean(slowMoverData.draftPreview?.requiresApproval), "seller agent draft preview onay gerektirmeli");
+  assert(slowMoverData.draftPreview?.endpoint === sellerAgentApplyEndpoint, "seller agent draft endpoint yanlış");
+  assert(slowMoverData.draftPreview?.toolId === sellerAgentListingApplyToolId, "seller agent draft apply tool id yanlış");
+  assert(slowMoverData.draftPreview?.productId === slowMoverData.productFindings[0].product.id, "seller agent draft ürün id uyumsuz");
+  assert(slowMoverData.draftPreview?.applyRequest.productId === slowMoverData.productFindings[0].product.id, "seller agent draft apply request ürün id yanlış");
+  assert(slowMoverData.draftPreview?.delta.some((item) => item.field === "title"), "seller agent draft title delta eksik");
+  assert(slowMoverData.draftPreview?.delta.some((item) => item.field === "price"), "seller agent draft price delta eksik");
+  assert(
+    slowMoverData.draftPreview?.sharedSurfaces.includes("route") &&
+      slowMoverData.draftPreview?.sharedSurfaces.includes("floating"),
+    "seller agent draft route/floating surface eksik",
+  );
   assert(negativeReviewData.activeFocus === "negative-reviews", "seller agent negative review focus yanlış");
   assert(validRequest.ok, "seller agent valid request doğrulanmalı");
   assert(!missingPrompt.ok && missingPrompt.code === "PROMPT_REQUIRED", "seller agent missing prompt validation yanlış");
   assert(!longPrompt.ok && longPrompt.code === "PROMPT_TOO_LONG", "seller agent long prompt validation yanlış");
+}
+
+function validateSellerListingMutationApplyContracts() {
+  const agentData = getSellerAgentApiData({
+    prompt: "Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla.",
+    sellerId: "seller-commercepilot",
+  });
+  const draftPreview = agentData.draftPreview;
+  const invalidBody = validateSellerListingMutationApplyRequest(null);
+  const missingProduct = validateSellerListingMutationApplyRequest({
+    mutation: draftPreview?.afterListing,
+  });
+  const invalidMutation = validateSellerListingMutationApplyRequest({
+    mutation: {
+      campaignLabel: "x",
+      description: "short",
+      price: -1,
+      title: "x",
+    },
+    productId: "prod-ergoflex-chair",
+  });
+
+  assert(Boolean(draftPreview), "seller listing apply için draft preview olmalı");
+
+  if (!draftPreview) {
+    return;
+  }
+
+  const validRequest = validateSellerListingMutationApplyRequest({
+    ...draftPreview.applyRequest,
+    actorId: "seller-commercepilot",
+    sourceRuntimeId: agentData.runtime.runtimeId,
+    surface: "route",
+  });
+
+  assert(validRequest.ok, "seller listing apply valid request doğrulanmalı");
+  assert(!invalidBody.ok && invalidBody.code === "INVALID_BODY", "seller listing apply invalid body validation yanlış");
+  assert(!missingProduct.ok && missingProduct.code === "PRODUCT_REQUIRED", "seller listing apply missing product validation yanlış");
+  assert(!invalidMutation.ok && invalidMutation.code === "INVALID_MUTATION", "seller listing apply invalid mutation validation yanlış");
+
+  const applyData = validRequest.ok ? getSellerListingMutationApplyApiData(validRequest.value) : undefined;
+
+  assert(Boolean(applyData), "seller listing apply data üretilemedi");
+
+  if (!applyData) {
+    return;
+  }
+
+  assert(applyData.contract.endpoint === sellerAgentApplyEndpoint, "seller listing apply endpoint yanlış");
+  assert(applyData.contract.method === "POST", "seller listing apply method yanlış");
+  assert(applyData.sharedMutation.toolId === sellerAgentListingApplyToolId, "seller listing apply tool id yanlış");
+  assert(applyData.sharedMutation.requiresApproval, "seller listing apply onay sınırı eksik");
+  assert(applyData.sharedMutation.clientAction.helper === "applySellerListingMutation", "seller listing apply client helper yanlış");
+  assert(applyData.sharedMutation.clientAction.rollbackHelper === "rollbackSellerListingMutation", "seller listing apply rollback helper yanlış");
+  assert(applyData.sharedMutation.clientAction.eventName === sellerListingMutationUpdatedEvent, "seller listing apply storage event yanlış");
+  assert(applyData.sharedMutation.stateTarget.storageKey === sellerListingMutationStorageKey, "seller listing apply storage key yanlış");
+  assert(
+    applyData.sharedMutation.sharedSurfaces.includes("route") &&
+      applyData.sharedMutation.sharedSurfaces.includes("floating"),
+    "seller listing apply route/floating surface eksik",
+  );
+  assert(applyData.auditPreview.rollbackAvailable, "seller listing apply rollback preview eksik");
+  assert(applyData.delta.some((item) => item.field === "description"), "seller listing apply description delta eksik");
+  assert(applyData.delta.some((item) => item.field === "campaignLabel"), "seller listing apply campaign delta eksik");
+  assert(applyData.summary.fieldCount >= 4, "seller listing apply tüm temel alanları değiştirmeli");
 }
 
 function validateSharedAgentRuntimeContracts() {
@@ -925,6 +1014,10 @@ function validateSharedAgentRuntimeContracts() {
     agentToolRegistry.some((tool) => tool.id === "seller.agent.listing.preview" && tool.mutationKind === "preview" && tool.requiresApproval),
     "shared runtime seller preview tool eksik",
   );
+  assert(
+    agentToolRegistry.some((tool) => tool.id === sellerAgentListingApplyToolId && tool.mutationKind === "apply" && tool.requiresApproval),
+    "shared runtime seller apply tool eksik",
+  );
   assert(buyerSnapshot.request.routeContext === "/buyer/agent", "buyer runtime routeContext yanlış");
   assert(buyerSnapshot.promptTemplate.id === "buyer-smart-cart-route", "buyer runtime prompt id yanlış");
   assert(buyerSnapshot.toolPlan.some((tool) => tool.id === "buyer.catalog.search"), "buyer runtime catalog tool eksik");
@@ -936,7 +1029,11 @@ function validateSharedAgentRuntimeContracts() {
   assert(sellerSnapshot.request.routeContext === "/seller/agent", "seller runtime routeContext yanlış");
   assert(sellerSnapshot.promptTemplate.id === "seller-growth-route", "seller runtime prompt id yanlış");
   assert(sellerSnapshot.toolPlan.some((tool) => tool.id === "seller.profile.permissions"), "seller runtime permission tool eksik");
-  assert(sellerSnapshot.handoff.nextMilestone === "8P", "seller runtime handoff 8P olmalı");
+  assert(
+    sellerSnapshot.toolPlan.some((tool) => tool.id === sellerAgentListingApplyToolId && tool.requiresApproval),
+    "seller runtime apply approval tool eksik",
+  );
+  assert(sellerSnapshot.handoff.nextMilestone === "8Q", "seller runtime handoff 8Q olmalı");
 }
 
 function validateSellerProfileApiContracts() {

@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Milestone 8O tamamlandı: buyer Agent cart apply davranışı shared mutation contract ve client helper üzerinden çalışıyor.
+  * Milestone 8P tamamlandı: seller Agent listing apply davranışı shared mutation contract, audit log ve rollback helper üzerinden çalışıyor.
 * Son değişiklik neydi?
-  * `src/lib/agents/buyer-cart-apply.ts` ve `src/lib/agents/buyer-cart-apply-client.ts` eklendi; `/api/buyer/agent/apply` `sharedMutation` contract'ı döndürüyor, `/buyer/agent` aynı helper ile `localStorage` sepet yazıyor.
+  * `src/lib/agents/seller-listing-apply.ts` ve `src/lib/agents/seller-listing-apply-client.ts` eklendi; `/api/seller/agent/apply` `sharedMutation` contract'ı döndürüyor, `/seller/agent` aynı helper ile `localStorage` listing override/audit state yazıyor ve rollback yapıyor.
 * Bir sonraki net adım ne?
-  * Milestone 8P: seller before/after listing mutation, onay, audit log ve rollback davranışını kurmak.
+  * Milestone 8Q: floating Agent mini panelini tüm buyer/seller sayfalarında Codex pet ikonu, ortak runtime/history ve susturma/gizleme kontrolleriyle kurmak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -71,12 +71,15 @@
   * `src/lib/api/buyer-agent.ts`: buyer Agent prompt contract'ını smart-cart workflow ve katalog ürün kartlarıyla birleştirir; apply contract'ı `append`/`replace` stratejilerini doğrular.
   * `src/lib/agents/buyer-cart-apply.ts`: buyer Agent cart apply validation, preview, shared mutation contract, route/floating surface metadata ve API data builder için tek kaynak.
   * `src/lib/agents/buyer-cart-apply-client.ts`: route Agent ve ileride floating Agent tarafından kullanılacak client-side cart mutation helper'ı; `localStorage` yazımı ve cart update event'i burada merkezileşir.
-  * `src/lib/api/seller-agent.ts`: seller Agent prompt contract'ını seller products/actions contract'larıyla birleştirir; prompt'u risk focus'una ayırır, ürün kanıtı, action önerisi, next step ve onay gerektiren draft preview döndürür.
-  * `src/lib/agents/runtime.ts`: buyer/seller Agent prompt template registry, typed tool registry, request contract, runtime snapshot, guardrail ve 8O/8P handoff metadata için ortak kaynak.
+  * `src/lib/api/seller-agent.ts`: seller Agent prompt contract'ını seller products/actions contract'larıyla birleştirir; prompt'u risk focus'una ayırır, ürün kanıtı, action önerisi, next step ve onay gerektiren shared listing apply draft preview döndürür.
+  * `src/lib/agents/seller-listing-apply.ts`: seller Agent listing apply validation, before/after preview, shared mutation contract, route/floating surface metadata, audit preview ve API data builder için tek kaynak.
+  * `src/lib/agents/seller-listing-apply-client.ts`: route Agent ve ileride floating Agent tarafından kullanılacak client-side listing mutation helper'ı; `localStorage` listing override, audit log ve rollback event'i burada merkezileşir.
+  * `src/lib/agents/runtime.ts`: buyer/seller Agent prompt template registry, typed tool registry, request contract, runtime snapshot, guardrail ve 8Q handoff metadata için ortak kaynak.
   * `src/lib/api/seller-profile.ts`: seller profile, Agent permission mode, capability matrix, notification channels, risk thresholds, quiet hours, proactive controls, audit trail ve PATCH validation contract'ını üretir.
   * `src/lib/api/seller.ts`: seller overview/actions/products/product health/buyer signal contract builder'larını üretir; 8K itibarıyla actions contract'ı kategori/focus segmentleri, action card ürün kanıtları, category route metadata ve seller product sprite image metadata taşır.
   * `src/app/api/buyer/agent/route.ts`: agent prompt'unu alır, katalogdaki mevcut ürünlerden görselli öneri ve onay mesajı döndürür.
   * `src/app/api/buyer/agent/apply/route.ts`: onaylanan agent sepet mutation payload'unu doğrular ve client'ın localStorage'a uygulayacağı temiz ürün/adet listesini döndürür.
+  * `src/app/api/seller/agent/apply/route.ts`: onaylanan seller listing mutation payload'unu doğrular ve client'ın localStorage'a uygulayacağı before/after delta, shared mutation ve audit preview contract'ını döndürür.
   * `src/app/api/agent/runtime/route.ts`: shared Agent runtime registry'yi read-only `GET /api/agent/runtime` endpoint'iyle döndürür.
   * `src/lib/api/buyer-profile.ts`: buyer profile tercihleri, yorum geçmişi, öğrenilen sinyaller ve PATCH validation contract'ını üretir.
   * `src/app/api/buyer/profile/route.ts`: buyer profile `GET/PATCH` endpoint'ini `success/data/error` envelope ile döndürür.
@@ -88,6 +91,7 @@
   * `src/components/commerce/buyer-product-purchase-panel.tsx`: ürün detayındaki adet, `Şimdi Al`, `Sepete Ekle` ve favori aksiyon yüzeyi.
   * `src/components/commerce/buyer-cart-workspace.tsx`: sepet satırları, adet/sil/temizle, toplam hesaplama, empty state ve checkout mock yüzeyi.
   * `src/components/commerce/buyer-agent-workspace.tsx`: `/buyer/agent` için prompt composer, chat cevabı, görselli ürün önerileri, onay paneli ve cart apply akışını render eder.
+  * `src/components/commerce/seller-agent-workspace.tsx`: `/seller/agent` için prompt composer, ürün kanıt sırası, before/after listing preview, onaylı apply, audit log ve rollback akışını render eder.
   * `src/components/commerce/agent-runtime-panel.tsx`: buyer/seller Agent ekranlarında ortak runtime prompt/tool plan, guardrail ve registry linkini gösterir.
   * `src/components/commerce/buyer-profile-workspace.tsx`: `/buyer/profile` için profil notu, tercih checkbox'ları, bütçe/renk kontrolü, yorum geçmişi, öğrenilen sinyal paneli ve kaydetme akışını render eder.
   * `src/components/commerce/seller-profile-workspace.tsx`: `/seller/profile` için mağaza bilgisi, Agent permission mode, capability toggles, notification channels, risk thresholds, quiet hours, proactive controls, audit trail ve kaydetme akışını render eder.
@@ -224,6 +228,7 @@
 * 2026-05-16 — Karar: Seller profile ilk fazda typed API contract + client `localStorage` taslağıyla yönetilecek. | Gerekçe: Auth/DB olmadan mağaza ayarı ve Agent permission tercihleri reload sonrası kaybolmamalı; route Agent ve ileride floating Agent aynı izin/onay sınırını okuyabilmeli. | Etki: `src/lib/api/seller-profile.ts`, `/api/seller/profile`, `SellerProfileWorkspace`, `src/lib/profile/seller-profile-storage.ts`, loading state ve workflow validation kontrolleri eklendi. | Alternatifler: Permission state'ini yalnızca sayfa içinde tutmak veya 8P mutation/audit store ile birlikte bekletmek.
 * 2026-05-16 — Karar: Buyer/Seller route Agent cevapları ortak `AgentRuntimeSnapshot` taşıyacak ve prompt/tool registry tek kaynak `src/lib/agents/runtime.ts` olacak. | Gerekçe: 8O/8P/8Q route ve floating apply davranışlarını aynı request, tool plan ve onay sınırıyla birleştirmek. | Etki: `/api/agent/runtime`, buyer/seller agent API `runtime` alanları, `AgentRuntimePanel` ve workflow validation kontrolleri eklendi. | Alternatifler: Her agent route içinde ayrı prompt/tool metadata tutmak.
 * 2026-05-16 — Karar: Buyer cart apply validation/API contract ve client-side sepet yazımı route component içinde kalmayacak; shared Agent apply modüllerine taşınacak. | Gerekçe: 8Q floating Agent aynı append/replace contract'ını ve aynı `localStorage` mutation helper'ını kullanmalı. | Etki: `src/lib/agents/buyer-cart-apply.ts`, `src/lib/agents/buyer-cart-apply-client.ts`, `BuyerAgentApiData.applyPreview`, `BuyerAgentApplyApiData.sharedMutation`, `/api/buyer/agent/apply` ve `BuyerAgentWorkspace` güncellendi. | Alternatifler: Route Agent component içinde doğrudan `clearBuyerCartItems`/`addBuyerCartItem` çağırmaya devam etmek.
+* 2026-05-16 — Karar: Seller listing apply validation/API contract, audit yazımı ve rollback route component içinde kalmayacak; shared Agent apply modüllerine taşınacak. | Gerekçe: 8Q floating Agent aynı before/after contract'ını, aynı `localStorage` audit store'unu ve aynı rollback helper'ını kullanmalı. | Etki: `src/lib/agents/seller-listing-apply.ts`, `src/lib/agents/seller-listing-apply-client.ts`, `SellerAgentDraftPreview` shared apply metadata, `/api/seller/agent/apply`, seller runtime apply tool'u ve `SellerAgentWorkspace` güncellendi. | Alternatifler: `/seller/agent` içinde doğrudan audit localStorage yazmak veya mutation'ı yalnızca görsel preview olarak bırakmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -260,6 +265,7 @@
 * 2026-05-16 — Milestone: Milestone 8M Seller Profile + Permissions tamamlandı. | Sonuç: `/seller/profile` mağaza bilgisi, Agent permission mode, capability matrix, notification channels, risk thresholds, quiet hours, proactive controls ve audit/policy preview ile çalışır; `GET/PATCH /api/seller/profile`, localStorage taslak persistence, validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8N Shared Agent Runtime tamamlandı. | Sonuç: `/api/agent/runtime` read-only registry, `src/lib/agents/runtime.ts` prompt/tool source of truth, buyer/seller Agent `runtime` snapshot'ları ve Agent runtime paneli eklendi; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8O Shared Buyer Agent Cart Mutations tamamlandı. | Sonuç: Buyer Agent apply preview ve apply API shared route/floating mutation contract'ı taşıyor; route UI aynı `applyBuyerAgentCartMutation` helper'ı ile localStorage cart state'ini güncelliyor; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
+* 2026-05-16 — Milestone: Milestone 8P Seller Mock Mutations + Audit tamamlandı. | Sonuç: Seller Agent draft preview başlık/açıklama/fiyat/kampanya before-after contract'ı taşıyor; `/api/seller/agent/apply` shared listing mutation ve audit preview döndürüyor; route UI aynı `applySellerListingMutation`/`rollbackSellerListingMutation` helper'ları ile localStorage listing override, audit log ve rollback akışını çalıştırıyor; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 
 ## 8) Yapılanlar
 
@@ -305,6 +311,7 @@
 * [x] Milestone 8M seller profile permission, bildirim ve audit ayar yüzeyi uygulandı.
 * [x] Milestone 8N shared Agent runtime, prompt/tool registry ve route snapshot panelleri uygulandı.
 * [x] Milestone 8O shared buyer Agent cart mutation contract ve client apply helper uygulandı.
+* [x] Milestone 8P seller listing apply, audit log ve rollback helper uygulandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -352,7 +359,7 @@
 * [x] Milestone 8M seller profile + permissions ekranını gerçek ayar yüzeyine dönüştür: mağaza profili, agent yetki modu, bildirim tercihleri.
 * [x] Milestone 8N shared agent runtime: buyer/seller prompt registry, typed tool registry ve ortak request/apply sınırlarını kur.
 * [x] Milestone 8O shared buyer agent cart mutations: 8G onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştır.
-* [ ] Milestone 8P için seller before/after preview, onay, audit log ve rollback davranışını netleştir.
+* [x] Milestone 8P için seller before/after preview, onay, audit log ve rollback davranışını netleştir.
 * [ ] Milestone 8Q floating Agent mini panelini kur: tüm buyer/seller sayfalarında Codex pet ikonu, ortak agent history/runtime, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
@@ -392,10 +399,10 @@
   * `/seller/actions/[id]` route'u parametre focus/category slug ise `SellerActionsWorkspace`, gerçek action id ise mevcut action detail ekranını render eder.
 * 8L seller agent:
   * `/api/seller/agent` GET default seller agent contract, POST ise `{ prompt, sellerId? }` ile deterministic prompt analysis döndürür.
-  * Seller Agent mutation yapmaz; draft preview yalnızca onay gerektiren öneri olarak gösterilir. Gerçek before/after apply + audit akışı 8P kapsamındadır.
+  * Seller Agent doğrudan mutation yapmaz; draft preview shared apply metadata taşır ve gerçek localStorage yazımı 8P apply helper'ı ile satıcı onayı sonrası yapılır.
 * 8M seller profile:
   * `/api/seller/profile` GET default seller profile contract, PATCH ise mağaza bilgisi, permission mode, capability ids, notification channels, alert rules, quiet hours ve proactive controls alanlarını doğrular.
-  * `auto-apply` capability kilitlidir ve PATCH sırasında filtrelenir; seller mutation hâlâ açık satıcı onayı ve 8P audit/apply akışı olmadan uygulanmaz.
+  * `auto-apply` capability kilitlidir ve PATCH sırasında filtrelenir; seller mutation hâlâ açık satıcı onayı ve 8P audit/apply helper'ı olmadan uygulanmaz.
   * `SellerProfileWorkspace` localStorage taslağı kullanır; gerçek kalıcı DB/auth store yoktur.
 * 8N shared runtime:
   * `/api/agent/runtime` read-only registry snapshot'tır; buyer cart apply ve seller listing apply hâlâ kendi route/client akışlarında yürür.
@@ -403,6 +410,10 @@
 * 8O buyer cart apply:
   * `/api/buyer/agent/apply` tarayıcı sepetini doğrudan değiştirmez; `sharedMutation.clientAction.helper` route/floating UI'a hangi client helper'ı çalıştıracağını söyler.
   * Gerçek cart yazımı `src/lib/agents/buyer-cart-apply-client.ts` içindeki `applyBuyerAgentCartMutation` ile yapılır; yeni floating panel kendi `clear/add` mantığını yazmamalı.
+* 8P seller listing apply:
+  * `/api/seller/agent/apply` tarayıcı listing state'ini doğrudan değiştirmez; `sharedMutation.clientAction.helper` route/floating UI'a hangi client helper'ı çalıştıracağını söyler.
+  * Gerçek listing override, audit log ve rollback yazımı `src/lib/agents/seller-listing-apply-client.ts` içindeki `applySellerListingMutation` ve `rollbackSellerListingMutation` ile yapılır; yeni floating panel kendi audit/localStorage mantığını yazmamalı.
+  * Seller runtime template `8P.1` ve handoff `8Q`; seller tool plan artık `seller.agent.listing.preview` yanında `seller.agent.listing.apply` approval tool'unu taşır.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 
@@ -421,6 +432,8 @@
 * Buyer sepet UI `src/components/commerce/buyer-cart-workspace.tsx` ve `src/lib/cart/buyer-cart.ts` üzerinden çalışır; 8G Agent apply akışı append/replace stratejisini bu helper'lara bağlar.
 * Buyer Agent UI/API `src/lib/api/buyer-agent.ts`, `/api/buyer/agent`, `/api/buyer/agent/apply` ve `src/components/commerce/buyer-agent-workspace.tsx` üzerinden çalışır; agent contract'ı değişirse `scripts/validate-workflows.js` içindeki buyer agent kontrolleri birlikte güncellenmeli.
 * Buyer Agent cart mutation contract `src/lib/agents/buyer-cart-apply.ts` üzerinden çalışır; append/replace stratejisi, `sharedMutation`, storage key, cart event veya surface listesi değişirse route handler, client helper, runtime registry ve validation birlikte güncellenmeli.
+* Seller Agent listing mutation contract `src/lib/agents/seller-listing-apply.ts` üzerinden çalışır; before/after alanları, `sharedMutation`, audit id, storage key, event veya surface listesi değişirse route handler, client helper, runtime registry ve validation birlikte güncellenmeli.
+* Seller Agent audit store `src/lib/agents/seller-listing-apply-client.ts` içindedir; floating Agent seller mutation uygularsa aynı `applySellerListingMutation` ve `rollbackSellerListingMutation` helper'larını kullanmalı.
 * Shared Agent runtime `src/lib/agents/runtime.ts` üzerinden çalışır; prompt id, tool id, approval boundary veya handoff değişirse buyer/seller agent API'leri, `AgentRuntimePanel` ve `scripts/validate-workflows.js` birlikte güncellenmeli.
 * Buyer Profile UI/API `src/lib/api/buyer-profile.ts`, `/api/buyer/profile`, `src/lib/profile/buyer-profile-storage.ts` ve `src/components/commerce/buyer-profile-workspace.tsx` üzerinden çalışır; profil tercih id'leri, yorum görsel contract'ı veya learned signal shape'i değişirse `scripts/validate-workflows.js` içindeki buyer profile kontrolleri birlikte güncellenmeli.
 * Seller overview kartları `src/lib/api/seller.ts` içindeki `alertCards` ve `priorityQueue` üzerinden gelir; risk kartı id'leri, href/apiEndpoint veya evidence shape'i değişirse `scripts/validate-workflows.js` içindeki overview kontrolleri birlikte güncellenmeli.

@@ -12,6 +12,10 @@ import {
   createAgentRuntimeSnapshot,
   type AgentRuntimeSnapshot,
 } from "@/lib/agents/runtime";
+import {
+  createSellerListingMutationPreview,
+  type SellerListingMutationPreview,
+} from "@/lib/agents/seller-listing-apply";
 
 export const sellerAgentEndpoint = "/api/seller/agent";
 
@@ -106,12 +110,10 @@ export interface SellerAgentNextStep {
   requiresApproval: boolean;
 }
 
-export interface SellerAgentDraftPreview {
+export interface SellerAgentDraftPreview extends SellerListingMutationPreview {
   title: string;
   before: string;
   after: string;
-  helper: string;
-  requiresApproval: true;
 }
 
 export interface SellerAgentValidationError {
@@ -248,7 +250,7 @@ export function getSellerAgentApiData(request: SellerAgentRequest): SellerAgentA
       method: "POST",
       source: "seller-agent-deterministic-workflow",
     },
-    draftPreview: createDraftPreview(productFindings[0], actionSuggestions[0], activeFocus),
+    draftPreview: createDraftPreview(productFindings[0], actionSuggestions[0], activeFocus, normalizedRequest.sellerId),
     evidenceSummary: createEvidenceSummary(productFindings, actionSuggestions, activeFocus),
     message: {
       content: createAgentContent(productFindings, actionSuggestions, activeFocus),
@@ -473,18 +475,24 @@ function createDraftPreview(
   finding: SellerAgentProductFinding | undefined,
   action: SellerAgentActionSuggestion | undefined,
   focus: SellerAgentFocusKey,
+  sellerId: string,
 ): SellerAgentDraftPreview | undefined {
   if (!finding) {
     return undefined;
   }
 
+  const listingPreview = createSellerListingMutationPreview({
+    actionId: action?.id,
+    actionTitle: action?.title,
+    focusLabel: getSellerAgentFocusLabel(focus),
+    product: finding.product,
+    sellerId,
+  });
+
   return {
-    after: `${finding.product.name}: ${getSellerAgentFocusLabel(focus)} sinyali ürün sayfasında açık, ölçülebilir ve alıcı itirazını önden karşılayan bir metne çevrilir.`,
-    before: `${finding.product.name}: ${finding.product.healthLabel}. ${finding.product.riskSignals[0]?.helper ?? "Risk sinyali izleniyor."}`,
-    helper: action
-      ? `${action.title} aksiyonuna bağlı taslak; uygulama onay gerektirir.`
-      : "Aksiyon bulunursa taslak seller action detayına bağlanır.",
-    requiresApproval: true,
+    ...listingPreview,
+    after: `${listingPreview.afterListing.title}. ${listingPreview.afterListing.campaignLabel}; ${formatTryCompact(listingPreview.afterListing.price)}.`,
+    before: `${listingPreview.beforeListing.title}. ${listingPreview.beforeListing.campaignLabel}; ${formatTryCompact(listingPreview.beforeListing.price)}.`,
     title: "Onaylı mutation önizlemesi",
   };
 }

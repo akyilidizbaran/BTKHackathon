@@ -8,8 +8,8 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J, 8K, 8L, 8M, 8N ve 8O tamamlandı.
-  * Sıradaki net adım 8P: seller before/after listing mutation, onay ve audit log davranışını kurmak.
+  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J, 8K, 8L, 8M, 8N, 8O ve 8P tamamlandı.
+  * Sıradaki net adım 8Q: floating Agent mini panelini tüm buyer/seller sayfalarında ortak runtime/history, context-aware uyarı ve kullanıcı kontrolleriyle kurmak.
   * 8K ve sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
@@ -298,17 +298,19 @@
   * `/api/buyer/agent` öneri üretir; `/api/buyer/agent/apply` onaylanan ürün/adet/strateji payload'unu doğrular.
   * Cart apply'in gerçek yazımı ilk fazda tarayıcıda `src/lib/cart/buyer-cart.ts` helper'larıyla yapılır.
   * 8N'de shared runtime source of truth eklendi: `src/lib/agents/runtime.ts`.
-  * `/api/agent/runtime` read-only registry olarak 2 prompt template, 8 typed tool contract ve buyer/seller route snapshot döndürür.
+  * `/api/agent/runtime` read-only registry olarak 2 prompt template, 9 typed tool contract ve buyer/seller route snapshot döndürür.
   * Buyer/seller Agent API response'ları `runtime: AgentRuntimeSnapshot` taşır; UI bunu `AgentRuntimePanel` ile görünür kılar.
   * 8O'da buyer cart apply davranışı `src/lib/agents/buyer-cart-apply.ts` ve `src/lib/agents/buyer-cart-apply-client.ts` üzerinden ortaklaştırıldı.
   * `/api/buyer/agent/apply` artık `sharedMutation` contract'ı taşır; route Agent ve ileride floating Agent aynı `applyBuyerAgentCartMutation` client helper'ını kullanır.
+  * 8P'de seller listing apply davranışı `src/lib/agents/seller-listing-apply.ts` ve `src/lib/agents/seller-listing-apply-client.ts` üzerinden ortaklaştırıldı.
+  * `/api/seller/agent/apply` artık başlık/açıklama/fiyat/kampanya before-after delta, `sharedMutation` contract'ı ve audit preview taşır; route Agent ve ileride floating Agent aynı `applySellerListingMutation`/`rollbackSellerListingMutation` client helper'larını kullanır.
   * Promptlar/tool contract'ları ileride `src/lib/agents/prompts/*` ve `src/lib/agents/tools/*` altına ayrılabilir, fakat mevcut tek kaynak `src/lib/agents/runtime.ts` olmalıdır.
   * İlk aşamada typed internal tool runner kullanılacak.
   * LangChain daha sonra tool orchestration adapter olarak bağlanacak.
 * Cart/listing state:
   * İlk fazda gerçek DB yok.
   * Buyer cart state `localStorage` ile korunacak.
-  * Seller mutation önce preview/draft olarak üretilecek; satıcı onayından sonra app içi mock state ve audit log üzerinde uygulanacak.
+  * Seller mutation önce preview/draft olarak üretilecek; satıcı onayından sonra app içi mock state ve audit log üzerinde `src/lib/agents/seller-listing-apply-client.ts` ile uygulanacak ve geri alınabilecek.
 * Görseller:
   * 8E'de kontrollü mock/generated ürün görsel seti tek sprite olarak başlatıldı.
   * Ürün görselleri marketplace hissi için kritik kabul edilir; sprite yeterli kalmazsa ürün bazlı görsel seti sonraki milestone'larda genişletilebilir.
@@ -335,7 +337,7 @@
 | 8M | Seller profile + permissions | Mağaza profili ve agent yetki ayarları | Tamamlandı: `/seller/profile` typed `/api/seller/profile` GET/PATCH contract'ıyla mağaza bilgisi, permission mode, capability matrix, bildirim kanalları, risk eşikleri, quiet hours, proactive controls, audit/policy preview ve localStorage taslak persistence çalışır |
 | 8N | Shared agent runtime | Buyer/seller agent prompt ve tool registry ortaklaştırmak | Tamamlandı: `src/lib/agents/runtime.ts`, `/api/agent/runtime`, buyer/seller `runtime` snapshot'ları ve Agent runtime panelleri çalışır |
 | 8O | Shared buyer agent cart mutations | 8G'deki onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştırmak | Tamamlandı: route Agent ve ileride floating panel aynı apply preview, `sharedMutation` contract'ı ve `applyBuyerAgentCartMutation` helper'ı üzerinden cart state'e ekler veya sepeti değiştirir |
-| 8P | Seller mock mutations + audit | Satıcı agent'ın onaylı listing mutation yapması | Önce/sonra preview görünür; satıcı onaylarsa başlık/açıklama/fiyat/kampanya mock state değişir ve audit log görünür |
+| 8P | Seller mock mutations + audit | Satıcı agent'ın onaylı listing mutation yapması | Tamamlandı: `/seller/agent` before/after listing preview gösterir; `/api/seller/agent/apply` shared mutation/audit contract'ı döndürür; route UI `applySellerListingMutation` ve `rollbackSellerListingMutation` ile localStorage mock state, audit log ve rollback çalıştırır |
 | 8Q | Floating Agent mini panel + proactive signals | Route agent oturduktan sonra sağ alt Agent deneyimini eklemek | Tüm buyer/seller sayfalarında Codex pet benzeri ikon görünür; panel aynı agent history/runtime ile çalışır; ürün/sepet/seller mutation işleri panel içinde yapılır; context-aware badge/ünlem uyarıları, gizle/sessize al/bu sayfada uyarma kontrolleri çalışır |
 | 8R | End-to-end demo hardening | Buyer ve seller demo akışlarını parlatmak | Browser QA, check/build, demo script ve kritik akışlar temiz geçer |
 | 9A | Gemini/provider finalization | OpenAI geçici provider'dan final Gemini/provider yapısına geçmek | Buyer/seller/agent contract'ları Gemini ile generated döner |
@@ -404,6 +406,7 @@
 * 8G buyer Agent contract'ı `src/lib/api/buyer-agent.ts` içindedir; `/api/buyer/agent` ve `/api/buyer/agent/apply` route'ları aynı typed builder/validation ile çalışır.
 * 8N shared Agent runtime contract'ı `src/lib/agents/runtime.ts` içindedir; `/api/agent/runtime`, buyer/seller `runtime` snapshot'ları ve UI runtime paneli aynı prompt/tool registry'den beslenir.
 * 8O buyer cart apply contract'ı `src/lib/agents/buyer-cart-apply.ts` içindedir; client yazım `src/lib/agents/buyer-cart-apply-client.ts` içindeki `applyBuyerAgentCartMutation` ile yapılır.
+* 8P seller listing apply contract'ı `src/lib/agents/seller-listing-apply.ts` içindedir; client yazım ve rollback `src/lib/agents/seller-listing-apply-client.ts` içindeki `applySellerListingMutation` ve `rollbackSellerListingMutation` ile yapılır.
 * Buyer agent onay sonrası mevcut sepete ekleyebilir veya kullanıcı seçerse sepeti öneriyle değiştirebilir.
 * Buyer profil serbest metin + chip/checkbox tercihleriyle tutulur.
 * Seller overview ana uyarı kartları: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.
