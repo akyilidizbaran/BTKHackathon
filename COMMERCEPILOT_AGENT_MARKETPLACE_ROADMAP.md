@@ -8,9 +8,9 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C, 8D, 8E, 8F ve 8G tamamlandı.
-  * Sıradaki net adım 8H: buyer profile tercihleri, agent kişiselleştirme ve kullanıcı yorumları ekranını kurmak.
-  * 8H sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
+  * 8B, 8C, 8D, 8E, 8F, 8G ve 8H tamamlandı.
+  * Sıradaki net adım 8I: seller overview endpoint kartlarını kurmak; iade, negatif yorum, satılmayan ürün ve stok riski route linkleriyle netleşecek.
+  * 8I ve sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
 
@@ -152,9 +152,9 @@
   * Tamamlandı: Kullanıcı onayından sonra agent'ın önerdiği sepet mutation payload'unu doğrular; client tarafı bunu `localStorage` cart helper'ıyla uygular.
   * Desteklenen stratejiler: mevcut sepete ekle, mevcut sepeti öneriyle değiştir.
 * `GET /api/buyer/profile`
-  * Tercih ve yorumları döner.
+  * Tamamlandı: Tercihleri, yorum geçmişini, öğrenilen Agent sinyallerini ve agent preview contract'ını döner.
 * `PATCH /api/buyer/profile`
-  * Agent kişiselleştirme tercihlerini günceller.
+  * Tamamlandı: Agent kişiselleştirme tercihlerini doğrular; client tarafı taslak persistence için dönen editable state'i `localStorage` içine yazar.
 
 ### Seller Routes
 
@@ -324,7 +324,7 @@
 | 8E | Buyer catalog data + ürün grid | Çok ürünlü klasik e-ticaret ürünler ekranı kurmak | Tamamlandı: 7 görselli kategori, kampanya chip'leri, `GET /api/buyer/catalog`, 48 fotoğraflı ürün kartı ve görünür sepete ekle aksiyonu |
 | 8F | Buyer product detail + cart state | Ürün satış detay penceresi ve sepeti gerçek etkileşimli hale getirmek | Tamamlandı: `/buyer/products/[slug]` detail, ürün ekle/sil/adet/toplam, checkout mock ve `localStorage` sepet state'i çalışır |
 | 8G | Buyer agent page | ChatGPT benzeri alıcı agent sayfasını kurmak | Tamamlandı: Prompt -> görselli ürün önerisi -> onay sorusu -> sepete ekle/değiştir akışı çalışır |
-| 8H | Buyer profile | Agent kişiselleştirme ve kullanıcı yorumları sayfasını kurmak | Tercihler ve yorumlar profil ekranında görünür/güncellenir |
+| 8H | Buyer profile | Agent kişiselleştirme ve kullanıcı yorumları sayfasını kurmak | Tamamlandı: Profil notu, tercih checkbox'ları, bütçe/renk kontrolleri, yorum geçmişi, learned signals ve `localStorage` taslak persistence çalışır |
 | 8I | Seller IA + overview endpoints | Satıcı ana sayfayı kısa uyarı kartları ve endpoint linkleriyle kurmak | Dağılım, iade, negatif yorum, stok ve satılmayan ürün uyarıları route'lara bağlanır |
 | 8J | Seller products | Fotoğraflı satıcı ürün yönetimi ekranı | Ürünler fotoğraf, stok, satış, fiyat, yorum ve risk sinyaliyle listelenir |
 | 8K | Seller actions by category | Aksiyonları alt başlık endpoint'lerine bölmek | `/seller/actions/[category]` listeleri çalışır |

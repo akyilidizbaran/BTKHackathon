@@ -50,6 +50,11 @@ const {
   getDefaultBuyerAgentApiData,
   validateBuyerAgentApplyRequest,
 } = require("../src/lib/api/buyer-agent");
+const {
+  getBuyerProfileApiData,
+  getDefaultBuyerProfileApiData,
+  validateBuyerProfilePatchRequest,
+} = require("../src/lib/api/buyer-profile");
 const { getBuyerCatalogApiData } = require("../src/lib/api/buyer-catalog");
 const { getBuyerSmartCartExplanationApiData } = require("../src/lib/api/buyer-smart-cart-explanations");
 
@@ -81,6 +86,7 @@ async function main() {
   validateBuyerApiContracts();
   validateBuyerCatalogApiContracts();
   validateBuyerAgentApiContracts();
+  validateBuyerProfileApiContracts();
   await validateBuyerSmartCartExplanationApiContracts();
 
   if (failures.length > 0) {
@@ -115,6 +121,7 @@ async function main() {
       `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
       `Buyer catalog products: ${getBuyerCatalogApiData().products.length}`,
       `Buyer agent endpoint: ${getDefaultBuyerAgentApiData().contract.endpoint}`,
+      `Buyer profile endpoint: ${getDefaultBuyerProfileApiData().contract.endpoint}`,
       `Buyer API examples: ${buyerSmartCartExamples.length}`,
       "Buyer prompts: 7",
     ].join("\n"),
@@ -628,6 +635,81 @@ function validateBuyerAgentApiContracts() {
   assert(applyData.summary.totalPrice > 0, "buyer agent apply total eksik");
   assert(!invalidStrategy.ok && invalidStrategy.code === "INVALID_STRATEGY", "buyer agent invalid strategy validation yanlış");
   assert(!emptyItems.ok && emptyItems.code === "ITEMS_REQUIRED", "buyer agent empty item validation yanlış");
+}
+
+function validateBuyerProfileApiContracts() {
+  const defaultData = getDefaultBuyerProfileApiData();
+  const alternateBuyerData = getBuyerProfileApiData({ buyerId: "buyer-emre" });
+  const missingBuyerData = getBuyerProfileApiData({ buyerId: "missing-buyer" });
+  const validPatch = validateBuyerProfilePatchRequest({
+    budgetBand: "premium",
+    buyerId: "buyer-aylin",
+    personalNote: "Sade, kaliteli, hızlı kargolu ve logosuz ürünleri öner.",
+    preferredColors: ["krem", "beyaz", "krem"],
+    selectedPreferenceIds: ["fast_shipping", "premium_quality", "old_money_style"],
+  });
+  const longNotePatch = validateBuyerProfilePatchRequest({
+    buyerId: "buyer-aylin",
+    personalNote: "x".repeat(521),
+  });
+  const invalidPreferencePatch = validateBuyerProfilePatchRequest({
+    buyerId: "buyer-aylin",
+    personalNote: "Kısa not.",
+    selectedPreferenceIds: ["fast_shipping", "invalid-preference"],
+  });
+  const patchedData = validPatch.ok
+    ? getBuyerProfileApiData({
+        buyerId: validPatch.value.buyerId,
+        editableOverride: validPatch.value,
+        method: "PATCH",
+      })
+    : undefined;
+
+  assert(defaultData.contract.envelope === "success/data/error", "buyer profile envelope contract yanlış");
+  assert(defaultData.contract.endpoint === "/api/buyer/profile", "buyer profile endpoint yanlış");
+  assert(defaultData.contract.method === "GET", "buyer profile method yanlış");
+  assert(defaultData.buyer.id === "buyer-aylin", "buyer profile default buyer yanlış");
+  assert(defaultData.preferences.length >= 8, "buyer profile tercih sayısı yetersiz");
+  assert(defaultData.preferences.some((preference) => preference.id === "old_money_style"), "buyer profile old-money tercihi eksik");
+  assert(defaultData.reviews.length > 0, "buyer profile yorum geçmişi boş olmamalı");
+  assert(
+    defaultData.reviews.every((review) => review.image.src === "/catalog/buyer-product-sprite.png"),
+    "buyer profile yorum görsel sprite contract yanlış",
+  );
+  assert(defaultData.learnedSignals.length > 0, "buyer profile öğrenilen sinyal üretmeli");
+  assert(defaultData.agentPreview.appliedRules.length >= 3, "buyer profile agent preview kuralları eksik");
+  assert(defaultData.summary.reviewCount === defaultData.reviews.length, "buyer profile reviewCount uyumsuz");
+  assert(Boolean(alternateBuyerData), "buyer profile alternate buyer üretilemedi");
+  assert(!missingBuyerData, "olmayan buyer profile undefined dönmeli");
+  assert(validPatch.ok, "buyer profile geçerli PATCH reddedildi");
+
+  if (validPatch.ok) {
+    assert(validPatch.value.budgetBand === "premium", "buyer profile PATCH budget normalize yanlış");
+    assert(validPatch.value.preferredColors.length === 2, "buyer profile PATCH renk unique normalize yanlış");
+    assert(validPatch.value.selectedPreferenceIds.length === 3, "buyer profile PATCH preference normalize yanlış");
+  }
+
+  assert(!longNotePatch.ok && longNotePatch.code === "NOTE_TOO_LONG", "buyer profile uzun not validation yanlış");
+  assert(invalidPreferencePatch.ok, "buyer profile invalid preference body tamamen reddedilmemeli");
+
+  if (invalidPreferencePatch.ok) {
+    assert(
+      invalidPreferencePatch.value.selectedPreferenceIds.length === 1 &&
+        invalidPreferencePatch.value.selectedPreferenceIds[0] === "fast_shipping",
+      "buyer profile invalid preference filtreleme yanlış",
+    );
+  }
+
+  assert(Boolean(patchedData), "buyer profile PATCH data üretilemedi");
+
+  if (patchedData) {
+    assert(patchedData.contract.method === "PATCH", "buyer profile PATCH method contract yanlış");
+    assert(patchedData.summary.preferredColorCount === 2, "buyer profile PATCH color count yanlış");
+    assert(
+      patchedData.agentPreview.appliedRules.some((rule) => rule.includes("premium")),
+      "buyer profile PATCH agent preview bütçe kuralını taşımıyor",
+    );
+  }
 }
 
 async function validateBuyerSmartCartExplanationApiContracts() {
