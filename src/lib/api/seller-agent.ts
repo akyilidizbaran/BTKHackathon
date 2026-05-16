@@ -8,6 +8,10 @@ import {
   type SellerProductApiRow,
   type SellerProductLinkedAction,
 } from "@/lib/api/seller";
+import {
+  createAgentRuntimeSnapshot,
+  type AgentRuntimeSnapshot,
+} from "@/lib/agents/runtime";
 
 export const sellerAgentEndpoint = "/api/seller/agent";
 
@@ -63,6 +67,7 @@ export interface SellerAgentApiData {
     actionsEndpoint: string;
     routeHint: string;
   };
+  runtime: AgentRuntimeSnapshot;
 }
 
 export interface SellerAgentProductFinding {
@@ -259,6 +264,13 @@ export function getSellerAgentApiData(request: SellerAgentRequest): SellerAgentA
       productsEndpoint: getProductsEndpoint(activeFocus),
       routeHint: activeFocus === "all" ? "/seller/actions" : `/seller/actions?focus=${actionsFocus}`,
     },
+    runtime: createAgentRuntimeSnapshot({
+      actorId: normalizedRequest.sellerId,
+      prompt: normalizedRequest.prompt,
+      role: "seller",
+      routeContext: "/seller/agent",
+      surface: "route",
+    }),
     summary: {
       actionCount: actionSuggestions.length,
       focusLabel: getSellerAgentFocusLabel(activeFocus),

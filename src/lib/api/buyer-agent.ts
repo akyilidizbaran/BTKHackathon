@@ -10,6 +10,10 @@ import {
   getBuyerCatalogApiData,
   type BuyerCatalogProductCard,
 } from "@/lib/api/buyer-catalog";
+import {
+  createAgentRuntimeSnapshot,
+  type AgentRuntimeSnapshot,
+} from "@/lib/agents/runtime";
 import type {
   BuyerCartWarning,
   BuyerProductSuggestion,
@@ -50,6 +54,7 @@ export interface BuyerAgentApiData {
   alternatives: BuyerAgentSuggestion[];
   complementarySuggestions: BuyerAgentSuggestion[];
   sourceSmartCart: BuyerSmartCartApiData;
+  runtime: AgentRuntimeSnapshot;
 }
 
 export interface BuyerAgentRecommendation {
@@ -173,6 +178,13 @@ export function getBuyerAgentApiData(request: BuyerSmartCartApiRequest): BuyerAg
     alternatives: mapSuggestions(sourceSmartCart.result.alternatives, productById),
     complementarySuggestions: mapSuggestions(sourceSmartCart.result.complementarySuggestions, productById),
     sourceSmartCart,
+    runtime: createAgentRuntimeSnapshot({
+      actorId: sourceSmartCart.request.buyerId ?? "buyer-aylin",
+      prompt: sourceSmartCart.request.prompt,
+      role: "buyer",
+      routeContext: "/buyer/agent",
+      surface: "route",
+    }),
   };
 }
 

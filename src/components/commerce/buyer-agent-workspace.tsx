@@ -29,6 +29,7 @@ import {
   clearBuyerCartItems,
   readBuyerCartItems,
 } from "@/lib/cart/buyer-cart";
+import { AgentRuntimePanel } from "@/components/commerce/agent-runtime-panel";
 
 gsap.registerPlugin(useGSAP);
 
@@ -312,7 +313,10 @@ export function BuyerAgentWorkspace({ examples, initialData }: BuyerAgentWorkspa
           </div>
         </div>
 
-        <ConversationPanel data={data} isLoading={isLoading} />
+        <div data-agent-reveal className="space-y-5">
+          <ConversationPanel data={data} isLoading={isLoading} />
+          <AgentRuntimePanel runtime={data.runtime} />
+        </div>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">

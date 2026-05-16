@@ -22,6 +22,7 @@ import {
   type SellerAgentExample,
   type SellerAgentProductFinding,
 } from "@/lib/api/seller-agent";
+import { AgentRuntimePanel } from "@/components/commerce/agent-runtime-panel";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -295,6 +296,10 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
                 Yetkileri aç
                 <ArrowRight size={15} weight="bold" />
               </Link>
+            </div>
+
+            <div className="mt-4">
+              <AgentRuntimePanel runtime={data.runtime} variant="dark" />
             </div>
           </div>
         </aside>
