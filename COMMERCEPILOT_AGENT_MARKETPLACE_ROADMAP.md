@@ -8,8 +8,8 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J, 8K, 8L, 8M, 8N, 8O ve 8P tamamlandı.
-  * Sıradaki net adım 8Q: floating Agent mini panelini tüm buyer/seller sayfalarında ortak runtime/history, context-aware uyarı ve kullanıcı kontrolleriyle kurmak.
+  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J, 8K, 8L, 8M, 8N, 8O, 8P ve 8Q tamamlandı.
+  * Sıradaki net adım 8R: end-to-end demo hardening, demo script, kritik buyer/seller akış polish ve sunum hazırlığı.
   * 8K ve sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
@@ -283,16 +283,16 @@
 ## 6) Teknik Yön
 
 * Agent UI:
-  * Önce route tabanlı agent sayfaları kurulacak: `/buyer/agent`, `/seller/agent`.
-  * Sonra sağ alt floating Agent mini paneli eklenecek.
-  * Floating Agent ayrı bir widget runtime'ı değil, route Agent ekranlarının kompakt UI varyantı olacak.
-  * Floating panel tüm buyer/seller sayfalarında görünebilir ve aynı konuşma geçmişini kullanır.
-  * Floating panel agent'ın tüm temel işlerini yapabilir: ürün önerisi, sepet apply, seller analiz, seller before/after mutation preview.
-  * Floating Agent bulunduğu sayfanın context'ini runtime'a taşır.
-  * Proactive uyarı sinyali ses kullanmaz; badge/ünlem/kafa kaldırma gibi görsel mikro etkileşim kullanır.
+  * Route tabanlı agent sayfaları kuruldu: `/buyer/agent`, `/seller/agent`.
+  * 8Q'da sağ alt floating Agent mini paneli eklendi.
+  * Floating Agent ayrı bir widget runtime'ı değil, route Agent ekranlarının kompakt UI varyantıdır.
+  * Floating panel tüm buyer/seller sayfalarında görünür ve `commercepilot.floatingAgent.v1` üzerinde ortak konuşma geçmişi/control state kullanır.
+  * Floating panel agent'ın temel işlerini yapar: ürün önerisi, sepet apply, seller analiz, seller before/after mutation preview, seller apply/rollback.
+  * Floating Agent bulunduğu sayfanın context'ini `createFloatingAgentContext` üzerinden runtime'a taşır.
+  * Proactive uyarı sinyali ses kullanmaz; avatar badge/ünlem ve kısa balon gösterir.
   * Kullanıcı kontrolleri: `Gizle`, `Sessize al`, `Bu sayfada uyarma`.
-  * İlk sürüm web/desktop odaklıdır; mobil bottom sheet davranışı bu fazın kapsamı değildir.
-  * Floating pet eklendiğinde header navigasyonunu veya ürün/sepet akışını gölgelemeyecek.
+  * İlk sürüm web/desktop odaklıdır; 8Q QA'de 390px mobilde yatay taşma olmadığı da doğrulandı.
+  * Floating pet header navigasyonunu veya ürün/sepet akışını gölgelemeyecek şekilde bottom-right overlay olarak çalışır.
 * Agent runtime:
   * 8G'de route tabanlı buyer Agent için geçici typed contract eklendi: `src/lib/api/buyer-agent.ts`.
   * `/api/buyer/agent` öneri üretir; `/api/buyer/agent/apply` onaylanan ürün/adet/strateji payload'unu doğrular.
@@ -301,9 +301,12 @@
   * `/api/agent/runtime` read-only registry olarak 2 prompt template, 9 typed tool contract ve buyer/seller route snapshot döndürür.
   * Buyer/seller Agent API response'ları `runtime: AgentRuntimeSnapshot` taşır; UI bunu `AgentRuntimePanel` ile görünür kılar.
   * 8O'da buyer cart apply davranışı `src/lib/agents/buyer-cart-apply.ts` ve `src/lib/agents/buyer-cart-apply-client.ts` üzerinden ortaklaştırıldı.
-  * `/api/buyer/agent/apply` artık `sharedMutation` contract'ı taşır; route Agent ve ileride floating Agent aynı `applyBuyerAgentCartMutation` client helper'ını kullanır.
+  * `/api/buyer/agent/apply` artık `sharedMutation` contract'ı taşır; route Agent ve floating Agent aynı `applyBuyerAgentCartMutation` client helper'ını kullanır.
   * 8P'de seller listing apply davranışı `src/lib/agents/seller-listing-apply.ts` ve `src/lib/agents/seller-listing-apply-client.ts` üzerinden ortaklaştırıldı.
-  * `/api/seller/agent/apply` artık başlık/açıklama/fiyat/kampanya before-after delta, `sharedMutation` contract'ı ve audit preview taşır; route Agent ve ileride floating Agent aynı `applySellerListingMutation`/`rollbackSellerListingMutation` client helper'larını kullanır.
+  * `/api/seller/agent/apply` artık başlık/açıklama/fiyat/kampanya before-after delta, `sharedMutation` contract'ı ve audit preview taşır; route Agent ve floating Agent aynı `applySellerListingMutation`/`rollbackSellerListingMutation` client helper'larını kullanır.
+  * 8Q'da floating Agent route context/state contract'ı `src/lib/agents/floating-agent.ts` ve `src/lib/agents/floating-agent-client.ts` üzerinden eklendi.
+  * `FloatingAgentPanel`, `/api/buyer/agent`, `/api/buyer/agent/apply`, `/api/seller/agent`, `/api/seller/agent/apply`, `applyBuyerAgentCartMutation`, `applySellerListingMutation` ve `rollbackSellerListingMutation` ile aynı onay/audit sınırlarını kullanır.
+  * Runtime template versiyonları `8Q.1`, handoff `8R`; `/api/agent/runtime` validation bu contract'ı doğrular.
   * Promptlar/tool contract'ları ileride `src/lib/agents/prompts/*` ve `src/lib/agents/tools/*` altına ayrılabilir, fakat mevcut tek kaynak `src/lib/agents/runtime.ts` olmalıdır.
   * İlk aşamada typed internal tool runner kullanılacak.
   * LangChain daha sonra tool orchestration adapter olarak bağlanacak.
@@ -336,9 +339,9 @@
 | 8L | Seller agent page | Satıcı agent sohbet ve analiz yüzeyini kurmak | Tamamlandı: `/seller/agent` typed `/api/seller/agent` contract'ıyla prompt alır; ürün kanıt sırası, sebep analizi, action önerileri, next steps ve onay gerektiren draft preview çalışır; mutation uygulanmaz |
 | 8M | Seller profile + permissions | Mağaza profili ve agent yetki ayarları | Tamamlandı: `/seller/profile` typed `/api/seller/profile` GET/PATCH contract'ıyla mağaza bilgisi, permission mode, capability matrix, bildirim kanalları, risk eşikleri, quiet hours, proactive controls, audit/policy preview ve localStorage taslak persistence çalışır |
 | 8N | Shared agent runtime | Buyer/seller agent prompt ve tool registry ortaklaştırmak | Tamamlandı: `src/lib/agents/runtime.ts`, `/api/agent/runtime`, buyer/seller `runtime` snapshot'ları ve Agent runtime panelleri çalışır |
-| 8O | Shared buyer agent cart mutations | 8G'deki onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştırmak | Tamamlandı: route Agent ve ileride floating panel aynı apply preview, `sharedMutation` contract'ı ve `applyBuyerAgentCartMutation` helper'ı üzerinden cart state'e ekler veya sepeti değiştirir |
+| 8O | Shared buyer agent cart mutations | 8G'deki onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştırmak | Tamamlandı: route Agent ve floating panel aynı apply preview, `sharedMutation` contract'ı ve `applyBuyerAgentCartMutation` helper'ı üzerinden cart state'e ekler veya sepeti değiştirir |
 | 8P | Seller mock mutations + audit | Satıcı agent'ın onaylı listing mutation yapması | Tamamlandı: `/seller/agent` before/after listing preview gösterir; `/api/seller/agent/apply` shared mutation/audit contract'ı döndürür; route UI `applySellerListingMutation` ve `rollbackSellerListingMutation` ile localStorage mock state, audit log ve rollback çalıştırır |
-| 8Q | Floating Agent mini panel + proactive signals | Route agent oturduktan sonra sağ alt Agent deneyimini eklemek | Tüm buyer/seller sayfalarında Codex pet benzeri ikon görünür; panel aynı agent history/runtime ile çalışır; ürün/sepet/seller mutation işleri panel içinde yapılır; context-aware badge/ünlem uyarıları, gizle/sessize al/bu sayfada uyarma kontrolleri çalışır |
+| 8Q | Floating Agent mini panel + proactive signals | Route agent oturduktan sonra sağ alt Agent deneyimini eklemek | Tamamlandı: tüm buyer/seller sayfalarında Codex pet benzeri ikon görünür; panel `8Q.1` runtime, shared history/control state, buyer cart apply, seller listing apply/rollback, context-aware badge/balon ve `Gizle`/`Sessize al`/`Bu sayfada uyarma` kontrolleriyle çalışır |
 | 8R | End-to-end demo hardening | Buyer ve seller demo akışlarını parlatmak | Browser QA, check/build, demo script ve kritik akışlar temiz geçer |
 | 9A | Gemini/provider finalization | OpenAI geçici provider'dan final Gemini/provider yapısına geçmek | Buyer/seller/agent contract'ları Gemini ile generated döner |
 
@@ -391,6 +394,8 @@
 * Konuşma geçmişi route Agent ve floating panel arasında ayrışırsa kullanıcı deneyimi kırılır.
 * Shared runtime registry contract-level metadata taşır; gerçek cart/listing mutation execution ayrı apply route/client akışlarından koparılmamalı.
 * Buyer cart mutation için yeni surface eklenirse `sharedSurfaces`, client helper ve validation birlikte güncellenmeli; panel kendi localStorage yazımını yeniden icat etmemeli.
+* Floating Agent SSR/hydration sırasında `localStorage` okursa Next recoverable hydration issue üretir; store default başlar, mount sonrası senkronlanır.
+* Seller compact currency formatı server/client locale farkı yaratırsa dev overlay issue görünür; satıcı ürün listesinde deterministik `₺90 B` biçimi korunmalı.
 * Seller overview tek uzun sayfa olursa yönetim paneli hissi kaybolur; uyarı kartları endpoint'lere dağıtılmalı.
 * Mock ürün görselleri zayıf kalırsa marketplace hissi düşer; 8E sprite seti gerekirse ürün bazlı görsellerle büyütülmeli.
 * Cart/listing mutation gerçek görünmeli ama kontrolsüz olmamalı; buyer cart onayı, seller before/after preview ve audit zorunlu.
@@ -407,6 +412,7 @@
 * 8N shared Agent runtime contract'ı `src/lib/agents/runtime.ts` içindedir; `/api/agent/runtime`, buyer/seller `runtime` snapshot'ları ve UI runtime paneli aynı prompt/tool registry'den beslenir.
 * 8O buyer cart apply contract'ı `src/lib/agents/buyer-cart-apply.ts` içindedir; client yazım `src/lib/agents/buyer-cart-apply-client.ts` içindeki `applyBuyerAgentCartMutation` ile yapılır.
 * 8P seller listing apply contract'ı `src/lib/agents/seller-listing-apply.ts` içindedir; client yazım ve rollback `src/lib/agents/seller-listing-apply-client.ts` içindeki `applySellerListingMutation` ve `rollbackSellerListingMutation` ile yapılır.
+* 8Q floating Agent context/state contract'ı `src/lib/agents/floating-agent.ts` ve `src/lib/agents/floating-agent-client.ts` içindedir; UI `src/components/commerce/floating-agent-panel.tsx` üzerinden tüm buyer/seller sayfalarına `WorkspaceShell` içinde bağlanır.
 * Buyer agent onay sonrası mevcut sepete ekleyebilir veya kullanıcı seçerse sepeti öneriyle değiştirebilir.
 * Buyer profil serbest metin + chip/checkbox tercihleriyle tutulur.
 * Seller overview ana uyarı kartları: `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski`.

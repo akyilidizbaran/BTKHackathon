@@ -95,7 +95,7 @@ export interface AgentRuntimeSnapshot {
     readOnlyToolCount: number;
   };
   handoff: {
-    nextMilestone: "8O" | "8P" | "8Q";
+    nextMilestone: "8O" | "8P" | "8Q" | "8R";
     summary: string;
   };
 }
@@ -133,7 +133,7 @@ export const agentPromptTemplates: AgentPromptTemplate[] = [
     responseContract: "recommendations + confirmationQuestion + shared apply preview boundary",
     role: "buyer",
     systemInstruction: "Sadece CommercePilot katalog ürünlerinden seç; kullanıcı onayı olmadan sepete ürün ekleme.",
-    version: "8O.1",
+    version: "8Q.1",
   },
   {
     endpoint: sellerAgentEndpoint,
@@ -148,7 +148,7 @@ export const agentPromptTemplates: AgentPromptTemplate[] = [
     responseContract: "productFindings + actionSuggestions + draftPreview + shared apply/audit boundary",
     role: "seller",
     systemInstruction: "Ürün ve action contract'larını kanıt olarak oku; satıcı onayı olmadan mutation uygulama.",
-    version: "8P.1",
+    version: "8Q.1",
   },
 ];
 
@@ -348,7 +348,7 @@ export function createAgentRuntimeSnapshot(input: {
       surface: input.surface ?? "route",
     },
     role: input.role,
-    runtimeId: `${input.role}-${input.surface ?? "route"}-${input.role === "seller" ? "8p" : "8o"}`,
+    runtimeId: `${input.role}-${input.surface ?? "route"}-8q`,
     surface: input.surface ?? "route",
     toolPlan,
   };
@@ -407,13 +407,13 @@ function createGuardrails(role: AgentRole): string[] {
 function createHandoff(role: AgentRole): AgentRuntimeSnapshot["handoff"] {
   if (role === "buyer") {
     return {
-      nextMilestone: "8Q",
-      summary: "Cart apply artık shared contract ve client helper üzerinden çalışır; floating panel aynı apply yolunu kullanmaya hazır.",
+      nextMilestone: "8R",
+      summary: "Floating panel buyer cart apply yolunu kullanır; sıradaki adım end-to-end demo hardening.",
     };
   }
 
   return {
-    nextMilestone: "8Q",
-    summary: "Seller listing apply artık shared contract, audit helper ve rollback sınırıyla çalışır; floating panel aynı yolu kullanmaya hazır.",
+    nextMilestone: "8R",
+    summary: "Floating panel seller listing apply/audit yolunu kullanır; sıradaki adım end-to-end demo hardening.",
   };
 }

@@ -17,6 +17,7 @@ import {
 } from "@phosphor-icons/react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
+import { FloatingAgentPanel } from "@/components/commerce/floating-agent-panel";
 
 gsap.registerPlugin(useGSAP);
 
@@ -203,6 +204,8 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
           <div data-shell-reveal className="commerce-legacy-light">{children}</div>
         </section>
       </div>
+
+      <FloatingAgentPanel role={role} />
     </main>
   );
 }

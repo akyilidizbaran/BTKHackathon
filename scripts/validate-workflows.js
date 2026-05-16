@@ -83,6 +83,13 @@ const {
   getSharedAgentRuntimeApiData,
   sharedAgentRuntimeEndpoint,
 } = require("../src/lib/agents/runtime");
+const {
+  createDefaultFloatingAgentStore,
+  createFloatingAgentContext,
+  floatingAgentStorageKey,
+  floatingAgentUpdatedEvent,
+  normalizeFloatingAgentPathname,
+} = require("../src/lib/agents/floating-agent");
 const { getBuyerCatalogApiData } = require("../src/lib/api/buyer-catalog");
 const { getBuyerSmartCartExplanationApiData } = require("../src/lib/api/buyer-smart-cart-explanations");
 
@@ -117,6 +124,7 @@ async function main() {
   validateSellerAgentApiContracts();
   validateSellerListingMutationApplyContracts();
   validateSharedAgentRuntimeContracts();
+  validateFloatingAgentContracts();
   validateSellerProfileApiContracts();
   validateBuyerProfileApiContracts();
   await validateBuyerSmartCartExplanationApiContracts();
@@ -793,7 +801,7 @@ function validateBuyerAgentApiContracts() {
     data.runtime.toolPlan.some((tool) => tool.id === "buyer.agent.cart.apply.preview" && tool.requiresApproval),
     "buyer agent apply approval tool plan eksik",
   );
-  assert(data.runtime.handoff.nextMilestone === "8Q", "buyer agent runtime handoff 8Q olmalı");
+  assert(data.runtime.handoff.nextMilestone === "8R", "buyer agent runtime handoff 8R olmalı");
   assert(data.applyPreview.toolId === "buyer.agent.cart.apply.preview", "buyer agent apply preview tool id yanlış");
   assert(data.applyPreview.endpoint === "/api/buyer/agent/apply", "buyer agent apply preview endpoint yanlış");
   assert(data.applyPreview.requiresApproval, "buyer agent apply preview onay sınırı eksik");
@@ -867,7 +875,7 @@ function validateSellerAgentApiContracts() {
   assert(defaultData.runtime.promptTemplate.id === "seller-growth-route", "seller agent prompt registry id yanlış");
   assert(defaultData.runtime.toolPlan.some((tool) => tool.id === "seller.products.rank"), "seller agent products tool plan eksik");
   assert(defaultData.runtime.toolPlan.some((tool) => tool.requiresApproval), "seller agent approval tool plan eksik");
-  assert(defaultData.runtime.handoff.nextMilestone === "8Q", "seller agent runtime handoff 8Q olmalı");
+  assert(defaultData.runtime.handoff.nextMilestone === "8R", "seller agent runtime handoff 8R olmalı");
   assert(defaultData.message.safetyNote.includes("Onay"), "seller agent safety note onay sınırı eksik");
   assert(slowMoverData.activeFocus === "slow-movers", "seller agent slow movers focus yanlış");
   assert(
@@ -1020,20 +1028,72 @@ function validateSharedAgentRuntimeContracts() {
   );
   assert(buyerSnapshot.request.routeContext === "/buyer/agent", "buyer runtime routeContext yanlış");
   assert(buyerSnapshot.promptTemplate.id === "buyer-smart-cart-route", "buyer runtime prompt id yanlış");
+  assert(buyerSnapshot.promptTemplate.version === "8Q.1", "buyer runtime prompt version 8Q.1 olmalı");
   assert(buyerSnapshot.toolPlan.some((tool) => tool.id === "buyer.catalog.search"), "buyer runtime catalog tool eksik");
   assert(
     buyerSnapshot.toolPlan.some((tool) => tool.id === "buyer.agent.cart.apply.preview" && tool.requiresApproval),
     "buyer runtime apply approval tool eksik",
   );
-  assert(buyerSnapshot.handoff.nextMilestone === "8Q", "buyer runtime handoff 8Q olmalı");
+  assert(buyerSnapshot.handoff.nextMilestone === "8R", "buyer runtime handoff 8R olmalı");
   assert(sellerSnapshot.request.routeContext === "/seller/agent", "seller runtime routeContext yanlış");
   assert(sellerSnapshot.promptTemplate.id === "seller-growth-route", "seller runtime prompt id yanlış");
+  assert(sellerSnapshot.promptTemplate.version === "8Q.1", "seller runtime prompt version 8Q.1 olmalı");
   assert(sellerSnapshot.toolPlan.some((tool) => tool.id === "seller.profile.permissions"), "seller runtime permission tool eksik");
   assert(
     sellerSnapshot.toolPlan.some((tool) => tool.id === sellerAgentListingApplyToolId && tool.requiresApproval),
     "seller runtime apply approval tool eksik",
   );
-  assert(sellerSnapshot.handoff.nextMilestone === "8Q", "seller runtime handoff 8Q olmalı");
+  assert(sellerSnapshot.handoff.nextMilestone === "8R", "seller runtime handoff 8R olmalı");
+}
+
+function validateFloatingAgentContracts() {
+  const buyerContext = createFloatingAgentContext({
+    pathname: "/buyer/cart",
+    role: "buyer",
+  });
+  const sellerContext = createFloatingAgentContext({
+    pathname: "/seller/products",
+    role: "seller",
+  });
+  const normalizedPath = normalizeFloatingAgentPathname("/seller/products/");
+  const defaultStore = createDefaultFloatingAgentStore();
+
+  assert(floatingAgentStorageKey === "commercepilot.floatingAgent.v1", "floating agent storage key yanlış");
+  assert(floatingAgentUpdatedEvent === "commercepilot:floating-agent-updated", "floating agent event yanlış");
+  assert(normalizedPath === "/seller/products", "floating agent pathname normalize yanlış");
+  assert(defaultStore.version === 1, "floating agent store version yanlış");
+  assert(!defaultStore.control.muted, "floating agent default mute kapalı olmalı");
+  assert(defaultStore.control.disabledRoutes.length === 0, "floating agent default disabled routes boş olmalı");
+  assert(defaultStore.history.length === 0, "floating agent default history boş olmalı");
+  assert(buyerContext.role === "buyer", "floating buyer role yanlış");
+  assert(buyerContext.routeLabel === "Buyer sepet", "floating buyer route label yanlış");
+  assert(buyerContext.runtime.surface === "floating", "floating buyer runtime surface yanlış");
+  assert(buyerContext.runtime.request.routeContext === "/buyer/cart", "floating buyer route context yanlış");
+  assert(buyerContext.runtime.runtimeId === "buyer-floating-8q", "floating buyer runtime id yanlış");
+  assert(buyerContext.runtime.handoff.nextMilestone === "8R", "floating buyer handoff 8R olmalı");
+  assert(
+    buyerContext.capabilities.some((capability) => capability.id === "buyer-cart-apply" && capability.requiresApproval),
+    "floating buyer cart apply capability eksik",
+  );
+  assert(
+    buyerContext.controls.some((control) => control.id === "mute") &&
+      buyerContext.controls.some((control) => control.id === "snooze-page"),
+    "floating buyer controls eksik",
+  );
+  assert(sellerContext.role === "seller", "floating seller role yanlış");
+  assert(sellerContext.routeLabel === "Seller ürünler", "floating seller route label yanlış");
+  assert(sellerContext.runtime.surface === "floating", "floating seller runtime surface yanlış");
+  assert(sellerContext.runtime.request.routeContext === "/seller/products", "floating seller route context yanlış");
+  assert(sellerContext.runtime.runtimeId === "seller-floating-8q", "floating seller runtime id yanlış");
+  assert(sellerContext.runtime.handoff.nextMilestone === "8R", "floating seller handoff 8R olmalı");
+  assert(
+    sellerContext.capabilities.some((capability) => capability.id === "seller-listing-apply" && capability.requiresApproval),
+    "floating seller listing apply capability eksik",
+  );
+  assert(
+    sellerContext.sharedMutationNotes.some((note) => note.includes("audit")),
+    "floating seller audit shared mutation notu eksik",
+  );
 }
 
 function validateSellerProfileApiContracts() {

@@ -639,12 +639,18 @@ function sortSellerProducts(first: SellerProductApiRow, second: SellerProductApi
 }
 
 function formatTry(value: number): string {
-  return new Intl.NumberFormat("tr-TR", {
-    currency: "TRY",
-    maximumFractionDigits: 0,
-    notation: "compact",
-    style: "currency",
-  }).format(value);
+  const absoluteValue = Math.abs(value);
+  const sign = value < 0 ? "-" : "";
+
+  if (absoluteValue >= 1_000_000) {
+    return `${sign}₺${formatCompactMetric(absoluteValue / 1_000_000)} Mn`;
+  }
+
+  if (absoluteValue >= 1_000) {
+    return `${sign}₺${formatCompactMetric(absoluteValue / 1_000)} B`;
+  }
+
+  return `${sign}₺${formatCompactMetric(absoluteValue)}`;
 }
 
 function formatTryFull(value: number): string {
@@ -652,5 +658,11 @@ function formatTryFull(value: number): string {
     currency: "TRY",
     maximumFractionDigits: 0,
     style: "currency",
+  }).format(value);
+}
+
+function formatCompactMetric(value: number): string {
+  return new Intl.NumberFormat("tr-TR", {
+    maximumFractionDigits: value >= 10 ? 0 : 1,
   }).format(value);
 }
