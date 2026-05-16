@@ -1,9 +1,14 @@
 import { buyerSmartCartExamples, getBuyerSmartCartApiData } from "@/lib/api/buyer";
+import {
+  getBuyerCatalogApiData,
+  type BuyerCatalogImage,
+} from "@/lib/api/buyer-catalog";
 import { analyzeProductHealthWorkflow, generateSellerActionsWorkflow } from "@/lib/workflows";
 import type {
   BuyerSellerSignalCandidate,
   ProductHealthWorkflowResult,
   SellerActionOwner,
+  SellerActionType,
   SellerGrowthAction,
 } from "@/lib/workflows";
 import { getProductById, getProductBySlug, getProductDetail, getSellerOverview } from "@/lib/data";
@@ -54,8 +59,10 @@ export interface SellerOverviewApiData {
     attentionActionCount: number;
     reviewAttentionCount: number;
   };
+  alertCards: SellerOverviewAlertCard[];
   topActions: SellerGrowthAction[];
   operationSignals: SellerOperationSignal[];
+  priorityQueue: SellerOverviewPriorityItem[];
 }
 
 export interface SellerOperationSignal {
@@ -65,6 +72,50 @@ export interface SellerOperationSignal {
   value: string;
   helper: string;
   tone: "good" | "calm" | "warning";
+}
+
+export type SellerOverviewAlertId =
+  | "negative_reviews"
+  | "return_risk"
+  | "slow_movers"
+  | "stock_risk";
+
+export interface SellerOverviewAlertCard {
+  id: SellerOverviewAlertId;
+  title: string;
+  value: string;
+  summary: string;
+  href: string;
+  apiEndpoint: string;
+  ownerLabel: SellerActionOwner;
+  tone: "calm" | "danger" | "warning";
+  productCount: number;
+  actionCount: number;
+  primaryProduct?: SellerProductApiRow;
+  primaryAction?: {
+    id: string;
+    title: string;
+    href: string;
+    priorityScore: number;
+    timeHorizonLabel: string;
+  };
+  evidence: SellerOverviewAlertEvidence[];
+}
+
+export interface SellerOverviewAlertEvidence {
+  label: string;
+  value: string;
+  helper: string;
+}
+
+export interface SellerOverviewPriorityItem {
+  id: string;
+  title: string;
+  href: string;
+  ownerLabel: SellerActionOwner;
+  priorityScore: number;
+  helper: string;
+  tone: "calm" | "danger" | "warning";
 }
 
 export interface SellerActionsApiData {
@@ -151,6 +202,7 @@ export interface SellerProductApiRow {
   ratingAverage: number;
   reviewCount: number;
   demoStoryFlags: string[];
+  image: BuyerCatalogImage;
   href: string;
   apiHealthEndpoint: string;
 }
@@ -248,9 +300,11 @@ export function getSellerOverviewApiData(sellerId = demoSellerId): SellerOvervie
     return undefined;
   }
 
-  const lowStockProducts = overview.products.filter((product) => getAvailableStock(product) <= product.stock.reorderPoint);
+  const products = overview.products.map(createSellerProductRow);
+  const lowStockProducts = products.filter((product) => product.stockStatus === "risk");
   const attentionActions = workflow.actions.filter((action) => action.timeHorizon === "today");
   const reviewAttentionCount = workflow.actions.filter((action) => action.type === "review_attention").length;
+  const alertCards = createSellerOverviewAlertCards(products, workflow.actions);
 
   return {
     contract: createContractMeta(sellerId, workflow.generatedAt),
@@ -263,6 +317,7 @@ export function getSellerOverviewApiData(sellerId = demoSellerId): SellerOvervie
       attentionActionCount: attentionActions.length,
       reviewAttentionCount,
     },
+    alertCards,
     topActions: workflow.actions,
     operationSignals: workflow.actions.slice(0, 3).map((action) => ({
       id: action.id,
@@ -272,6 +327,7 @@ export function getSellerOverviewApiData(sellerId = demoSellerId): SellerOvervie
       helper: action.metricHighlights[0]?.label ?? action.timeHorizonLabel,
       tone: action.urgency === "critical" ? "warning" : action.urgency === "high" ? "calm" : "good",
     })),
+    priorityQueue: createSellerOverviewPriorityQueue(alertCards, workflow.actions),
   };
 }
 
@@ -534,8 +590,251 @@ function createSellerProductRow(product: Product): SellerProductApiRow {
     ratingAverage: product.metrics.ratingAverage,
     reviewCount: product.metrics.reviewCount,
     demoStoryFlags: product.demoStoryFlags,
+    image: getSellerProductImage(product.id, product.name),
     href: `/seller/products/${product.slug}`,
     apiHealthEndpoint: `/api/seller/products/${product.id}/health`,
+  };
+}
+
+function createSellerOverviewAlertCards(
+  products: SellerProductApiRow[],
+  actions: SellerGrowthAction[],
+): SellerOverviewAlertCard[] {
+  const slowMoverProducts = products
+    .filter((product) => product.demoStoryFlags.includes("slow_mover") || (product.healthScore < 66 && product.orders30d < 16))
+    .sort((first, second) => first.healthScore - second.healthScore);
+  const negativeReviewProducts = products
+    .filter((product) =>
+      product.demoStoryFlags.includes("negative_review_theme") ||
+        actions.some((action) => action.type === "review_attention" && action.productIds.includes(product.id)),
+    )
+    .sort((first, second) => second.reviewCount - first.reviewCount);
+  const returnRiskProducts = products
+    .filter((product) =>
+      product.demoStoryFlags.includes("return_risk") ||
+        actions.some((action) => action.type === "reduce_return_risk" && action.productIds.includes(product.id)),
+    )
+    .sort((first, second) => first.healthScore - second.healthScore);
+  const stockRiskProducts = products
+    .filter((product) => product.stockStatus === "risk" || product.availableStock <= product.reorderPoint)
+    .sort((first, second) => first.availableStock - second.availableStock);
+
+  return [
+    {
+      id: "slow_movers",
+      title: "Satılmayan ürünler",
+      value: String(slowMoverProducts.length),
+      summary: "Görünen ama siparişe dönmeyen ürünleri aksiyon sırasına al.",
+      href: "/seller/actions?focus=slow-movers",
+      apiEndpoint: `${sellerActionsEndpoint}?focus=slow-movers`,
+      ownerLabel: "pazarlama",
+      tone: "warning",
+      productCount: slowMoverProducts.length,
+      actionCount: countActions(actions, ["fix_listing", "create_bundle", "promote_winner"]),
+      primaryProduct: slowMoverProducts[0],
+      primaryAction: createPrimaryAction(actions, ["fix_listing", "create_bundle", "promote_winner"]),
+      evidence: [
+        {
+          label: "Ortalama sağlık",
+          value: `${averageHealthScore(slowMoverProducts)}/100`,
+          helper: "Düşük skor satış dönüşümünü baskılar.",
+        },
+        {
+          label: "Toplam gelir",
+          value: formatTryCompact(sumValues(slowMoverProducts.map((product) => product.revenue30d))),
+          helper: "Hâlâ kurtarılabilir ürün hacmi.",
+        },
+      ],
+    },
+    {
+      id: "negative_reviews",
+      title: "Negatif yorumlar",
+      value: String(negativeReviewProducts.length),
+      summary: "Tekrar eden itiraz temalarını destek ve PDP metnine çevir.",
+      href: "/seller/actions?focus=negative-reviews",
+      apiEndpoint: `${sellerActionsEndpoint}?focus=negative-reviews`,
+      ownerLabel: "destek",
+      tone: "danger",
+      productCount: negativeReviewProducts.length,
+      actionCount: countActions(actions, ["review_attention"]),
+      primaryProduct: negativeReviewProducts[0],
+      primaryAction: createPrimaryAction(actions, ["review_attention"]),
+      evidence: [
+        {
+          label: "Yorum hacmi",
+          value: String(sumValues(negativeReviewProducts.map((product) => product.reviewCount))),
+          helper: "Alıcı itirazları ürün sayfasına taşınmalı.",
+        },
+        {
+          label: "Ortalama puan",
+          value: formatDecimal(averageValues(negativeReviewProducts.map((product) => product.ratingAverage))),
+          helper: "Düşen puan yeni siparişi yavaşlatır.",
+        },
+      ],
+    },
+    {
+      id: "return_risk",
+      title: "İade riski",
+      value: String(returnRiskProducts.length),
+      summary: "Uyumluluk, kalite ve beklenti farkını satın alma öncesinde kapat.",
+      href: "/seller/products?focus=return-risk",
+      apiEndpoint: "/api/seller/products?focus=return-risk",
+      ownerLabel: "operasyon",
+      tone: "warning",
+      productCount: returnRiskProducts.length,
+      actionCount: countActions(actions, ["reduce_return_risk", "protect_margin"]),
+      primaryProduct: returnRiskProducts[0],
+      primaryAction: createPrimaryAction(actions, ["reduce_return_risk", "protect_margin"]),
+      evidence: [
+        {
+          label: "Riskli ürün",
+          value: String(returnRiskProducts.length),
+          helper: "İade riski taşıyan ürün satırları.",
+        },
+        {
+          label: "Gelir etkisi",
+          value: formatTryCompact(sumValues(returnRiskProducts.map((product) => product.revenue30d))),
+          helper: "İade maliyeti en yüksek alan.",
+        },
+      ],
+    },
+    {
+      id: "stock_risk",
+      title: "Stok riski",
+      value: String(stockRiskProducts.length),
+      summary: "Reorder point altındaki ürünleri vitrin baskısı büyümeden kapat.",
+      href: "/seller/products?focus=stock-risk",
+      apiEndpoint: "/api/seller/products?focus=stock-risk",
+      ownerLabel: "stok",
+      tone: "danger",
+      productCount: stockRiskProducts.length,
+      actionCount: countActions(actions, ["restock", "pause_promotion"]),
+      primaryProduct: stockRiskProducts[0],
+      primaryAction: createPrimaryAction(actions, ["restock", "pause_promotion"]),
+      evidence: [
+        {
+          label: "Kritik stok",
+          value: `${stockRiskProducts[0]?.availableStock ?? 0} adet`,
+          helper: "En düşük kullanılabilir stok.",
+        },
+        {
+          label: "Reorder eşiği",
+          value: `${stockRiskProducts[0]?.reorderPoint ?? 0} adet`,
+          helper: "Altına düşen ürünler vitrin riski yaratır.",
+        },
+      ],
+    },
+  ];
+}
+
+function createSellerOverviewPriorityQueue(
+  alertCards: SellerOverviewAlertCard[],
+  actions: SellerGrowthAction[],
+): SellerOverviewPriorityItem[] {
+  const alertItems = alertCards.map((card) => ({
+    helper: card.primaryProduct?.name ?? card.summary,
+    href: card.primaryAction?.href ?? card.href,
+    id: card.id,
+    ownerLabel: card.ownerLabel,
+    priorityScore: card.primaryAction?.priorityScore ?? deriveAlertPriority(card),
+    title: card.primaryAction?.title ?? card.title,
+    tone: card.tone,
+  }));
+  const actionItems = actions.slice(0, 4).map((action) => {
+    const tone: SellerOverviewPriorityItem["tone"] =
+      action.urgency === "critical" ? "danger" : action.urgency === "high" ? "warning" : "calm";
+
+    return {
+      helper: action.timeHorizonLabel,
+      href: `/seller/actions/${action.id}`,
+      id: action.id,
+      ownerLabel: action.todayChecklist[0]?.owner ?? "operasyon",
+      priorityScore: action.priorityScore,
+      title: action.title,
+      tone,
+    };
+  });
+
+  return [...alertItems, ...actionItems]
+    .sort((first, second) => second.priorityScore - first.priorityScore)
+    .slice(0, 4);
+}
+
+function createPrimaryAction(
+  actions: SellerGrowthAction[],
+  types: SellerActionType[],
+): SellerOverviewAlertCard["primaryAction"] | undefined {
+  const action = actions.find((candidate) => types.includes(candidate.type));
+
+  if (!action) {
+    return undefined;
+  }
+
+  return {
+    href: `/seller/actions/${action.id}`,
+    id: action.id,
+    priorityScore: action.priorityScore,
+    timeHorizonLabel: action.timeHorizonLabel,
+    title: action.title,
+  };
+}
+
+function countActions(actions: SellerGrowthAction[], types: SellerActionType[]): number {
+  return actions.filter((action) => types.includes(action.type)).length;
+}
+
+function deriveAlertPriority(card: SellerOverviewAlertCard): number {
+  const toneScore = card.tone === "danger" ? 82 : card.tone === "warning" ? 74 : 64;
+
+  return Math.min(94, toneScore + card.productCount * 2 + card.actionCount * 3);
+}
+
+function averageHealthScore(products: SellerProductApiRow[]): number {
+  return Math.round(averageValues(products.map((product) => product.healthScore)));
+}
+
+function averageValues(values: number[]): number {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function sumValues(values: number[]): number {
+  return values.reduce((sum, value) => sum + value, 0);
+}
+
+function formatDecimal(value: number): string {
+  return new Intl.NumberFormat("tr-TR", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 1,
+  }).format(value);
+}
+
+function formatTryCompact(value: number): string {
+  return new Intl.NumberFormat("tr-TR", {
+    compactDisplay: "short",
+    currency: "TRY",
+    maximumFractionDigits: 1,
+    notation: "compact",
+    style: "currency",
+  }).format(value);
+}
+
+let productImageById: Map<string, BuyerCatalogImage> | undefined;
+
+function getSellerProductImage(productId: string, fallbackName: string): BuyerCatalogImage {
+  if (!productImageById) {
+    productImageById = new Map(
+      getBuyerCatalogApiData().products.map((product) => [product.id, product.image]),
+    );
+  }
+
+  return productImageById.get(productId) ?? {
+    alt: fallbackName,
+    position: "0% 0%",
+    src: "/catalog/buyer-product-sprite.png",
   };
 }
 

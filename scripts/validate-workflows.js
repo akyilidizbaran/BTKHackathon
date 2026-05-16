@@ -349,6 +349,26 @@ function validateSellerApiContracts() {
     assert(overview.stats.analyzedProductCount === products.length, "overview analyzedProductCount yanlış");
     assert(overview.topActions.length === 5, "overview top actions top 5 dönmeli");
     assert(overview.operationSignals.length > 0, "overview operation signals boş");
+    assert(overview.alertCards.length === 4, "overview alert card sayısı 4 olmalı");
+    assert(
+      ["negative_reviews", "return_risk", "slow_movers", "stock_risk"].every((id) =>
+        overview.alertCards.some((card) => card.id === id),
+      ),
+      "overview alert card id coverage eksik",
+    );
+    assert(overview.priorityQueue.length === 4, "overview priority queue top 4 dönmeli");
+    assert(
+      overview.alertCards.every((card) => card.href.startsWith("/seller/") && card.apiEndpoint.startsWith("/api/seller/")),
+      "overview alert route/api endpoint contract yanlış",
+    );
+    assert(
+      overview.alertCards.every((card) => card.evidence.length === 2),
+      "overview alert evidence çift metrik dönmeli",
+    );
+    assert(
+      overview.alertCards.some((card) => card.primaryProduct?.image.src === "/catalog/buyer-product-sprite.png"),
+      "overview alert ürün görsel sprite contract eksik",
+    );
   }
 
   if (actions) {
@@ -398,6 +418,10 @@ function validateSellerApiContracts() {
     assert(productContract.products.length === products.length, "products API ürün sayısı yanlış");
     assert(productContract.summary.averageHealthScore > 0, "products API ortalama sağlık skoru eksik");
     assert(productContract.products.every((product) => product.href.startsWith("/seller/products/")), "products API href contract yanlış");
+    assert(
+      productContract.products.every((product) => product.image.src === "/catalog/buyer-product-sprite.png"),
+      "products API görsel sprite contract yanlış",
+    );
     assert(
       productContract.products.every((product) => product.apiHealthEndpoint.startsWith("/api/seller/products/")),
       "products API health endpoint contract yanlış",
