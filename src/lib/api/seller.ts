@@ -7,6 +7,7 @@ import { analyzeProductHealthWorkflow, generateSellerActionsWorkflow } from "@/l
 import type {
   BuyerSellerSignalCandidate,
   ProductHealthWorkflowResult,
+  SellerActionCategory,
   SellerActionOwner,
   SellerActionType,
   SellerGrowthAction,
@@ -118,12 +119,76 @@ export interface SellerOverviewPriorityItem {
   tone: "calm" | "danger" | "warning";
 }
 
+export interface SellerActionsApiContractMeta extends SellerApiContractMeta {
+  source: "mock-workflow";
+  endpoint: string;
+  method: "GET";
+  activeFocus: SellerActionsFocusKey;
+}
+
 export interface SellerActionsApiData {
-  contract: SellerApiContractMeta;
+  contract: SellerActionsApiContractMeta;
   seller: SellerSummaryApiData;
+  activeFocus: SellerActionsFocusKey;
   actions: SellerGrowthAction[];
+  actionCards: SellerActionListItem[];
+  segments: SellerActionsSegment[];
+  categoryRoutes: SellerActionsSegment[];
   analyzedProductCount: number;
   actionTypeCoverage: string[];
+  summary: {
+    actionCount: number;
+    visibleActionCount: number;
+    categoryCount: number;
+    affectedProductCount: number;
+    criticalActionCount: number;
+    topPriorityScore: number;
+  };
+}
+
+export type SellerActionsFocusKey =
+  | "all"
+  | "inventory"
+  | "operations"
+  | "content"
+  | "customer-voice"
+  | "returns"
+  | "campaign"
+  | "growth"
+  | "profitability"
+  | "stock-risk"
+  | "negative-reviews"
+  | "return-risk"
+  | "slow-movers";
+
+export interface SellerActionsSegment {
+  id: SellerActionsFocusKey;
+  label: string;
+  helper: string;
+  actionCount: number;
+  productCount: number;
+  href: string;
+  apiEndpoint: string;
+  kind: "all" | "category" | "risk";
+  tone: "calm" | "danger" | "warning";
+  ownerLabel: SellerActionOwner;
+}
+
+export interface SellerActionListItem {
+  id: string;
+  href: string;
+  action: SellerGrowthAction;
+  affectedProducts: SellerProductApiRow[];
+  primaryProduct?: SellerProductApiRow;
+  focusTags: SellerActionsFocusKey[];
+  evidence: SellerActionListEvidence[];
+}
+
+export interface SellerActionListEvidence {
+  label: string;
+  value: string;
+  helper: string;
+  tone: "good" | "calm" | "warning";
 }
 
 export interface SellerActionDetailApiData {
@@ -373,6 +438,180 @@ const sellerProductsFocusAliases: Record<string, SellerProductsFocusKey> = {
   stock_risk: "stock-risk",
 };
 
+const sellerActionCategoryFocusMap: Record<SellerActionCategory, SellerActionsFocusKey> = {
+  campaign: "campaign",
+  content: "content",
+  customer_voice: "customer-voice",
+  growth: "growth",
+  inventory: "inventory",
+  operations: "operations",
+  profitability: "profitability",
+  returns: "returns",
+};
+
+const sellerActionFocusCategoryMap: Partial<Record<SellerActionsFocusKey, SellerActionCategory>> = {
+  campaign: "campaign",
+  content: "content",
+  "customer-voice": "customer_voice",
+  growth: "growth",
+  inventory: "inventory",
+  operations: "operations",
+  profitability: "profitability",
+  returns: "returns",
+};
+
+const sellerActionsFocusKeys = new Set<SellerActionsFocusKey>([
+  "all",
+  "inventory",
+  "operations",
+  "content",
+  "customer-voice",
+  "returns",
+  "campaign",
+  "growth",
+  "profitability",
+  "stock-risk",
+  "negative-reviews",
+  "return-risk",
+  "slow-movers",
+]);
+
+const sellerActionsFocusAliases: Record<string, SellerActionsFocusKey> = {
+  customer_voice: "customer-voice",
+  "customer-voices": "customer-voice",
+  "musteri-sesi": "customer-voice",
+  negative_reviews: "negative-reviews",
+  "negative-review": "negative-reviews",
+  "negatif-yorum": "negative-reviews",
+  "negatif-yorumlar": "negative-reviews",
+  return_risk: "return-risk",
+  "return-risk-products": "return-risk",
+  "iade-riski": "return-risk",
+  slow_mover: "slow-movers",
+  slow_movers: "slow-movers",
+  "slow-mover": "slow-movers",
+  "satilmayan": "slow-movers",
+  "satilmayan-urunler": "slow-movers",
+  stock_risk: "stock-risk",
+  "stok-riski": "stock-risk",
+  review_attention: "negative-reviews",
+  reduce_return_risk: "return-risk",
+  restock: "stock-risk",
+};
+
+const sellerActionFocusOrder: SellerActionsFocusKey[] = [
+  "all",
+  "stock-risk",
+  "negative-reviews",
+  "return-risk",
+  "slow-movers",
+  "inventory",
+  "customer-voice",
+  "returns",
+  "content",
+  "campaign",
+  "growth",
+  "operations",
+  "profitability",
+];
+
+const sellerActionSegmentMeta: Record<
+  SellerActionsFocusKey,
+  { label: string; helper: string; kind: SellerActionsSegment["kind"]; ownerLabel: SellerActionOwner; tone: SellerActionsSegment["tone"] }
+> = {
+  all: {
+    helper: "Tüm workflow aksiyonları",
+    kind: "all",
+    label: "Tümü",
+    ownerLabel: "operasyon",
+    tone: "calm",
+  },
+  campaign: {
+    helper: "Bundle ve kampanya kurguları",
+    kind: "category",
+    label: "Kampanya",
+    ownerLabel: "pazarlama",
+    tone: "calm",
+  },
+  content: {
+    helper: "Listeleme ve PDP düzeni",
+    kind: "category",
+    label: "İçerik",
+    ownerLabel: "icerik",
+    tone: "warning",
+  },
+  "customer-voice": {
+    helper: "Yorum ve destek itirazları",
+    kind: "category",
+    label: "Müşteri sesi",
+    ownerLabel: "destek",
+    tone: "danger",
+  },
+  growth: {
+    helper: "Kazanan ürünü büyüt",
+    kind: "category",
+    label: "Büyüme",
+    ownerLabel: "pazarlama",
+    tone: "calm",
+  },
+  inventory: {
+    helper: "Stok ve tedarik riski",
+    kind: "category",
+    label: "Stok",
+    ownerLabel: "stok",
+    tone: "danger",
+  },
+  "negative-reviews": {
+    helper: "Negatif yorum aksiyonları",
+    kind: "risk",
+    label: "Negatif yorum",
+    ownerLabel: "destek",
+    tone: "danger",
+  },
+  operations: {
+    helper: "Operasyon baskısı",
+    kind: "category",
+    label: "Operasyon",
+    ownerLabel: "operasyon",
+    tone: "warning",
+  },
+  profitability: {
+    helper: "Marj ve finans koruması",
+    kind: "category",
+    label: "Kârlılık",
+    ownerLabel: "finans",
+    tone: "warning",
+  },
+  "return-risk": {
+    helper: "İade riski aksiyonları",
+    kind: "risk",
+    label: "İade riski",
+    ownerLabel: "operasyon",
+    tone: "warning",
+  },
+  returns: {
+    helper: "İade ve beklenti yönetimi",
+    kind: "category",
+    label: "İade",
+    ownerLabel: "operasyon",
+    tone: "warning",
+  },
+  "slow-movers": {
+    helper: "Satış hızı düşük aksiyonlar",
+    kind: "risk",
+    label: "Satılmayan",
+    ownerLabel: "pazarlama",
+    tone: "warning",
+  },
+  "stock-risk": {
+    helper: "Stok açığı ve vitrin koruması",
+    kind: "risk",
+    label: "Stok riski",
+    ownerLabel: "stok",
+    tone: "danger",
+  },
+};
+
 const productCategoryLabels: Record<ProductCategory, string> = {
   aksesuar: "Aksesuar",
   "elektronik-aksesuar": "Elektronik",
@@ -434,6 +673,33 @@ export function normalizeSellerProductsFocus(
     : "all";
 }
 
+export function resolveSellerActionsFocus(
+  value?: string | string[] | null,
+): SellerActionsFocusKey | undefined {
+  const rawValue = Array.isArray(value) ? value[0] : value;
+  const normalizedValue = rawValue?.trim().toLowerCase();
+
+  if (!normalizedValue) {
+    return undefined;
+  }
+
+  const hyphenatedValue = normalizedValue.replaceAll("_", "-");
+  const aliasedValue =
+    sellerActionsFocusAliases[normalizedValue] ??
+    sellerActionsFocusAliases[hyphenatedValue] ??
+    hyphenatedValue;
+
+  return sellerActionsFocusKeys.has(aliasedValue as SellerActionsFocusKey)
+    ? (aliasedValue as SellerActionsFocusKey)
+    : undefined;
+}
+
+export function normalizeSellerActionsFocus(
+  value?: string | string[] | null,
+): SellerActionsFocusKey {
+  return resolveSellerActionsFocus(value) ?? "all";
+}
+
 export function getSellerOverviewApiData(sellerId = demoSellerId): SellerOverviewApiData | undefined {
   const overview = getSellerOverview(sellerId);
   const workflow = generateSellerActionsWorkflow(sellerId);
@@ -473,7 +739,10 @@ export function getSellerOverviewApiData(sellerId = demoSellerId): SellerOvervie
   };
 }
 
-export function getSellerActionsApiData(sellerId = demoSellerId): SellerActionsApiData | undefined {
+export function getSellerActionsApiData(
+  sellerId = demoSellerId,
+  options: { focus?: string | string[] | null } = {},
+): SellerActionsApiData | undefined {
   const overview = getSellerOverview(sellerId);
   const workflow = generateSellerActionsWorkflow(sellerId);
 
@@ -481,12 +750,43 @@ export function getSellerActionsApiData(sellerId = demoSellerId): SellerActionsA
     return undefined;
   }
 
+  const activeFocus = normalizeSellerActionsFocus(options.focus);
+  const allActionCards = workflow.actions.map((action) =>
+    createSellerActionListItem(action, overview.products, workflow.actions),
+  );
+  const actionCards = filterSellerActionCardsByFocus(allActionCards, activeFocus);
+  const segments = createSellerActionSegments(allActionCards);
+  const affectedProductCount = new Set(allActionCards.flatMap((card) => card.affectedProducts.map((product) => product.id))).size;
+  const categoryCount = new Set(allActionCards.map((card) => card.action.category)).size;
+  const topPriorityScore = allActionCards.reduce(
+    (maxPriority, card) => Math.max(maxPriority, card.action.priorityScore),
+    0,
+  );
+
   return {
-    contract: createContractMeta(sellerId, workflow.generatedAt),
+    contract: {
+      ...createContractMeta(sellerId, workflow.generatedAt, "mock-workflow"),
+      activeFocus,
+      endpoint: activeFocus === "all" ? sellerActionsEndpoint : `${sellerActionsEndpoint}?focus=${activeFocus}`,
+      method: "GET",
+      source: "mock-workflow",
+    },
     seller: createSellerSummary(overview.seller),
-    actions: workflow.actions,
+    activeFocus,
+    actions: actionCards.map((card) => card.action),
+    actionCards,
+    segments,
+    categoryRoutes: segments.filter((segment) => segment.kind === "category"),
     analyzedProductCount: workflow.analyzedProductCount,
     actionTypeCoverage: Array.from(new Set(workflow.actions.map((action) => action.type))),
+    summary: {
+      actionCount: allActionCards.length,
+      affectedProductCount,
+      categoryCount,
+      criticalActionCount: allActionCards.filter((card) => card.action.urgency === "critical").length,
+      topPriorityScore,
+      visibleActionCount: actionCards.length,
+    },
   };
 }
 
@@ -712,6 +1012,136 @@ export function getSellerBuyerSignalsApiData(sellerId = demoSellerId): SellerBuy
     })),
     signals,
   };
+}
+
+function createSellerActionListItem(
+  action: SellerGrowthAction,
+  sellerProducts: Product[],
+  allActions: SellerGrowthAction[],
+): SellerActionListItem {
+  const productById = new Map(sellerProducts.map((product) => [product.id, product]));
+  const affectedProducts = action.productIds
+    .map((productId) => productById.get(productId))
+    .filter((product): product is Product => Boolean(product))
+    .map((product) => createSellerProductRow(product, allActions));
+
+  return {
+    action,
+    affectedProducts,
+    evidence: createSellerActionListEvidence(action, affectedProducts),
+    focusTags: createSellerActionFocusTags(action),
+    href: `/seller/actions/${action.id}`,
+    id: action.id,
+    primaryProduct: affectedProducts[0],
+  };
+}
+
+function createSellerActionFocusTags(action: SellerGrowthAction): SellerActionsFocusKey[] {
+  const tags = new Set<SellerActionsFocusKey>(["all", sellerActionCategoryFocusMap[action.category]]);
+
+  if (action.type === "restock" || action.type === "pause_promotion") {
+    tags.add("stock-risk");
+  }
+
+  if (action.type === "review_attention") {
+    tags.add("negative-reviews");
+  }
+
+  if (action.type === "reduce_return_risk" || action.type === "protect_margin") {
+    tags.add("return-risk");
+  }
+
+  if (action.type === "fix_listing" || action.type === "create_bundle" || action.type === "promote_winner") {
+    tags.add("slow-movers");
+  }
+
+  return Array.from(tags);
+}
+
+function createSellerActionListEvidence(
+  action: SellerGrowthAction,
+  affectedProducts: SellerProductApiRow[],
+): SellerActionListEvidence[] {
+  const primaryProduct = affectedProducts[0];
+  const productRiskCount = affectedProducts.filter((product) => product.focusTags.includes("at-risk")).length;
+  const firstMetric = action.metricHighlights[0];
+  const secondMetric = action.metricHighlights[1];
+
+  return [
+    {
+      helper: firstMetric?.helperText ?? action.timeHorizonLabel,
+      label: firstMetric?.label ?? "Öncelik",
+      tone: action.urgency === "critical" ? "warning" : "calm",
+      value: firstMetric?.value ?? `${action.priorityScore}/100`,
+    },
+    {
+      helper: secondMetric?.helperText ?? `${affectedProducts.length} ürün aksiyona bağlı`,
+      label: secondMetric?.label ?? "Ürün",
+      tone: productRiskCount > 0 ? "warning" : "calm",
+      value: secondMetric?.value ?? String(affectedProducts.length),
+    },
+    {
+      helper: primaryProduct?.healthLabel ?? "Ürün kanıtı yok",
+      label: "Ürün sağlığı",
+      tone: primaryProduct && primaryProduct.healthScore < 70 ? "warning" : "good",
+      value: primaryProduct ? `${primaryProduct.healthScore}/100` : "Yok",
+    },
+  ];
+}
+
+function filterSellerActionCardsByFocus(
+  actionCards: SellerActionListItem[],
+  focus: SellerActionsFocusKey,
+): SellerActionListItem[] {
+  if (focus === "all") {
+    return actionCards;
+  }
+
+  const category = sellerActionFocusCategoryMap[focus];
+
+  if (category) {
+    return actionCards.filter((card) => card.action.category === category);
+  }
+
+  return actionCards.filter((card) => card.focusTags.includes(focus));
+}
+
+function createSellerActionSegments(actionCards: SellerActionListItem[]): SellerActionsSegment[] {
+  return sellerActionFocusOrder
+    .map((id) => {
+      const meta = sellerActionSegmentMeta[id];
+      const matchingCards = filterSellerActionCardsByFocus(actionCards, id);
+      const productCount = new Set(matchingCards.flatMap((card) => card.affectedProducts.map((product) => product.id))).size;
+
+      return {
+        actionCount: matchingCards.length,
+        apiEndpoint: id === "all" ? sellerActionsEndpoint : `${sellerActionsEndpoint}?focus=${id}`,
+        helper: meta.helper,
+        href: getSellerActionFocusHref(id, meta.kind),
+        id,
+        kind: meta.kind,
+        label: meta.label,
+        ownerLabel: meta.ownerLabel,
+        productCount,
+        tone: meta.tone,
+      };
+    })
+    .filter((segment) => segment.kind === "all" || segment.actionCount > 0);
+}
+
+function getSellerActionFocusHref(
+  focus: SellerActionsFocusKey,
+  kind: SellerActionsSegment["kind"] = sellerActionSegmentMeta[focus].kind,
+): string {
+  if (focus === "all") {
+    return "/seller/actions";
+  }
+
+  if (kind === "category") {
+    return `/seller/actions/${focus}`;
+  }
+
+  return `/seller/actions?focus=${focus}`;
 }
 
 function createSellerProductRow(

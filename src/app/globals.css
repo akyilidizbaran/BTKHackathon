@@ -66,6 +66,10 @@ body {
   animation: seller-products-marquee 28s linear infinite;
 }
 
+.seller-actions-marquee {
+  animation: seller-products-marquee 30s linear infinite;
+}
+
 @keyframes seller-products-marquee {
   from {
     transform: translate3d(0, 0, 0);

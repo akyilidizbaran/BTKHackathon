@@ -36,6 +36,8 @@ const {
   getSellerOverviewApiData,
   getSellerProductHealthApiData,
   getSellerProductsApiData,
+  normalizeSellerActionsFocus,
+  resolveSellerActionsFocus,
 } = require("../src/lib/api/seller");
 const { getSellerActionExplanationApiData } = require("../src/lib/api/seller-action-explanations");
 const {
@@ -328,6 +330,8 @@ function validateSellerApiContracts() {
   const sellerId = "seller-commercepilot";
   const overview = getSellerOverviewApiData(sellerId);
   const actions = getSellerActionsApiData(sellerId);
+  const negativeReviewActions = getSellerActionsApiData(sellerId, { focus: "negative-reviews" });
+  const inventoryActions = getSellerActionsApiData(sellerId, { focus: "inventory" });
   const restockDetail = getSellerActionDetailApiData("restock-ergoflex-calisma-sandalyesi", sellerId);
   const reviewDetail = getSellerActionDetailApiData("review_attention-connectplus-usb-c-hub", sellerId);
   const missingActionDetail = getSellerActionDetailApiData("missing-action", sellerId);
@@ -339,6 +343,8 @@ function validateSellerApiContracts() {
 
   assert(Boolean(overview), "seller overview API contract üretilemedi");
   assert(Boolean(actions), "seller actions API contract üretilemedi");
+  assert(Boolean(negativeReviewActions), "seller actions negative review focus contract üretilemedi");
+  assert(Boolean(inventoryActions), "seller actions inventory focus contract üretilemedi");
   assert(Boolean(restockDetail), "seller action detail API contract üretilemedi");
   assert(Boolean(reviewDetail), "seller review action detail API contract üretilemedi");
   assert(!missingActionDetail, "olmayan seller action detail undefined dönmeli");
@@ -377,8 +383,62 @@ function validateSellerApiContracts() {
 
   if (actions) {
     assert(actions.contract.envelope === "success/data/error", "actions envelope contract yanlış");
+    assert(actions.contract.endpoint === "/api/seller/actions", "actions endpoint contract yanlış");
+    assert(actions.contract.method === "GET", "actions method contract yanlış");
+    assert(actions.activeFocus === "all", "actions API default focus all olmalı");
     assert(actions.actions.length === 5, "actions API top 5 dönmeli");
+    assert(actions.actionCards.length === actions.actions.length, "actions card/action count uyumsuz");
     assert(actions.actionTypeCoverage.includes("restock"), "actions API restock coverage eksik");
+    assert(actions.segments.length >= 5, "actions segment coverage zayıf");
+    assert(actions.categoryRoutes.length > 0, "actions kategori route coverage eksik");
+    assert(actions.summary.visibleActionCount === actions.actionCards.length, "actions visible count yanlış");
+    assert(actions.summary.affectedProductCount > 0, "actions affected product count eksik");
+    assert(
+      ["all", "stock-risk", "negative-reviews", "return-risk", "slow-movers"].every((id) =>
+        actions.segments.some((segment) => segment.id === id),
+      ),
+      "actions focus segment id coverage eksik",
+    );
+    assert(
+      actions.categoryRoutes.every((segment) => segment.href.startsWith("/seller/actions/")),
+      "actions category route href contract yanlış",
+    );
+    assert(
+      actions.segments.every((segment) => segment.apiEndpoint.startsWith("/api/seller/actions")),
+      "actions segment api endpoint contract yanlış",
+    );
+    assert(
+      actions.actionCards.every((card) => card.href.startsWith("/seller/actions/") && card.affectedProducts.length > 0),
+      "actions card href veya ürün kanıtı eksik",
+    );
+    assert(
+      actions.actionCards.every((card) => card.primaryProduct?.image.src === "/catalog/buyer-product-sprite.png"),
+      "actions card ürün görsel sprite contract eksik",
+    );
+    assert(resolveSellerActionsFocus("customer_voice") === "customer-voice", "actions focus alias customer_voice yanlış");
+    assert(normalizeSellerActionsFocus("unknown-focus") === "all", "actions bilinmeyen focus all dönmeli");
+  }
+
+  if (negativeReviewActions) {
+    assert(negativeReviewActions.activeFocus === "negative-reviews", "negative review actions activeFocus yanlış");
+    assert(
+      negativeReviewActions.contract.endpoint === "/api/seller/actions?focus=negative-reviews",
+      "negative review actions endpoint yanlış",
+    );
+    assert(negativeReviewActions.actionCards.length > 0, "negative review actions boş olmamalı");
+    assert(
+      negativeReviewActions.actions.every((action) => action.type === "review_attention"),
+      "negative review actions filtre dışı aksiyon döndü",
+    );
+  }
+
+  if (inventoryActions) {
+    assert(inventoryActions.activeFocus === "inventory", "inventory actions activeFocus yanlış");
+    assert(inventoryActions.actionCards.length > 0, "inventory actions boş olmamalı");
+    assert(
+      inventoryActions.actions.every((action) => action.category === "inventory"),
+      "inventory actions filtre dışı kategori döndü",
+    );
   }
 
   if (restockDetail) {

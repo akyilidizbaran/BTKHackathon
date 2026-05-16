@@ -1,13 +1,26 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SellerActionExplanationPanel } from "@/components/commerce/seller-action-explanation-panel";
+import { SellerActionsWorkspace } from "@/components/commerce/seller-actions-workspace";
 import {
   getSellerActionDetailApiData,
   getSellerActionsApiData,
+  resolveSellerActionsFocus,
 } from "@/lib/api/seller";
 
 export function generateStaticParams(): Array<{ id: string }> {
-  return getSellerActionsApiData()?.actions.map((action) => ({ id: action.id })) ?? [];
+  const actionsData = getSellerActionsApiData();
+
+  if (!actionsData) {
+    return [];
+  }
+
+  const actionParams = actionsData.actionCards.map((card) => ({ id: card.id }));
+  const categoryParams = actionsData.segments
+    .filter((segment) => segment.id !== "all")
+    .map((segment) => ({ id: segment.id }));
+
+  return [...actionParams, ...categoryParams];
 }
 
 export default async function SellerActionDetailPage({
@@ -16,6 +29,18 @@ export default async function SellerActionDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const focus = resolveSellerActionsFocus(id);
+
+  if (focus) {
+    const actionsData = getSellerActionsApiData();
+
+    if (!actionsData) {
+      notFound();
+    }
+
+    return <SellerActionsWorkspace key={focus} data={actionsData} initialFocus={focus} />;
+  }
+
   const data = getSellerActionDetailApiData(id);
 
   if (!data) {

@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Milestone 8J tamamlandı: seller products artık fotoğraflı ürün yönetimi, risk filtreleri ve seçili ürün aksiyon rail'iyle çalışıyor.
+  * Milestone 8K tamamlandı: seller actions artık kategori/focus endpoint'leri, light action queue ve kategori route'larıyla çalışıyor.
 * Son değişiklik neydi?
-  * `src/lib/api/seller.ts` içine product segment/focus contract'ı, risk sinyalleri ve linked action metadata eklendi; `/seller/products` `SellerProductsWorkspace` ile light yönetim yüzeyine taşındı.
+  * `src/lib/api/seller.ts` içine actions segment/focus contract'ı, action card ürün kanıtları, kategori route metadata ve `/api/seller/actions?focus=...` filtreleme eklendi; `/seller/actions` `SellerActionsWorkspace` ile light kategori yönetim yüzeyine taşındı.
 * Bir sonraki net adım ne?
-  * Milestone 8K: seller actions ekranını kategori/focus endpoint'lerine bölmek.
+  * Milestone 8L: seller agent sohbet ve analiz yüzeyini kurmak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -69,7 +69,7 @@
   * `src/lib/api/buyer-catalog.ts`: buyer marketplace kategori, sıralama, görsel metadata ve ürün kartı contract'ını üretir.
   * `src/app/api/buyer/catalog/route.ts`: buyer katalog contract'ını `success/data/error` envelope ile döndürür.
   * `src/lib/api/buyer-agent.ts`: buyer Agent prompt contract'ını smart-cart workflow ve katalog ürün kartlarıyla birleştirir; apply contract'ı `append`/`replace` stratejilerini doğrular.
-  * `src/lib/api/seller.ts`: seller overview/actions/products/product health/buyer signal contract builder'larını üretir; 8J itibarıyla products contract'ı segment/focus filtreleri, risk sinyalleri, linked action ve seller product sprite image metadata taşır.
+  * `src/lib/api/seller.ts`: seller overview/actions/products/product health/buyer signal contract builder'larını üretir; 8K itibarıyla actions contract'ı kategori/focus segmentleri, action card ürün kanıtları, category route metadata ve seller product sprite image metadata taşır.
   * `src/app/api/buyer/agent/route.ts`: agent prompt'unu alır, katalogdaki mevcut ürünlerden görselli öneri ve onay mesajı döndürür.
   * `src/app/api/buyer/agent/apply/route.ts`: onaylanan agent sepet mutation payload'unu doğrular ve client'ın localStorage'a uygulayacağı temiz ürün/adet listesini döndürür.
   * `src/lib/api/buyer-profile.ts`: buyer profile tercihleri, yorum geçmişi, öğrenilen sinyaller ve PATCH validation contract'ını üretir.
@@ -209,6 +209,7 @@
 * 2026-05-16 — Karar: Buyer profile ilk fazda typed API contract + client `localStorage` taslağıyla yönetilecek. | Gerekçe: Auth/DB olmadan kullanıcı profil notu ve tercihleri reload sonrası kaybolmamalı; route Agent ve ileride floating Agent aynı profil sinyallerini okuyabilmeli. | Etki: `src/lib/api/buyer-profile.ts`, `/api/buyer/profile`, `BuyerProfileWorkspace`, `src/lib/profile/buyer-profile-storage.ts` ve workflow validation kontrolleri eklendi. | Alternatifler: Profil state'ini yalnızca sayfa içinde tutmak veya server memory mock store kullanmak.
 * 2026-05-16 — Karar: Seller overview ana ekranı artık dört risk endpoint kartını typed contract üzerinden alacak. | Gerekçe: Satıcı ana sayfası uzun açıklama veya statik KPI değil, hızlı karar ve route geçiş yüzeyi olmalı. | Etki: `SellerOverviewApiData.alertCards`, `priorityQueue`, seller product image metadata ve `SellerOverviewWorkspace` eklendi; kartlar `/seller/actions` ve `/seller/products` query hedeflerine bağlandı. | Alternatifler: Kartları sayfa içinde ad hoc hesaplamak veya tüm seller aksiyonlarını ana ekrana yığmak.
 * 2026-05-16 — Karar: Seller products ekranı query focus değerlerini typed product segment contract'ına bağlayacak. | Gerekçe: Overview'deki stok/iade yönlendirmeleri gerçek ürün listesi filtresine dönüşmeli; satıcı aynı ekranda fotoğraf, ticari metrik ve aksiyon bağını görebilmeli. | Etki: `SellerProductsApiData.activeFocus/segments/categoryBreakdown/spotlightProduct`, product `riskSignals/focusTags/linkedAction`, `/api/seller/products?focus=...` filtreleme ve `SellerProductsWorkspace` eklendi. | Alternatifler: Query değerlerini sadece client state'te tutmak veya ürün risklerini sayfa içinde ad hoc hesaplamak.
+* 2026-05-16 — Karar: Seller actions ekranı query focus ve kategori slug değerlerini typed action segment contract'ına bağlayacak. | Gerekçe: Overview'deki `/seller/actions?focus=...` hedefleri ve `/seller/actions/[category]` listeleri aynı deterministic action kuyruğunu okumalı; action detail route'ları kırılmamalı. | Etki: `SellerActionsApiData.activeFocus/actionCards/segments/categoryRoutes/summary`, `/api/seller/actions?focus=...`, `/api/seller/actions/[focus]`, `/seller/actions/[category]` ve `SellerActionsWorkspace` eklendi. | Alternatifler: Kategorileri sadece client state'te tutmak veya action/detail route'unu ayrı path'e taşımak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -240,6 +241,7 @@
 * 2026-05-16 — Milestone: Milestone 8H Buyer Profile tamamlandı. | Sonuç: `/buyer/profile` profil notu, hızlı tercih checkbox'ları, bütçe/renk kontrolleri, yorum geçmişi, öğrenilen Agent sinyalleri ve localStorage taslak persistence ile çalışır; `GET/PATCH /api/buyer/profile`, workflow validation, `npm run check`, `npm run build` ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8I Seller Overview Endpoint Cards tamamlandı. | Sonuç: `/seller` seller decision workspace'e dönüştü; dört alert card (`slow_movers`, `negative_reviews`, `return_risk`, `stock_risk`), priority queue, ürün görselleri, route/API endpoint hedefleri ve validation kontrolleri eklendi; `npm run check`, `npm run build` ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8J Seller Products tamamlandı. | Sonuç: `/seller/products` fotoğraflı ürün yönetimi yüzeyine dönüştü; segment/search/sort filtreleri, `focus` query desteği, ürün risk sinyalleri, linked action, seçili ürün evidence rail'i, category breakdown, route loading state ve validation kontrolleri eklendi; `npm run check`, `npm run build` ve Puppeteer desktop/mobil QA geçti.
+* 2026-05-16 — Milestone: Milestone 8K Seller Actions by Category tamamlandı. | Sonuç: `/seller/actions` kategori/focus action queue yüzeyine dönüştü; `/seller/actions?focus=negative-reviews`, `/seller/actions/customer-voice`, `/api/seller/actions?focus=...` ve `/api/seller/actions/[focus]` çalışır; mevcut action detail id route'ları korundu; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 
 ## 8) Yapılanlar
 
@@ -280,6 +282,7 @@
 * [x] Milestone 8H buyer profile tercihleri, yorum geçmişi ve Agent sinyal paneli uygulandı.
 * [x] Milestone 8I seller overview endpoint kartları ve öncelik sırası uygulandı.
 * [x] Milestone 8J seller products fotoğraflı ürün yönetimi ve focus filtreleri uygulandı.
+* [x] Milestone 8K seller actions kategori/focus endpoint'leri ve light action queue uygulandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -322,7 +325,8 @@
 * [x] Milestone 8H buyer profile tercihleri ve yorumları ekranını kur.
 * [x] Milestone 8I seller overview endpoint kartlarını kur: iade, negatif yorum, satılmayan ürün, stok riski.
 * [x] Milestone 8J seller products ekranını fotoğraflı ürün yönetimi yüzeyine dönüştür.
-* [ ] Milestone 8K seller actions ekranını kategori/focus endpoint'lerine böl.
+* [x] Milestone 8K seller actions ekranını kategori/focus endpoint'lerine böl.
+* [ ] Milestone 8L seller agent sohbet ve analiz yüzeyini kur: satıcı prompt'u, satılmayan ürün sıralama, sebep analizi ve öneri akışı.
 * [ ] Milestone 8Q floating Agent mini panelini kur: tüm buyer/seller sayfalarında Codex pet ikonu, ortak agent history/runtime, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri.
 * [ ] Milestone 8N sonrası agent prompt/tool/runtime registry katmanını kur.
 * [ ] Milestone 8P için seller before/after preview, onay, audit log ve rollback davranışını netleştir.
@@ -356,9 +360,12 @@
 * 8H buyer profile state:
   * `/api/buyer/profile` PATCH profile verisini server'da kalıcı saklamaz; ilk fazda doğrulanmış contract döndürür. Reload persistence client `src/lib/profile/buyer-profile-storage.ts` içindeki `localStorage` taslağıyla sağlanır.
 * 8I seller overview:
-  * Alert card query hedeflerinden `/seller/products?focus=...` 8J itibarıyla ürün listesi filtresine bağlandı; `/seller/actions?focus=...` tarafı 8K içinde gerçek kategori/focus davranışına bağlanmalı.
+  * Alert card query hedeflerinden `/seller/products?focus=...` 8J itibarıyla ürün listesi filtresine, `/seller/actions?focus=...` hedefleri 8K itibarıyla action queue filtresine bağlandı.
 * 8J seller products:
   * `/api/seller/products?focus=stock-risk|return-risk|negative-reviews|slow-movers|at-risk` filtrelenmiş product contract döndürür; sayfa route'u tüm ürünleri alıp initial URL focus değerini client filtre state'ine uygular.
+* 8K seller actions:
+  * `/api/seller/actions?focus=negative-reviews|return-risk|slow-movers|stock-risk|inventory|customer-voice` filtrelenmiş action contract döndürür.
+  * `/seller/actions/[id]` route'u parametre focus/category slug ise `SellerActionsWorkspace`, gerçek action id ise mevcut action detail ekranını render eder.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 
