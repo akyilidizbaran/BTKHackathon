@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Milestone 8L tamamlandı: seller agent artık prompt alıp ürünleri kanıtla sıralayan analiz yüzeyi olarak çalışıyor.
+  * Milestone 8M tamamlandı: seller profile artık mağaza ayarı, Agent permission, bildirim ve audit yüzeyi olarak çalışıyor.
 * Son değişiklik neydi?
-  * `src/lib/api/seller-agent.ts`, `/api/seller/agent` ve `SellerAgentWorkspace` eklendi; satıcı prompt'u slow-movers/negative-reviews/stock-risk/return-risk gibi focus'lara ayrılıp ürün kanıtı, action önerisi ve onay sınırıyla render ediliyor.
+  * `src/lib/api/seller-profile.ts`, `/api/seller/profile`, `SellerProfileWorkspace` ve seller profile `localStorage` taslak persistence eklendi; permission mode, capability matrix, notification channels, risk thresholds, quiet hours ve audit policy birlikte kaydediliyor.
 * Bir sonraki net adım ne?
-  * Milestone 8M: seller profile + agent permission ayarlarını gerçek ayar yüzeyine dönüştürmek.
+  * Milestone 8N: buyer/seller Agent prompt ve tool registry ortak runtime katmanını kurmak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -70,18 +70,22 @@
   * `src/app/api/buyer/catalog/route.ts`: buyer katalog contract'ını `success/data/error` envelope ile döndürür.
   * `src/lib/api/buyer-agent.ts`: buyer Agent prompt contract'ını smart-cart workflow ve katalog ürün kartlarıyla birleştirir; apply contract'ı `append`/`replace` stratejilerini doğrular.
   * `src/lib/api/seller-agent.ts`: seller Agent prompt contract'ını seller products/actions contract'larıyla birleştirir; prompt'u risk focus'una ayırır, ürün kanıtı, action önerisi, next step ve onay gerektiren draft preview döndürür.
+  * `src/lib/api/seller-profile.ts`: seller profile, Agent permission mode, capability matrix, notification channels, risk thresholds, quiet hours, proactive controls, audit trail ve PATCH validation contract'ını üretir.
   * `src/lib/api/seller.ts`: seller overview/actions/products/product health/buyer signal contract builder'larını üretir; 8K itibarıyla actions contract'ı kategori/focus segmentleri, action card ürün kanıtları, category route metadata ve seller product sprite image metadata taşır.
   * `src/app/api/buyer/agent/route.ts`: agent prompt'unu alır, katalogdaki mevcut ürünlerden görselli öneri ve onay mesajı döndürür.
   * `src/app/api/buyer/agent/apply/route.ts`: onaylanan agent sepet mutation payload'unu doğrular ve client'ın localStorage'a uygulayacağı temiz ürün/adet listesini döndürür.
   * `src/lib/api/buyer-profile.ts`: buyer profile tercihleri, yorum geçmişi, öğrenilen sinyaller ve PATCH validation contract'ını üretir.
   * `src/app/api/buyer/profile/route.ts`: buyer profile `GET/PATCH` endpoint'ini `success/data/error` envelope ile döndürür.
   * `src/lib/profile/buyer-profile-storage.ts`: buyer profile taslağını client-side `localStorage` üzerinde okur/yazar ve güncelleme event'i yayınlar.
+  * `src/app/api/seller/profile/route.ts`: seller profile `GET/PATCH` endpoint'ini `success/data/error` envelope ile döndürür.
+  * `src/lib/profile/seller-profile-storage.ts`: seller profile taslağını client-side `localStorage` üzerinde okur/yazar ve güncelleme event'i yayınlar.
   * `src/components/commerce/buyer-catalog-grid.tsx`: fotoğraflı ürün kartları, puan/yorum/teslimat/indirim sinyalleri ve görünür `Sepete Ekle` aksiyonunu render eder.
   * `src/lib/cart/buyer-cart.ts`: buyer sepetini `localStorage` üzerinde okur/yazar; ekleme, adet güncelleme, silme ve clear helper'larını sağlar.
   * `src/components/commerce/buyer-product-purchase-panel.tsx`: ürün detayındaki adet, `Şimdi Al`, `Sepete Ekle` ve favori aksiyon yüzeyi.
   * `src/components/commerce/buyer-cart-workspace.tsx`: sepet satırları, adet/sil/temizle, toplam hesaplama, empty state ve checkout mock yüzeyi.
   * `src/components/commerce/buyer-agent-workspace.tsx`: `/buyer/agent` için prompt composer, chat cevabı, görselli ürün önerileri, onay paneli ve cart apply akışını render eder.
   * `src/components/commerce/buyer-profile-workspace.tsx`: `/buyer/profile` için profil notu, tercih checkbox'ları, bütçe/renk kontrolü, yorum geçmişi, öğrenilen sinyal paneli ve kaydetme akışını render eder.
+  * `src/components/commerce/seller-profile-workspace.tsx`: `/seller/profile` için mağaza bilgisi, Agent permission mode, capability toggles, notification channels, risk thresholds, quiet hours, proactive controls, audit trail ve kaydetme akışını render eder.
   * `src/components/commerce/seller-overview-workspace.tsx`: `/seller` için seller karar başlığı, 4 risk endpoint kartı, öncelik sırası rail'i, kategori dağılımı ve düşük sağlık ürün listesi render eder.
   * `src/components/commerce/seller-products-workspace.tsx`: `/seller/products` için fotoğraflı ürün listesi, segment/search/sort filtreleri, seçili ürün evidence rail'i ve kategori yoğunluğu render eder.
   * `src/components/commerce/workspace-shell.tsx`: light marketplace header, search ve header-only yatay nav shell'i; buyer nav `Ürünler/Sepet/Agent/Profil`, seller nav `Ana Sayfa/Ürünler/Aksiyonlar/Agent/Profil`.
@@ -90,7 +94,7 @@
   * `src/app/buyer/agent/page.tsx`: buyer Agent workspace'ini server-side initial agent contract ile açar.
   * `src/app/seller/agent/page.tsx`: seller Agent analiz workspace'ini server-side initial agent contract ile açar.
   * `src/app/buyer/profile/page.tsx`: server-side default buyer profile contract'ını `BuyerProfileWorkspace` client component'ine verir.
-  * `src/app/seller/profile/page.tsx`: seller permission/profil route iskeleti.
+  * `src/app/seller/profile/page.tsx`: server-side default seller profile contract'ını `SellerProfileWorkspace` client component'ine verir.
   * `public/catalog/buyer-product-sprite.png`: 8E buyer katalog ve kategori görselleri için kontrollü mock ürün sprite'ı.
   * `src/app/globals.css`: light CommercePilot tokenları ve geçici `commerce-legacy-light` bridge'i.
   * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`: marketplace + agent pet pivot kararları, endpoint haritası ve revize milestone yol haritası.
@@ -212,6 +216,7 @@
 * 2026-05-16 — Karar: Seller products ekranı query focus değerlerini typed product segment contract'ına bağlayacak. | Gerekçe: Overview'deki stok/iade yönlendirmeleri gerçek ürün listesi filtresine dönüşmeli; satıcı aynı ekranda fotoğraf, ticari metrik ve aksiyon bağını görebilmeli. | Etki: `SellerProductsApiData.activeFocus/segments/categoryBreakdown/spotlightProduct`, product `riskSignals/focusTags/linkedAction`, `/api/seller/products?focus=...` filtreleme ve `SellerProductsWorkspace` eklendi. | Alternatifler: Query değerlerini sadece client state'te tutmak veya ürün risklerini sayfa içinde ad hoc hesaplamak.
 * 2026-05-16 — Karar: Seller actions ekranı query focus ve kategori slug değerlerini typed action segment contract'ına bağlayacak. | Gerekçe: Overview'deki `/seller/actions?focus=...` hedefleri ve `/seller/actions/[category]` listeleri aynı deterministic action kuyruğunu okumalı; action detail route'ları kırılmamalı. | Etki: `SellerActionsApiData.activeFocus/actionCards/segments/categoryRoutes/summary`, `/api/seller/actions?focus=...`, `/api/seller/actions/[focus]`, `/seller/actions/[category]` ve `SellerActionsWorkspace` eklendi. | Alternatifler: Kategorileri sadece client state'te tutmak veya action/detail route'unu ayrı path'e taşımak.
 * 2026-05-16 — Karar: Seller Agent route'u products/actions contract'larını doğrudan UI'a gömmek yerine typed `seller-agent` API contract'ı üzerinden çalışacak. | Gerekçe: Route Agent sayfası ve ileride floating Agent aynı prompt -> analiz -> ürün kanıtı -> action önerisi contract'ını paylaşabilmeli; seller mutation kullanıcı onayından önce yapılmamalı. | Etki: `src/lib/api/seller-agent.ts`, `/api/seller/agent`, `SellerAgentWorkspace`, prompt validation ve workflow validation kontrolleri eklendi. | Alternatifler: `/seller/agent` içinde doğrudan products/actions builder'larını çağırmak veya hemen mutation uygulamak.
+* 2026-05-16 — Karar: Seller profile ilk fazda typed API contract + client `localStorage` taslağıyla yönetilecek. | Gerekçe: Auth/DB olmadan mağaza ayarı ve Agent permission tercihleri reload sonrası kaybolmamalı; route Agent ve ileride floating Agent aynı izin/onay sınırını okuyabilmeli. | Etki: `src/lib/api/seller-profile.ts`, `/api/seller/profile`, `SellerProfileWorkspace`, `src/lib/profile/seller-profile-storage.ts`, loading state ve workflow validation kontrolleri eklendi. | Alternatifler: Permission state'ini yalnızca sayfa içinde tutmak veya 8P mutation/audit store ile birlikte bekletmek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -245,6 +250,7 @@
 * 2026-05-16 — Milestone: Milestone 8J Seller Products tamamlandı. | Sonuç: `/seller/products` fotoğraflı ürün yönetimi yüzeyine dönüştü; segment/search/sort filtreleri, `focus` query desteği, ürün risk sinyalleri, linked action, seçili ürün evidence rail'i, category breakdown, route loading state ve validation kontrolleri eklendi; `npm run check`, `npm run build` ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8K Seller Actions by Category tamamlandı. | Sonuç: `/seller/actions` kategori/focus action queue yüzeyine dönüştü; `/seller/actions?focus=negative-reviews`, `/seller/actions/customer-voice`, `/api/seller/actions?focus=...` ve `/api/seller/actions/[focus]` çalışır; mevcut action detail id route'ları korundu; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8L Seller Agent Page tamamlandı. | Sonuç: `/seller/agent` prompt composer, preset seller komutları, ürün kanıt sırası, pinned Agent cevabı, action önerileri, onay gerektiren draft preview ve `/api/seller/agent` GET/POST contract'ı ile çalışır; mutation uygulanmaz; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
+* 2026-05-16 — Milestone: Milestone 8M Seller Profile + Permissions tamamlandı. | Sonuç: `/seller/profile` mağaza bilgisi, Agent permission mode, capability matrix, notification channels, risk thresholds, quiet hours, proactive controls ve audit/policy preview ile çalışır; `GET/PATCH /api/seller/profile`, localStorage taslak persistence, validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 
 ## 8) Yapılanlar
 
@@ -287,6 +293,7 @@
 * [x] Milestone 8J seller products fotoğraflı ürün yönetimi ve focus filtreleri uygulandı.
 * [x] Milestone 8K seller actions kategori/focus endpoint'leri ve light action queue uygulandı.
 * [x] Milestone 8L seller agent prompt, ürün kanıt sırası ve onay sınırı uygulandı.
+* [x] Milestone 8M seller profile permission, bildirim ve audit ayar yüzeyi uygulandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -331,9 +338,10 @@
 * [x] Milestone 8J seller products ekranını fotoğraflı ürün yönetimi yüzeyine dönüştür.
 * [x] Milestone 8K seller actions ekranını kategori/focus endpoint'lerine böl.
 * [x] Milestone 8L seller agent sohbet ve analiz yüzeyini kur: satıcı prompt'u, satılmayan ürün sıralama, sebep analizi ve öneri akışı.
-* [ ] Milestone 8M seller profile + permissions ekranını gerçek ayar yüzeyine dönüştür: mağaza profili, agent yetki modu, bildirim tercihleri.
+* [x] Milestone 8M seller profile + permissions ekranını gerçek ayar yüzeyine dönüştür: mağaza profili, agent yetki modu, bildirim tercihleri.
+* [ ] Milestone 8N shared agent runtime: buyer/seller prompt registry, typed tool registry ve ortak request/apply sınırlarını kur.
 * [ ] Milestone 8Q floating Agent mini panelini kur: tüm buyer/seller sayfalarında Codex pet ikonu, ortak agent history/runtime, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri.
-* [ ] Milestone 8N sonrası agent prompt/tool/runtime registry katmanını kur.
+* [ ] Milestone 8O shared buyer agent cart mutations: 8G onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştır.
 * [ ] Milestone 8P için seller before/after preview, onay, audit log ve rollback davranışını netleştir.
 * [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
 
@@ -374,6 +382,10 @@
 * 8L seller agent:
   * `/api/seller/agent` GET default seller agent contract, POST ise `{ prompt, sellerId? }` ile deterministic prompt analysis döndürür.
   * Seller Agent mutation yapmaz; draft preview yalnızca onay gerektiren öneri olarak gösterilir. Gerçek before/after apply + audit akışı 8P kapsamındadır.
+* 8M seller profile:
+  * `/api/seller/profile` GET default seller profile contract, PATCH ise mağaza bilgisi, permission mode, capability ids, notification channels, alert rules, quiet hours ve proactive controls alanlarını doğrular.
+  * `auto-apply` capability kilitlidir ve PATCH sırasında filtrelenir; seller mutation hâlâ açık satıcı onayı ve 8P audit/apply akışı olmadan uygulanmaz.
+  * `SellerProfileWorkspace` localStorage taslağı kullanır; gerçek kalıcı DB/auth store yoktur.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 

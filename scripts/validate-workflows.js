@@ -63,6 +63,11 @@ const {
   getDefaultBuyerProfileApiData,
   validateBuyerProfilePatchRequest,
 } = require("../src/lib/api/buyer-profile");
+const {
+  getDefaultSellerProfileApiData,
+  getSellerProfileApiData,
+  validateSellerProfilePatchRequest,
+} = require("../src/lib/api/seller-profile");
 const { getBuyerCatalogApiData } = require("../src/lib/api/buyer-catalog");
 const { getBuyerSmartCartExplanationApiData } = require("../src/lib/api/buyer-smart-cart-explanations");
 
@@ -95,6 +100,7 @@ async function main() {
   validateBuyerCatalogApiContracts();
   validateBuyerAgentApiContracts();
   validateSellerAgentApiContracts();
+  validateSellerProfileApiContracts();
   validateBuyerProfileApiContracts();
   await validateBuyerSmartCartExplanationApiContracts();
 
@@ -131,6 +137,7 @@ async function main() {
       `Buyer catalog products: ${getBuyerCatalogApiData().products.length}`,
       `Buyer agent endpoint: ${getDefaultBuyerAgentApiData().contract.endpoint}`,
       `Seller agent endpoint: ${getDefaultSellerAgentApiData().contract.endpoint}`,
+      `Seller profile endpoint: ${getDefaultSellerProfileApiData().contract.endpoint}`,
       `Buyer profile endpoint: ${getDefaultBuyerProfileApiData().contract.endpoint}`,
       `Buyer API examples: ${buyerSmartCartExamples.length}`,
       "Buyer prompts: 7",
@@ -832,6 +839,96 @@ function validateSellerAgentApiContracts() {
   assert(validRequest.ok, "seller agent valid request doğrulanmalı");
   assert(!missingPrompt.ok && missingPrompt.code === "PROMPT_REQUIRED", "seller agent missing prompt validation yanlış");
   assert(!longPrompt.ok && longPrompt.code === "PROMPT_TOO_LONG", "seller agent long prompt validation yanlış");
+}
+
+function validateSellerProfileApiContracts() {
+  const defaultData = getDefaultSellerProfileApiData();
+  const missingSellerData = getSellerProfileApiData({ sellerId: "missing-seller" });
+  const validPatch = validateSellerProfilePatchRequest({
+    alertRules: defaultData.editable.alertRules.map((rule) => (
+      rule.id === "stock-risk" ? { ...rule, threshold: "critical" } : rule
+    )),
+    defaultDeliveryPromiseDays: 2,
+    enabledCapabilityIds: ["product-analysis", "listing-draft", "price-suggestion", "auto-apply"],
+    notificationChannelIds: ["panel", "email", "panel"],
+    permissionMode: "approved-apply",
+    proactiveControls: {
+      disableOnProductPages: true,
+      floatingBadgeEnabled: true,
+      hideFloatingAgent: false,
+      muteAll: false,
+    },
+    quietHours: {
+      end: "08:30",
+      start: "23:00",
+    },
+    returnWindowDays: 21,
+    sellerId: "seller-commercepilot",
+    storeDisplayName: "CommercePilot Store",
+    supportResponseHours: 3,
+  });
+  const longNamePatch = validateSellerProfilePatchRequest({
+    sellerId: "seller-commercepilot",
+    storeDisplayName: "x".repeat(73),
+  });
+  const missingSellerPatch = validateSellerProfilePatchRequest({
+    sellerId: "missing-seller",
+    storeDisplayName: "CommercePilot Store",
+  });
+  const chatOnlyPatch = validateSellerProfilePatchRequest({
+    enabledCapabilityIds: ["product-analysis", "listing-draft", "stock-alert"],
+    permissionMode: "chat-only",
+    sellerId: "seller-commercepilot",
+    storeDisplayName: "CommercePilot Store",
+  });
+  const patchedData = validPatch.ok
+    ? getSellerProfileApiData({
+        editableOverride: validPatch.value,
+        method: "PATCH",
+        sellerId: validPatch.value.sellerId,
+      })
+    : undefined;
+
+  assert(defaultData.contract.envelope === "success/data/error", "seller profile envelope contract yanlış");
+  assert(defaultData.contract.endpoint === "/api/seller/profile", "seller profile endpoint yanlış");
+  assert(defaultData.contract.method === "GET", "seller profile method yanlış");
+  assert(defaultData.seller.id === "seller-commercepilot", "seller profile default seller yanlış");
+  assert(defaultData.permissionModes.length === 3, "seller profile permission mode sayısı yanlış");
+  assert(defaultData.editable.permissionMode === "draft-only", "seller profile default permission mode yanlış");
+  assert(defaultData.capabilities.some((capability) => capability.id === "auto-apply" && capability.locked), "seller profile auto-apply kilidi eksik");
+  assert(!defaultData.summary.autoApplyAllowed, "seller profile auto apply default kapalı olmalı");
+  assert(defaultData.notificationChannels.length >= 4, "seller profile notification channel sayısı yetersiz");
+  assert(defaultData.editable.alertRules.length === 4, "seller profile alert rule sayısı yanlış");
+  assert(defaultData.auditTrail.some((item) => item.actorName === "CommercePilot Agent"), "seller profile audit Agent izi eksik");
+  assert(defaultData.agentPreview.appliedRules.length >= 3, "seller profile agent preview kuralları eksik");
+  assert(!missingSellerData, "olmayan seller profile undefined dönmeli");
+  assert(validPatch.ok, "seller profile valid PATCH reddedildi");
+
+  if (validPatch.ok) {
+    assert(validPatch.value.permissionMode === "approved-apply", "seller profile PATCH permission mode yanlış");
+    assert(!validPatch.value.enabledCapabilityIds.includes("auto-apply"), "seller profile locked auto apply filtrelenmeli");
+    assert(validPatch.value.notificationChannelIds.length === 2, "seller profile channel unique normalize yanlış");
+    assert(validPatch.value.quietHours.start === "23:00", "seller profile quiet hours normalize yanlış");
+  }
+
+  assert(!longNamePatch.ok && longNamePatch.code === "STORE_NAME_TOO_LONG", "seller profile uzun mağaza adı validation yanlış");
+  assert(!missingSellerPatch.ok && missingSellerPatch.code === "SELLER_NOT_FOUND", "seller profile missing seller validation yanlış");
+  assert(chatOnlyPatch.ok, "seller profile chat-only PATCH reddedilmemeli");
+
+  if (chatOnlyPatch.ok) {
+    assert(!chatOnlyPatch.value.enabledCapabilityIds.includes("listing-draft"), "seller profile chat-only draft yetkisini filtrelemeli");
+  }
+
+  assert(Boolean(patchedData), "seller profile PATCH data üretilemedi");
+
+  if (patchedData) {
+    assert(patchedData.contract.method === "PATCH", "seller profile PATCH method contract yanlış");
+    assert(patchedData.summary.permissionLabel === "Onaylı uygulama", "seller profile PATCH permission label yanlış");
+    assert(
+      patchedData.policyPreview.rules.some((rule) => rule.includes("Otomatik uygulama")),
+      "seller profile policy preview auto apply sınırını taşımıyor",
+    );
+  }
 }
 
 function validateBuyerProfileApiContracts() {
