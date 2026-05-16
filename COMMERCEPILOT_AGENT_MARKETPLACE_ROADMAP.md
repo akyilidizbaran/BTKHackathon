@@ -8,8 +8,8 @@
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
-  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J ve 8K tamamlandı.
-  * Sıradaki net adım 8L: seller agent sohbet ve analiz yüzeyini kurmak.
+  * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J, 8K ve 8L tamamlandı.
+  * Sıradaki net adım 8M: seller profile + permissions ekranını gerçek ayar yüzeyine dönüştürmek.
   * 8K ve sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
@@ -328,7 +328,7 @@
 | 8I | Seller IA + overview endpoints | Satıcı ana sayfayı kısa uyarı kartları ve endpoint linkleriyle kurmak | Tamamlandı: 4 alert card, priority queue, route/API hedefleri, ürün görselleri ve validation kontrolleri çalışır |
 | 8J | Seller products | Fotoğraflı satıcı ürün yönetimi ekranı | Tamamlandı: Fotoğraflı ürün listesi, segment/search/sort filtreleri, focus query, risk sinyalleri, linked action ve validation kontrolleri çalışır |
 | 8K | Seller actions by category | Aksiyonları alt başlık endpoint'lerine bölmek | Tamamlandı: `/seller/actions?focus=...`, `/seller/actions/[category]`, `/api/seller/actions?focus=...` ve `/api/seller/actions/[focus]` kategori/focus action queue olarak çalışır; action detail id route'ları korunur |
-| 8L | Seller agent page | Satıcı agent sohbet ve analiz yüzeyini kurmak | Satılmayan ürün sıralama, sebep analizi ve öneri akışı çalışır |
+| 8L | Seller agent page | Satıcı agent sohbet ve analiz yüzeyini kurmak | Tamamlandı: `/seller/agent` typed `/api/seller/agent` contract'ıyla prompt alır; ürün kanıt sırası, sebep analizi, action önerileri, next steps ve onay gerektiren draft preview çalışır; mutation uygulanmaz |
 | 8M | Seller profile + permissions | Mağaza profili ve agent yetki ayarları | Profil, yetki modu ve bildirim tercihleri görünür/güncellenir |
 | 8N | Shared agent runtime | Buyer/seller agent prompt ve tool registry ortaklaştırmak | Agent request contract, prompt registry ve typed tool registry oluşur |
 | 8O | Shared buyer agent cart mutations | 8G'deki onaylı cart apply davranışını shared runtime/floating panel ile ortaklaştırmak | Floating panel ve route agent aynı apply contract'ını kullanarak cart state'ine ekler veya sepeti değiştirir |

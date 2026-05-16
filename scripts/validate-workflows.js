@@ -53,6 +53,12 @@ const {
   validateBuyerAgentApplyRequest,
 } = require("../src/lib/api/buyer-agent");
 const {
+  getDefaultSellerAgentApiData,
+  getSellerAgentApiData,
+  sellerAgentExamples,
+  validateSellerAgentRequest,
+} = require("../src/lib/api/seller-agent");
+const {
   getBuyerProfileApiData,
   getDefaultBuyerProfileApiData,
   validateBuyerProfilePatchRequest,
@@ -88,6 +94,7 @@ async function main() {
   validateBuyerApiContracts();
   validateBuyerCatalogApiContracts();
   validateBuyerAgentApiContracts();
+  validateSellerAgentApiContracts();
   validateBuyerProfileApiContracts();
   await validateBuyerSmartCartExplanationApiContracts();
 
@@ -123,6 +130,7 @@ async function main() {
       `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
       `Buyer catalog products: ${getBuyerCatalogApiData().products.length}`,
       `Buyer agent endpoint: ${getDefaultBuyerAgentApiData().contract.endpoint}`,
+      `Seller agent endpoint: ${getDefaultSellerAgentApiData().contract.endpoint}`,
       `Buyer profile endpoint: ${getDefaultBuyerProfileApiData().contract.endpoint}`,
       `Buyer API examples: ${buyerSmartCartExamples.length}`,
       "Buyer prompts: 7",
@@ -772,6 +780,58 @@ function validateBuyerAgentApiContracts() {
   assert(applyData.summary.totalPrice > 0, "buyer agent apply total eksik");
   assert(!invalidStrategy.ok && invalidStrategy.code === "INVALID_STRATEGY", "buyer agent invalid strategy validation yanlış");
   assert(!emptyItems.ok && emptyItems.code === "ITEMS_REQUIRED", "buyer agent empty item validation yanlış");
+}
+
+function validateSellerAgentApiContracts() {
+  const defaultData = getDefaultSellerAgentApiData();
+  const slowMoverData = getSellerAgentApiData({
+    prompt: "Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla.",
+    sellerId: "seller-commercepilot",
+  });
+  const negativeReviewData = getSellerAgentApiData({
+    prompt: "Negatif yorum gelen ürünleri grupla.",
+    sellerId: "seller-commercepilot",
+  });
+  const validRequest = validateSellerAgentRequest({
+    prompt: "Stok riski olan ürünleri göster.",
+  });
+  const missingPrompt = validateSellerAgentRequest({
+    prompt: "   ",
+  });
+  const longPrompt = validateSellerAgentRequest({
+    prompt: "x".repeat(361),
+  });
+
+  assert(sellerAgentExamples.length >= 4, "seller agent örnek prompt coverage eksik");
+  assert(defaultData.contract.endpoint === "/api/seller/agent", "seller agent endpoint yanlış");
+  assert(defaultData.contract.method === "POST", "seller agent method yanlış");
+  assert(defaultData.contract.envelope === "success/data/error", "seller agent envelope contract yanlış");
+  assert(defaultData.contract.source === "seller-agent-deterministic-workflow", "seller agent source yanlış");
+  assert(defaultData.message.safetyNote.includes("Onay"), "seller agent safety note onay sınırı eksik");
+  assert(slowMoverData.activeFocus === "slow-movers", "seller agent slow movers focus yanlış");
+  assert(slowMoverData.productFindings.length > 0, "seller agent product finding eksik");
+  assert(slowMoverData.actionSuggestions.length > 0, "seller agent action suggestion eksik");
+  assert(
+    slowMoverData.productFindings.every((finding) => finding.product.image.src === "/catalog/buyer-product-sprite.png"),
+    "seller agent ürün görsel sprite contract yanlış",
+  );
+  assert(
+    slowMoverData.productFindings.every((finding) => finding.product.href.startsWith("/seller/products/")),
+    "seller agent ürün href contract yanlış",
+  );
+  assert(
+    slowMoverData.actionSuggestions.every((action) => action.href.startsWith("/seller/actions/")),
+    "seller agent action href contract yanlış",
+  );
+  assert(
+    slowMoverData.nextSteps.some((step) => step.requiresApproval),
+    "seller agent approval boundary next step eksik",
+  );
+  assert(Boolean(slowMoverData.draftPreview?.requiresApproval), "seller agent draft preview onay gerektirmeli");
+  assert(negativeReviewData.activeFocus === "negative-reviews", "seller agent negative review focus yanlış");
+  assert(validRequest.ok, "seller agent valid request doğrulanmalı");
+  assert(!missingPrompt.ok && missingPrompt.code === "PROMPT_REQUIRED", "seller agent missing prompt validation yanlış");
+  assert(!longPrompt.ok && longPrompt.code === "PROMPT_TOO_LONG", "seller agent long prompt validation yanlış");
 }
 
 function validateBuyerProfileApiContracts() {

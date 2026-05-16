@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Milestone 8K tamamlandı: seller actions artık kategori/focus endpoint'leri, light action queue ve kategori route'larıyla çalışıyor.
+  * Milestone 8L tamamlandı: seller agent artık prompt alıp ürünleri kanıtla sıralayan analiz yüzeyi olarak çalışıyor.
 * Son değişiklik neydi?
-  * `src/lib/api/seller.ts` içine actions segment/focus contract'ı, action card ürün kanıtları, kategori route metadata ve `/api/seller/actions?focus=...` filtreleme eklendi; `/seller/actions` `SellerActionsWorkspace` ile light kategori yönetim yüzeyine taşındı.
+  * `src/lib/api/seller-agent.ts`, `/api/seller/agent` ve `SellerAgentWorkspace` eklendi; satıcı prompt'u slow-movers/negative-reviews/stock-risk/return-risk gibi focus'lara ayrılıp ürün kanıtı, action önerisi ve onay sınırıyla render ediliyor.
 * Bir sonraki net adım ne?
-  * Milestone 8L: seller agent sohbet ve analiz yüzeyini kurmak.
+  * Milestone 8M: seller profile + agent permission ayarlarını gerçek ayar yüzeyine dönüştürmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -69,6 +69,7 @@
   * `src/lib/api/buyer-catalog.ts`: buyer marketplace kategori, sıralama, görsel metadata ve ürün kartı contract'ını üretir.
   * `src/app/api/buyer/catalog/route.ts`: buyer katalog contract'ını `success/data/error` envelope ile döndürür.
   * `src/lib/api/buyer-agent.ts`: buyer Agent prompt contract'ını smart-cart workflow ve katalog ürün kartlarıyla birleştirir; apply contract'ı `append`/`replace` stratejilerini doğrular.
+  * `src/lib/api/seller-agent.ts`: seller Agent prompt contract'ını seller products/actions contract'larıyla birleştirir; prompt'u risk focus'una ayırır, ürün kanıtı, action önerisi, next step ve onay gerektiren draft preview döndürür.
   * `src/lib/api/seller.ts`: seller overview/actions/products/product health/buyer signal contract builder'larını üretir; 8K itibarıyla actions contract'ı kategori/focus segmentleri, action card ürün kanıtları, category route metadata ve seller product sprite image metadata taşır.
   * `src/app/api/buyer/agent/route.ts`: agent prompt'unu alır, katalogdaki mevcut ürünlerden görselli öneri ve onay mesajı döndürür.
   * `src/app/api/buyer/agent/apply/route.ts`: onaylanan agent sepet mutation payload'unu doğrular ve client'ın localStorage'a uygulayacağı temiz ürün/adet listesini döndürür.
@@ -87,7 +88,7 @@
   * `src/components/commerce/role-gateway.tsx`: light rol giriş yüzeyi.
   * `src/app/buyer/products/[slug]/page.tsx`: katalogdaki her mock ürün için dynamic buyer ürün detay endpoint iskeleti.
   * `src/app/buyer/agent/page.tsx`: buyer Agent workspace'ini server-side initial agent contract ile açar.
-  * `src/app/seller/agent/page.tsx`: seller agent sohbet route iskeleti.
+  * `src/app/seller/agent/page.tsx`: seller Agent analiz workspace'ini server-side initial agent contract ile açar.
   * `src/app/buyer/profile/page.tsx`: server-side default buyer profile contract'ını `BuyerProfileWorkspace` client component'ine verir.
   * `src/app/seller/profile/page.tsx`: seller permission/profil route iskeleti.
   * `public/catalog/buyer-product-sprite.png`: 8E buyer katalog ve kategori görselleri için kontrollü mock ürün sprite'ı.
@@ -210,6 +211,7 @@
 * 2026-05-16 — Karar: Seller overview ana ekranı artık dört risk endpoint kartını typed contract üzerinden alacak. | Gerekçe: Satıcı ana sayfası uzun açıklama veya statik KPI değil, hızlı karar ve route geçiş yüzeyi olmalı. | Etki: `SellerOverviewApiData.alertCards`, `priorityQueue`, seller product image metadata ve `SellerOverviewWorkspace` eklendi; kartlar `/seller/actions` ve `/seller/products` query hedeflerine bağlandı. | Alternatifler: Kartları sayfa içinde ad hoc hesaplamak veya tüm seller aksiyonlarını ana ekrana yığmak.
 * 2026-05-16 — Karar: Seller products ekranı query focus değerlerini typed product segment contract'ına bağlayacak. | Gerekçe: Overview'deki stok/iade yönlendirmeleri gerçek ürün listesi filtresine dönüşmeli; satıcı aynı ekranda fotoğraf, ticari metrik ve aksiyon bağını görebilmeli. | Etki: `SellerProductsApiData.activeFocus/segments/categoryBreakdown/spotlightProduct`, product `riskSignals/focusTags/linkedAction`, `/api/seller/products?focus=...` filtreleme ve `SellerProductsWorkspace` eklendi. | Alternatifler: Query değerlerini sadece client state'te tutmak veya ürün risklerini sayfa içinde ad hoc hesaplamak.
 * 2026-05-16 — Karar: Seller actions ekranı query focus ve kategori slug değerlerini typed action segment contract'ına bağlayacak. | Gerekçe: Overview'deki `/seller/actions?focus=...` hedefleri ve `/seller/actions/[category]` listeleri aynı deterministic action kuyruğunu okumalı; action detail route'ları kırılmamalı. | Etki: `SellerActionsApiData.activeFocus/actionCards/segments/categoryRoutes/summary`, `/api/seller/actions?focus=...`, `/api/seller/actions/[focus]`, `/seller/actions/[category]` ve `SellerActionsWorkspace` eklendi. | Alternatifler: Kategorileri sadece client state'te tutmak veya action/detail route'unu ayrı path'e taşımak.
+* 2026-05-16 — Karar: Seller Agent route'u products/actions contract'larını doğrudan UI'a gömmek yerine typed `seller-agent` API contract'ı üzerinden çalışacak. | Gerekçe: Route Agent sayfası ve ileride floating Agent aynı prompt -> analiz -> ürün kanıtı -> action önerisi contract'ını paylaşabilmeli; seller mutation kullanıcı onayından önce yapılmamalı. | Etki: `src/lib/api/seller-agent.ts`, `/api/seller/agent`, `SellerAgentWorkspace`, prompt validation ve workflow validation kontrolleri eklendi. | Alternatifler: `/seller/agent` içinde doğrudan products/actions builder'larını çağırmak veya hemen mutation uygulamak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -242,6 +244,7 @@
 * 2026-05-16 — Milestone: Milestone 8I Seller Overview Endpoint Cards tamamlandı. | Sonuç: `/seller` seller decision workspace'e dönüştü; dört alert card (`slow_movers`, `negative_reviews`, `return_risk`, `stock_risk`), priority queue, ürün görselleri, route/API endpoint hedefleri ve validation kontrolleri eklendi; `npm run check`, `npm run build` ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8J Seller Products tamamlandı. | Sonuç: `/seller/products` fotoğraflı ürün yönetimi yüzeyine dönüştü; segment/search/sort filtreleri, `focus` query desteği, ürün risk sinyalleri, linked action, seçili ürün evidence rail'i, category breakdown, route loading state ve validation kontrolleri eklendi; `npm run check`, `npm run build` ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8K Seller Actions by Category tamamlandı. | Sonuç: `/seller/actions` kategori/focus action queue yüzeyine dönüştü; `/seller/actions?focus=negative-reviews`, `/seller/actions/customer-voice`, `/api/seller/actions?focus=...` ve `/api/seller/actions/[focus]` çalışır; mevcut action detail id route'ları korundu; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
+* 2026-05-16 — Milestone: Milestone 8L Seller Agent Page tamamlandı. | Sonuç: `/seller/agent` prompt composer, preset seller komutları, ürün kanıt sırası, pinned Agent cevabı, action önerileri, onay gerektiren draft preview ve `/api/seller/agent` GET/POST contract'ı ile çalışır; mutation uygulanmaz; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 
 ## 8) Yapılanlar
 
@@ -283,6 +286,7 @@
 * [x] Milestone 8I seller overview endpoint kartları ve öncelik sırası uygulandı.
 * [x] Milestone 8J seller products fotoğraflı ürün yönetimi ve focus filtreleri uygulandı.
 * [x] Milestone 8K seller actions kategori/focus endpoint'leri ve light action queue uygulandı.
+* [x] Milestone 8L seller agent prompt, ürün kanıt sırası ve onay sınırı uygulandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -326,7 +330,8 @@
 * [x] Milestone 8I seller overview endpoint kartlarını kur: iade, negatif yorum, satılmayan ürün, stok riski.
 * [x] Milestone 8J seller products ekranını fotoğraflı ürün yönetimi yüzeyine dönüştür.
 * [x] Milestone 8K seller actions ekranını kategori/focus endpoint'lerine böl.
-* [ ] Milestone 8L seller agent sohbet ve analiz yüzeyini kur: satıcı prompt'u, satılmayan ürün sıralama, sebep analizi ve öneri akışı.
+* [x] Milestone 8L seller agent sohbet ve analiz yüzeyini kur: satıcı prompt'u, satılmayan ürün sıralama, sebep analizi ve öneri akışı.
+* [ ] Milestone 8M seller profile + permissions ekranını gerçek ayar yüzeyine dönüştür: mağaza profili, agent yetki modu, bildirim tercihleri.
 * [ ] Milestone 8Q floating Agent mini panelini kur: tüm buyer/seller sayfalarında Codex pet ikonu, ortak agent history/runtime, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri.
 * [ ] Milestone 8N sonrası agent prompt/tool/runtime registry katmanını kur.
 * [ ] Milestone 8P için seller before/after preview, onay, audit log ve rollback davranışını netleştir.
@@ -366,6 +371,9 @@
 * 8K seller actions:
   * `/api/seller/actions?focus=negative-reviews|return-risk|slow-movers|stock-risk|inventory|customer-voice` filtrelenmiş action contract döndürür.
   * `/seller/actions/[id]` route'u parametre focus/category slug ise `SellerActionsWorkspace`, gerçek action id ise mevcut action detail ekranını render eder.
+* 8L seller agent:
+  * `/api/seller/agent` GET default seller agent contract, POST ise `{ prompt, sellerId? }` ile deterministic prompt analysis döndürür.
+  * Seller Agent mutation yapmaz; draft preview yalnızca onay gerektiren öneri olarak gösterilir. Gerçek before/after apply + audit akışı 8P kapsamındadır.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 

@@ -70,6 +70,10 @@ body {
   animation: seller-products-marquee 30s linear infinite;
 }
 
+.seller-agent-marquee {
+  animation: seller-products-marquee 32s linear infinite;
+}
+
 @keyframes seller-products-marquee {
   from {
     transform: translate3d(0, 0, 0);
