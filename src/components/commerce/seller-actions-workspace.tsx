@@ -405,20 +405,20 @@ function ActionQueueCard({
         </div>
       </div>
 
-      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_138px]">
+      <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]">
         <div className="grid gap-2 sm:grid-cols-3">
           {card.evidence.map((item) => (
             <ActionEvidenceMetric key={`${card.id}-${item.label}`} item={item} />
           ))}
         </div>
 
-        <div className="flex items-center gap-2 lg:justify-end">
+        <div className="flex items-center gap-2.5 lg:justify-end">
           {previewProducts.map((product) => (
             <Link
               key={product.id}
               href={product.href}
               aria-label={`${product.name} ürün detayını aç`}
-              className="block h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+              className="block h-14 w-14 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50 transition hover:border-orange-200 active:translate-y-px"
               title={product.name}
             >
               <span

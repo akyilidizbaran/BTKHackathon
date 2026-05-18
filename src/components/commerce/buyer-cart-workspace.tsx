@@ -213,7 +213,7 @@ export function BuyerCartWorkspace({ products }: { products: BuyerCatalogProduct
               <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">Sepete eklenebilecekler</h2>
               <Link
                 href="/buyer/products"
-                className="inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 hover:text-orange-800 active:translate-y-px"
+                className="inline-flex min-h-11 items-center rounded-full bg-orange-50 px-4 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 hover:text-orange-800 active:translate-y-px"
               >
                 Tüm ürünler
               </Link>

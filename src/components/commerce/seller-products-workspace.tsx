@@ -152,25 +152,25 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
 
   return (
     <div ref={rootRef} className="overflow-x-hidden">
-      <section className="grid grid-flow-dense items-start gap-5 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <div className="space-y-5">
+      <section className="grid grid-flow-dense items-start gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="space-y-4">
           <div
             data-seller-products-reveal
-            className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-6"
+            className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-5"
           >
-            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_260px]">
               <div>
-                <h2 className="max-w-5xl text-3xl font-semibold leading-[1.02] tracking-[-0.055em] text-slate-950 md:text-[2.65rem]">
+                <h2 className="max-w-5xl text-3xl font-semibold leading-[1.02] tracking-[-0.055em] text-slate-950 md:text-[2.25rem]">
                   Ürünleri tek bakışta yönet.
                 </h2>
-                <p className="mt-3 max-w-[68ch] text-sm leading-6 text-slate-600">
+                <p className="mt-2 max-w-[62ch] text-sm leading-5 text-slate-600">
                   Fotoğraf, stok, satış, fiyat, yorum ve risk sinyali aynı satırda okunur. Overview kartlarından gelen
                   odaklar bu ekranda gerçek filtreye dönüşür.
                 </p>
-                <div className="mt-5 flex flex-wrap gap-3">
+                <div className="mt-4 flex flex-wrap gap-2">
                   <button
                     type="button"
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-[#fff] transition hover:bg-slate-800 active:translate-y-px"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-[#fff] transition hover:bg-slate-800 active:translate-y-px"
                     onClick={() => handleFocusChange("at-risk")}
                   >
                     <WarningCircle size={17} weight="duotone" />
@@ -178,7 +178,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                   </button>
                   <button
                     type="button"
-                    className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
                     onClick={() => handleFocusChange("stock-risk")}
                   >
                     <FunnelSimple size={17} weight="duotone" />
@@ -189,7 +189,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
 
               <div className="rounded-lg border border-orange-200 bg-orange-50 p-4">
                 <div className="flex items-center gap-3">
-                  <span className="grid h-11 w-11 place-items-center rounded-lg bg-orange-500 text-[#fff]">
+                  <span className="grid h-10 w-10 place-items-center rounded-lg bg-orange-500 text-[#fff]">
                     <Package size={21} weight="duotone" />
                   </span>
                   <div>
@@ -197,7 +197,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                     <p className="text-xs text-slate-500">Aktif görünüm: {activeSegment?.label ?? "Tümü"}</p>
                   </div>
                 </div>
-                <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-orange-200/80">
+                <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-orange-200/80">
                   <HeroMetric label="Ürün" value={String(data.summary.productCount)} />
                   <HeroMetric label="Sağlık" value={`${data.summary.averageHealthScore}/100`} />
                   <HeroMetric label="Riskli" value={String(data.summary.riskyProductCount)} />
@@ -209,10 +209,10 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
 
           <section
             data-seller-products-reveal
-            className="rounded-lg border border-slate-200 bg-white p-4 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-5"
+            className="rounded-lg border border-slate-200 bg-white p-3 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-4"
           >
-            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_250px]">
-              <div className="flex flex-wrap gap-2 pb-1">
+            <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_240px]">
+              <div className="flex flex-wrap gap-2">
                 {data.segments.map((segment) => {
                   const Icon = focusIconMap[segment.id];
                   const isActive = activeFocus === segment.id;
@@ -221,9 +221,9 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                     <button
                       key={segment.id}
                       type="button"
-                      className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-semibold transition active:translate-y-px ${
+                      className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-3.5 text-sm font-semibold transition active:translate-y-px ${
                         isActive
-                          ? "min-w-[136px] bg-slate-950 text-[#fff] shadow-[0_14px_28px_-22px_rgba(15,23,42,0.9)]"
+                          ? "min-w-[128px] bg-slate-950 text-[#fff] shadow-[0_14px_28px_-22px_rgba(15,23,42,0.9)]"
                           : "bg-slate-50 text-slate-600 ring-1 ring-slate-200 hover:text-orange-700 hover:ring-orange-200"
                       }`}
                       onClick={() => handleFocusChange(segment.id)}
@@ -249,7 +249,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                   <input
                     id="seller-products-search"
                     aria-label="Ürün ara"
-                    className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 px-11 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                    className="h-10 w-full rounded-full border border-slate-200 bg-slate-50 px-11 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
                     placeholder="Ürün, SKU veya risk ara"
                     value={searchQuery}
                     onChange={(event) => setSearchQuery(event.target.value)}
@@ -276,7 +276,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                   <select
                     id="seller-products-sort"
                     aria-label="Ürün sıralaması"
-                    className="h-11 w-full appearance-none rounded-full border border-slate-200 bg-slate-50 px-11 text-sm font-semibold text-slate-700 outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                    className="h-10 w-full appearance-none rounded-full border border-slate-200 bg-slate-50 px-11 text-sm font-semibold text-slate-700 outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
                     value={sortKey}
                     onChange={(event) => setSortKey(event.target.value as SortKey)}
                   >
@@ -294,16 +294,16 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
 
         <aside
           data-seller-products-reveal
-          className="self-start rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)]"
+          className="self-start rounded-lg border border-slate-200 bg-white p-4 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)]"
         >
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Canlı ürün bandı</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
+              <h2 className="text-xl font-semibold tracking-[-0.04em] text-slate-950">Canlı ürün bandı</h2>
+              <p className="mt-1 text-sm leading-5 text-slate-500">
                 Filtre değişince ilk aday burada kısaca görünür.
               </p>
             </div>
-            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-orange-50 text-orange-600 ring-1 ring-orange-100">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-orange-50 text-orange-600 ring-1 ring-orange-100">
               <ChartLineUp size={21} weight="duotone" />
             </span>
           </div>
@@ -312,7 +312,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
             <Link
               href={selectedProduct.href}
               aria-label={`${selectedProduct.name} ürün detayını aç`}
-              className="mt-5 grid min-h-20 grid-cols-[80px_1fr] gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2 transition hover:border-orange-200 hover:bg-orange-50 active:translate-y-px"
+              className="mt-4 grid min-h-16 grid-cols-[70px_1fr] gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2 transition hover:border-orange-200 hover:bg-orange-50 active:translate-y-px"
             >
               <span className="overflow-hidden rounded-md border border-slate-200 bg-white">
                 <span
@@ -335,8 +335,8 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
             </Link>
           ) : null}
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            {railChips.slice(0, 5).map((item) => (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {railChips.slice(0, 4).map((item) => (
               <span
                 key={item}
                 className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
@@ -348,12 +348,12 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
         </aside>
       </section>
 
-      <section className="mt-5 grid grid-flow-dense gap-5 xl:grid-cols-[minmax(0,1fr)_390px]">
+      <section className="mt-4 grid grid-flow-dense gap-4 xl:grid-cols-[minmax(0,1fr)_390px]">
         <div data-seller-products-reveal className="min-w-0">
-          <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-end">
+          <div className="mb-3 flex flex-col justify-between gap-3 md:flex-row md:items-end">
             <div>
-              <h2 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950">Fotoğraflı ürün listesi</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
+              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Fotoğraflı ürün listesi</h2>
+              <p className="mt-1 text-sm leading-5 text-slate-500">
                 {visibleProducts.length} ürün görünüyor. Fiyat, satış, stok, yorum ve risk sinyalleri aynı akışta.
               </p>
             </div>
@@ -600,7 +600,7 @@ function RailEvidence({ label, value, helper }: { label: string; value: string; 
 
 function HeroMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white/80 p-3">
+    <div className="bg-white/80 p-2.5">
       <p className="text-xs text-slate-500">{label}</p>
       <p className="mt-1 font-mono text-sm font-semibold text-slate-950">{value}</p>
     </div>

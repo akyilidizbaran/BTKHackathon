@@ -1524,7 +1524,7 @@ function createSellerOverviewPriorityQueue(
   actions: SellerGrowthAction[],
 ): SellerOverviewPriorityItem[] {
   const alertItems = alertCards.map((card) => ({
-    helper: card.primaryProduct?.name ?? card.summary,
+    helper: card.primaryAction?.timeHorizonLabel ?? card.primaryProduct?.name ?? card.summary,
     href: card.primaryAction?.href ?? card.href,
     id: card.id,
     ownerLabel: card.ownerLabel,
@@ -1532,7 +1532,7 @@ function createSellerOverviewPriorityQueue(
     title: card.primaryAction?.title ?? card.title,
     tone: card.tone,
   }));
-  const actionItems = actions.slice(0, 4).map((action) => {
+  const actionItems = actions.map((action) => {
     const tone: SellerOverviewPriorityItem["tone"] =
       action.urgency === "critical" ? "danger" : action.urgency === "high" ? "warning" : "calm";
 
@@ -1547,9 +1547,36 @@ function createSellerOverviewPriorityQueue(
     };
   });
 
-  return [...alertItems, ...actionItems]
-    .sort((first, second) => second.priorityScore - first.priorityScore)
-    .slice(0, 4);
+  const seenHrefs = new Set<string>();
+  const seenTitles = new Set<string>();
+  const seenProductHelpers = new Set<string>();
+  const uniqueItems: SellerOverviewPriorityItem[] = [];
+
+  for (const item of [...alertItems, ...actionItems].sort((first, second) => second.priorityScore - first.priorityScore)) {
+    const hrefKey = item.href.toLocaleLowerCase("tr-TR");
+    const titleKey = item.title.trim().toLocaleLowerCase("tr-TR");
+    const helperKey = item.helper.trim().toLocaleLowerCase("tr-TR");
+    const isProductHelper = helperKey.length > 0 && !/(bugün|hafta|gün|saat|kontrol|takip)/u.test(helperKey);
+
+    if (seenHrefs.has(hrefKey) || seenTitles.has(titleKey) || (isProductHelper && seenProductHelpers.has(helperKey))) {
+      continue;
+    }
+
+    seenHrefs.add(hrefKey);
+    seenTitles.add(titleKey);
+
+    if (isProductHelper) {
+      seenProductHelpers.add(helperKey);
+    }
+
+    uniqueItems.push(item);
+
+    if (uniqueItems.length === 4) {
+      break;
+    }
+  }
+
+  return uniqueItems;
 }
 
 function createPrimaryAction(

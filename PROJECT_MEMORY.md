@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Gerçek DB öncesi clickable UI audit'teki P1 sorunları kapatıldı.
+  * Gerçek DB öncesi clickable UI audit'teki P1 ve P2 kalite işleri kapatıldı.
 * Son değişiklik neydi?
-  * Floating Agent çakışması için desktop agent lane eklendi, seller products üst bandı kompakt light düzene çekildi ve image-only link/form hit-area sorunları toparlandı.
+  * `/seller/products` üst ritmi daha sıkı hale geldi, P2 metin link/thumbnail/toggle hit-area sorunları kapandı ve seller overview öncelik kuyruğu tekilleştirildi.
 * Bir sonraki net adım ne?
-  * Kalan P2 işler: seller overview tekrarlarını prune etmek ve daha küçük metin yoğunluğu iyileştirmelerini manuel ilerletmek.
+  * Final teslim öncesi gerekirse responsive smoke ve demo akış ekran görüntüleri alınacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1439,6 +1439,21 @@
   * `npm run check`, `npm run build`, `git diff --check` geçti.
   * Puppeteer DOM probe: `/seller/products`, `/seller/actions?focus=slow-movers`, `/seller/actions/review_attention-connectplus-usb-c-hub`, `/seller/profile`, `/buyer/profile`, `/buyer/cart` için `badLabel: []`, `tiny: []`, `overflowX: 0`.
   * Puppeteer screenshot: `p1-seller-products-final`, `p1-buyer-product-detail-after`, `p1-seller-action-detail-after`.
+
+### 2026-05-18 UI Audit P2 Remediation
+
+* Kapsam:
+  * `/seller/products` üst hero, filtre ve canlı ürün bandı daha kompakt spacing'e çekildi; ürün listesi 1280x800 viewport'ta daha erken başlıyor.
+  * `Ürünlere dön`, `Aksiyonlara dön`, `Ürün radarına dön`, `Tüm ürünler` metin linkleri 44px civarı pill hedeflere çıkarıldı.
+  * `/seller/actions` ürün thumbnail linkleri 56x56 hedeflere büyütüldü.
+  * `/seller/profile` capability/channel/alert toggle görselleri ve alert “ürün etkileniyor” linkleri daha rahat tıklanabilir hale getirildi.
+  * Seller overview priority queue builder'ı duplicate title/href/product-helper satırlarını prune eder; action başlığı varsa helper metni action zaman ufkuyla tutarlı kalır.
+* Doğrulama:
+  * `npm run check`, `npm run build`, `git diff --check` geçti.
+  * Puppeteer DOM probe: `/seller/products` `productListTop: 682`, `firstProductTop: 750`, `scopedTiny: []`, `overflowX: 0`.
+  * Puppeteer DOM probe: `/seller/actions?focus=slow-movers` thumbnail hedefleri `56x56`, `scopedTiny: []`, `overflowX: 0`.
+  * Puppeteer DOM probe: `/seller/profile` alert toggle hedefleri `64x40`, affected product linkleri yaklaşık `149x40`, `scopedTiny: []`, `overflowX: 0`.
+  * Puppeteer DOM probe: `/seller` priority queue'da duplicate title/href yok; ekran görüntüleri `p2-seller-products-final`, `p2-seller-actions`, `p2-seller-profile`, `p2-seller-overview-final`.
 
 ### Güncelleme Kaydı
 

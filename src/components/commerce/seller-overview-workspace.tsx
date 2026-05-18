@@ -171,7 +171,7 @@ export function SellerOverviewWorkspace({ overview, products }: SellerOverviewWo
               <Link
                 key={item.id}
                 href={item.href}
-                className="group grid gap-3 py-4 transition hover:translate-x-1"
+                className="group -mx-3 grid min-h-20 gap-3 rounded-lg px-3 py-4 transition hover:translate-x-1 hover:bg-white/5 active:translate-y-px"
               >
                 <div className="flex items-start justify-between gap-3">
                   <p className="text-sm font-semibold leading-5 text-[#fff]">{item.title}</p>
@@ -201,7 +201,7 @@ export function SellerOverviewWorkspace({ overview, products }: SellerOverviewWo
             </div>
             <Link
               href="/seller/products"
-              className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
             >
               Ürünleri aç
               <ArrowRight size={15} weight="bold" />

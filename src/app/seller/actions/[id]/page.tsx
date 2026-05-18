@@ -65,7 +65,7 @@ export default async function SellerActionDetailPage({
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-7">
           <Link
             href="/seller/actions"
-            className="inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold text-orange-600 transition hover:bg-orange-50 hover:text-orange-700 active:translate-y-px"
+            className="inline-flex min-h-11 items-center justify-center rounded-full border border-orange-200 bg-orange-50 px-4 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 hover:text-orange-800 active:translate-y-px"
           >
             Aksiyonlara dön
           </Link>
@@ -114,7 +114,7 @@ export default async function SellerActionDetailPage({
               <Link
                 key={product.id}
                 href={product.href}
-                className="grid gap-3 py-4 transition hover:bg-slate-50 md:grid-cols-[1fr_100px]"
+                className="-mx-3 grid min-h-16 gap-3 rounded-lg px-3 py-4 transition hover:bg-slate-50 active:translate-y-px md:grid-cols-[1fr_100px]"
               >
                 <div>
                   <p className="text-sm font-semibold text-slate-950">{product.name}</p>

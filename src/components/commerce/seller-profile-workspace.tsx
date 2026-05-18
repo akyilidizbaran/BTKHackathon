@@ -489,7 +489,7 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
                 </div>
                 <Link
                   href="/seller/agent"
-                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
                 >
                   Agent ekranı
                   <ArrowRight size={15} weight="bold" />
@@ -564,11 +564,11 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
                           <span className="block text-sm font-semibold text-slate-950">{channel.label}</span>
                           <span className="mt-1 block text-xs leading-5 text-slate-500">{channel.helper}</span>
                         </span>
-                        <span className={`h-5 w-9 rounded-full p-0.5 transition ${
+                        <span className={`h-7 w-12 shrink-0 rounded-full p-1 transition ${
                           isSelected ? "bg-orange-500" : "bg-slate-300"
                         }`}>
-                          <span className={`block h-4 w-4 rounded-full bg-white transition ${
-                            isSelected ? "translate-x-4" : "translate-x-0"
+                          <span className={`block h-5 w-5 rounded-full bg-white transition ${
+                            isSelected ? "translate-x-5" : "translate-x-0"
                           }`} />
                         </span>
                       </span>
@@ -663,7 +663,7 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
               </div>
               <Link
                 href="/seller/actions"
-                className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
               >
                 Aksiyon kuyruğu
                 <ArrowRight size={15} weight="bold" />
@@ -865,11 +865,11 @@ function CapabilityToggle({
         }`}>
           <Icon size={18} weight="duotone" />
         </span>
-        <span className={`h-5 w-9 rounded-full p-0.5 transition ${
+        <span className={`h-7 w-12 shrink-0 rounded-full p-1 transition ${
           isSelected && !capability.locked ? "bg-orange-500" : "bg-slate-300"
         }`}>
-          <span className={`block h-4 w-4 rounded-full bg-white transition ${
-            isSelected && !capability.locked ? "translate-x-4" : "translate-x-0"
+          <span className={`block h-5 w-5 rounded-full bg-white transition ${
+            isSelected && !capability.locked ? "translate-x-5" : "translate-x-0"
           }`} />
         </span>
       </span>
@@ -902,19 +902,19 @@ function AlertRuleRow({
           <button
             type="button"
             onClick={() => onEnabledChange(!rule.enabled)}
-            className={`h-8 w-12 shrink-0 rounded-full p-1 transition active:translate-y-px ${
+            className={`h-10 w-16 shrink-0 rounded-full p-1 transition active:translate-y-px ${
               rule.enabled ? "bg-orange-500" : "bg-slate-300"
             }`}
             aria-label={`${rule.label} kuralını değiştir`}
           >
-            <span className={`block h-6 w-6 rounded-full bg-white transition ${
-              rule.enabled ? "translate-x-4" : "translate-x-0"
+            <span className={`block h-8 w-8 rounded-full bg-white transition ${
+              rule.enabled ? "translate-x-6" : "translate-x-0"
             }`} />
           </button>
         </div>
         <Link
           href={rule.href}
-          className="mt-2 inline-flex min-h-9 items-center rounded-full px-3 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 hover:text-orange-800 active:translate-y-px"
+          className="mt-3 inline-flex min-h-10 items-center rounded-full bg-orange-50 px-4 text-sm font-semibold text-orange-700 transition hover:bg-orange-100 hover:text-orange-800 active:translate-y-px"
         >
           {rule.affectedProductCount} ürün etkileniyor
         </Link>
