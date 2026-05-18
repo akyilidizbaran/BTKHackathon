@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Gerçek DB öncesi UI kalite denetiminde seller aksiyon listesi ve aksiyon detayları ürünleşmiş, kısa satıcı iş akışı diline indirildi.
+  * Gerçek DB öncesi tüm buyer/seller ürün, sepet, profil, agent ve aksiyon yüzeyleri tıklanabilir UI audit'ten geçirildi.
 * Son değişiklik neydi?
-  * `/seller/actions?focus=slow-movers` üst özet kartındaki boşluk kaynağı kaldırıldı; aksiyon detayları light card düzenine, kısa iş/sinyal/yorum görünümüne ve compact explanation paneline taşındı.
+  * Puppeteer ile ana endpoint'ler ve tıklanabilir kontroller incelendi; kalan UI sorunları P1/P2 backlog olarak kaydedildi.
 * Bir sonraki net adım ne?
-  * Sonraki objektif açık iş: gerçek DB/auth öncesi kalan mock/state sınırlarını netleştirmek ve gerekiyorsa P2 olarak buyer/seller detay ekranlarında metin yoğunluğunu manuel prune etmek.
+  * P1'den başlayarak floating agent çakışmaları, seller products boşluk düzeni ve tıklanabilir görsel/label erişilebilirliği kapatılacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1406,6 +1406,25 @@
 * Doğrulama:
   * `npm run check`, `npm run build`, `git diff --check` geçti.
   * Puppeteer screenshot smoke: `/seller/actions?focus=slow-movers`, `/seller/actions/create_bundle-tidy-kablo-duzenleyici`, `/seller/actions/review_attention-connectplus-usb-c-hub`.
+
+### 2026-05-18 Full Clickable UI Audit
+
+* Kapsam:
+  * Puppeteer ile `/`, `/buyer/products`, `/buyer/cart`, `/buyer/products/calliel-spf50-gunes-kremi`, `/buyer/agent`, `/buyer/profile`, `/seller`, `/seller/products`, `/seller/products/ergoflex-calisma-sandalyesi`, `/seller/actions?focus=slow-movers`, iki action detail, `/seller/agent`, `/seller/profile` ve floating agent açık paneli incelendi.
+* P0:
+  * Ana desktop akışlarda yatay taşma, kırık route, okunamaz başlık veya aksiyon bloklayan kritik UI hatası görülmedi.
+* P1:
+  * Floating Agent butonu/proactive kartı buyer ürün detayı ve seller action/detail/profile gibi sağ rail kullanan sayfalarda içerik kartlarının üstüne binebiliyor; global offset, safe-area padding veya sayfa tipine göre mini cue gizleme/konumlama gerekir.
+  * `/seller/products` ekranında sağdaki canlı ürün bandı yüksekliği, sol tarafta ürün listesi başlamadan gereksiz dikey boşluk hissi yaratıyor; actions sayfasındaki compact düzen mantığı buraya da taşınmalı.
+  * Buyer cart/agent/profile ve seller agent alt listelerinde bazı image-only product link'leri erişilebilir isim taşımıyor; link'in kendisine `aria-label` veya görünür metin bağlanmalı.
+  * Buyer/seller search ve color/number input audit'lerinde bazı kontroller label bağlantısı veya efektif hit-area açısından zayıf görünüyor; form label/id eşleşmeleri ve min-height kontrolleri toparlanmalı.
+* P2:
+  * `Ürünlere dön`, `Aksiyonlara dön`, `Ürün radarına dön`, `Tüm ürünler` gibi metin linklerinin hit-area yüksekliği 18-20px seviyesinde; minimum 40px tıklama alanına çıkarılmalı.
+  * `/seller/actions` içindeki küçük ürün thumbnail link'leri 24px genişliğe kadar düşebiliyor; thumbnail link alanı büyütülmeli veya kart aksiyonu tek büyük linke bağlanmalı.
+  * `/seller/profile` risk kuralı toggle'ları ve etkilenen ürün linkleri görsel olarak küçük; kontrol grubu minimum dokunma alanıyla yeniden dengelenmeli.
+  * Seller overview öncelik listesinde aynı ürün/aksiyon tekrarları güven hissini azaltabilir; veri/öncelik listesi prune edilebilir.
+* Doğrulama notu:
+  * Ekran görüntüleri: `audit-00-root` ile `audit-16-buyer-product-detail-1280x800` arası Puppeteer smoke seti.
 
 ### Güncelleme Kaydı
 
