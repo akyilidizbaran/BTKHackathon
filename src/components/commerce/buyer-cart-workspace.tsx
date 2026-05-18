@@ -137,7 +137,7 @@ export function BuyerCartWorkspace({ products }: { products: BuyerCatalogProduct
                 >
                   <div
                     aria-label={product.image.alt}
-                    className="aspect-square bg-[length:500%_400%] bg-no-repeat transition duration-700 hover:scale-105"
+                    className="aspect-square bg-[length:600%_800%] bg-no-repeat transition duration-700 hover:scale-105"
                     role="img"
                     style={{
                       backgroundImage: `url(${product.image.src})`,
@@ -228,7 +228,7 @@ export function BuyerCartWorkspace({ products }: { products: BuyerCatalogProduct
                   >
                     <div
                       aria-label={product.image.alt}
-                      className="h-full bg-[length:500%_400%] bg-no-repeat transition duration-700 hover:scale-105"
+                      className="h-full bg-[length:600%_800%] bg-no-repeat transition duration-700 hover:scale-105"
                       role="img"
                       style={{
                         backgroundImage: `url(${product.image.src})`,

@@ -424,7 +424,7 @@ function ActionQueueCard({
               <span
                 data-action-product-media
                 aria-label={product.image.alt}
-                className="block h-full w-full bg-[length:500%_400%] bg-no-repeat transition duration-700 ease-out group-hover:scale-105"
+                className="block h-full w-full bg-[length:600%_800%] bg-no-repeat transition duration-700 ease-out group-hover:scale-105"
                 role="img"
                 style={{
                   backgroundImage: `url(${product.image.src})`,
@@ -450,7 +450,7 @@ function SelectedActionRail({ card }: { card: SellerActionListItem }) {
           <div
             data-action-product-media
             aria-label={product.image.alt}
-            className="aspect-[4/3] bg-[length:500%_400%] bg-no-repeat"
+            className="aspect-[4/3] bg-[length:600%_800%] bg-no-repeat"
             role="img"
             style={{
               backgroundImage: `url(${product.image.src})`,

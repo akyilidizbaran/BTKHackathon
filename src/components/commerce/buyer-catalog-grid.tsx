@@ -63,7 +63,7 @@ export function BuyerCatalogGrid({ products }: { products: BuyerCatalogProductCa
                 className="block aspect-[4/3] overflow-hidden"
               >
                 <div
-                  className="h-full w-full bg-[length:500%_400%] bg-no-repeat transition duration-700 ease-out group-hover:scale-105"
+                  className="h-full w-full bg-[length:600%_800%] bg-no-repeat transition duration-700 ease-out group-hover:scale-105"
                   style={{
                     backgroundImage: `url(${product.image.src})`,
                     backgroundPosition: product.image.position,

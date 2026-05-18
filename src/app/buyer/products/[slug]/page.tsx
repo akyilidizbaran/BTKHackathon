@@ -48,7 +48,7 @@ export default async function BuyerProductDetailPage({
           <div className="aspect-[4/5] rounded-lg bg-slate-100 p-5">
             <div
               aria-label={catalogProduct.image.alt}
-              className="h-full rounded-md border border-slate-200 bg-white bg-[length:500%_400%] bg-no-repeat"
+              className="h-full rounded-md border border-slate-200 bg-white bg-[length:600%_800%] bg-no-repeat"
               role="img"
               style={{
                 backgroundImage: `url(${catalogProduct.image.src})`,
@@ -60,7 +60,7 @@ export default async function BuyerProductDetailPage({
             {Array.from({ length: 4 }).map((_, index) => (
               <div
                 key={index}
-                className="aspect-square rounded-md border border-slate-200 bg-slate-50 bg-[length:500%_400%] bg-no-repeat"
+                className="aspect-square rounded-md border border-slate-200 bg-slate-50 bg-[length:600%_800%] bg-no-repeat"
                 style={{
                   backgroundImage: `url(${catalogProduct.image.src})`,
                   backgroundPosition: catalogProduct.image.position,

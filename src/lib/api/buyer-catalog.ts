@@ -101,50 +101,17 @@ const featuredProductIds = [
   "prod-clearcam-webcam",
 ];
 
-const spritePositions = [
-  "0% 0%",
-  "25% 0%",
-  "50% 0%",
-  "75% 0%",
-  "100% 0%",
-  "0% 33.333%",
-  "25% 33.333%",
-  "50% 33.333%",
-  "75% 33.333%",
-  "100% 33.333%",
-  "0% 66.666%",
-  "25% 66.666%",
-  "50% 66.666%",
-  "75% 66.666%",
-  "100% 66.666%",
-  "0% 100%",
-  "25% 100%",
-  "50% 100%",
-  "75% 100%",
-  "100% 100%",
-];
-
-const productSpriteIndexOverrides: Record<string, number> = {
-  "prod-airbeat-spor-kulaklik": 16,
-  "prod-barista-kahve-ogutucu": 12,
-  "prod-brewday-french-press": 13,
-  "prod-calliel-spf50-gunes-kremi": 5,
-  "prod-clearcam-webcam": 19,
-  "prod-collaberry-gummy-kolajen": 6,
-  "prod-connectplus-usb-c-hub": 18,
-  "prod-elya-bej-pileli-pantolon": 1,
-  "prod-flowmate-kablosuz-mouse": 2,
-  "prod-focus-not-defteri-seti": 17,
-  "prod-graphite-desk-mat": 11,
-  "prod-luma-led-masa-lambasi": 4,
-  "prod-mokaline-moka-pot": 12,
-  "prod-riseup-laptop-standi": 10,
-  "prod-runbuds-spor-kulakici": 16,
-  "prod-runwell-spor-matara": 15,
-  "prod-sera-krem-triko-kazak": 0,
-  "prod-stride-kancali-spor-kulaklik": 16,
-  "prod-thermogo-termos-mug": 13,
-  "prod-tidy-kablo-duzenleyici": 9,
+const productSpriteColumnCount = 6;
+const productSpriteRowCount = 8;
+const spritePositions = createSpritePositions(productSpriteColumnCount, productSpriteRowCount);
+const categorySpriteProductIds: Record<BuyerMarketplaceCategoryId, string> = {
+  aksesuar: "prod-focus-not-defteri-seti",
+  elektronik: "prod-flowmate-kablosuz-mouse",
+  "erkek-giyim": "prod-nordline-lacivert-polo-kazak",
+  "ev-yasam": "prod-ergoflex-calisma-sandalyesi",
+  "kadin-giyim": "prod-sera-krem-triko-kazak",
+  kozmetik: "prod-calliel-spf50-gunes-kremi",
+  spor: "prod-runwell-spor-matara",
 };
 
 export function getBuyerCatalogApiData(input: {
@@ -280,49 +247,35 @@ function getMarketplaceCategory(category: ProductCategory): BuyerCatalogCategory
 }
 
 function getProductSpriteIndex(product: Product): number {
-  if (productSpriteIndexOverrides[product.id] !== undefined) {
-    return productSpriteIndexOverrides[product.id];
-  }
+  const index = getProducts().findIndex((candidate) => candidate.id === product.id);
 
-  if (product.category === "kadin-giyim") {
-    return 0;
-  }
-
-  if (product.category === "erkek-giyim") {
-    return 1;
-  }
-
-  if (product.category === "kozmetik") {
-    return product.subcategory.includes("Güneş") ? 5 : 6;
-  }
-
-  if (product.category === "spor") {
-    return product.subcategory.includes("Matara") ? 15 : 16;
-  }
-
-  if (product.subcategory.toLowerCase().includes("mouse")) {
-    return 2;
-  }
-
-  if (product.subcategory.toLowerCase().includes("kulaklık")) {
-    return 3;
+  if (index >= 0) {
+    return index;
   }
 
   return Math.abs(hashString(product.id)) % spritePositions.length;
 }
 
 function getCategorySpriteIndex(categoryId: BuyerMarketplaceCategoryId): number {
-  const categoryImageIndexes: Record<BuyerMarketplaceCategoryId, number> = {
-    aksesuar: 14,
-    elektronik: 3,
-    "erkek-giyim": 1,
-    "ev-yasam": 4,
-    "kadin-giyim": 0,
-    kozmetik: 5,
-    spor: 15,
-  };
+  const productId = categorySpriteProductIds[categoryId];
+  const index = getProducts().findIndex((product) => product.id === productId);
 
-  return categoryImageIndexes[categoryId];
+  return index >= 0 ? index : 0;
+}
+
+function createSpritePositions(columns: number, rows: number): string[] {
+  return Array.from({ length: columns * rows }, (_, index) => {
+    const column = index % columns;
+    const row = Math.floor(index / columns);
+    const x = columns === 1 ? 0 : (column / (columns - 1)) * 100;
+    const y = rows === 1 ? 0 : (row / (rows - 1)) * 100;
+
+    return `${formatSpritePercent(x)}% ${formatSpritePercent(y)}%`;
+  });
+}
+
+function formatSpritePercent(value: number): string {
+  return Number.isInteger(value) ? String(value) : value.toFixed(3).replace(/0+$/u, "").replace(/\.$/u, "");
 }
 
 function sortBuyerCatalogProducts(

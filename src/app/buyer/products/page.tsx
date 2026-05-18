@@ -51,7 +51,7 @@ export default async function BuyerProductsPage({
               >
                 <span
                   aria-hidden="true"
-                  className="h-16 w-16 rounded-full border border-slate-200 bg-slate-50 bg-[length:500%_400%] bg-no-repeat shadow-[0_12px_30px_-24px_rgba(15,23,42,0.7)] transition duration-500 group-hover:scale-105"
+                  className="h-16 w-16 rounded-full border border-slate-200 bg-slate-50 bg-[length:600%_800%] bg-no-repeat shadow-[0_12px_30px_-24px_rgba(15,23,42,0.7)] transition duration-500 group-hover:scale-105"
                   style={{
                     backgroundImage: `url(${category.image.src})`,
                     backgroundPosition: category.image.position,
@@ -90,7 +90,7 @@ export default async function BuyerProductsPage({
               {heroProducts.map((product, index) => (
                 <div
                   key={product.id}
-                  className="absolute bottom-[-8px] h-32 w-32 rounded-lg border border-white/80 bg-white bg-[length:500%_400%] bg-no-repeat shadow-[0_18px_42px_-32px_rgba(15,23,42,0.75)]"
+                  className="absolute bottom-[-8px] h-32 w-32 rounded-lg border border-white/80 bg-white bg-[length:600%_800%] bg-no-repeat shadow-[0_18px_42px_-32px_rgba(15,23,42,0.75)]"
                   style={{
                     backgroundImage: `url(${product.image.src})`,
                     backgroundPosition: product.image.position,

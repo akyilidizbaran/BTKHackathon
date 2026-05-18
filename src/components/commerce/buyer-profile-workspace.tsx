@@ -453,7 +453,7 @@ export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProp
                   >
                     <div
                       aria-label={review.image.alt}
-                      className="aspect-square bg-[length:500%_400%] bg-no-repeat transition duration-700 hover:scale-105"
+                      className="aspect-square bg-[length:600%_800%] bg-no-repeat transition duration-700 hover:scale-105"
                       role="img"
                       style={{
                         backgroundImage: `url(${review.image.src})`,

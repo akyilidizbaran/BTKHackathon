@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * GitHub teknik görünürlüğünü güçlendirme adımlarından demo script dokümantasyonu eklendi.
+  * MVP manuel demo öncesi ürün görsellerindeki tekrar hissi giderildi.
 * Son değişiklik neydi?
-  * `docs/DEMO_SCRIPT.md` eklendi; README demo walkthrough dokümanına link veriyor.
+  * `public/catalog/buyer-product-sprite.png` 48 ürünü kapsayan 6x8 özgün ürün sprite'ına taşındı; tüm ürün görsel yüzeyleri `600%_800%` sprite oranını kullanıyor.
 * Bir sonraki net adım ne?
-  * GitHub görünürlüğü için sıradaki adım: Puppeteer/Playwright smoke script'ini repo komutu haline getirmek.
+  * Kullanıcı manuel demo smoke yapacak; canlı demo/deploy URL hazırlığı bunun ardından ele alınacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -118,7 +118,7 @@
   * `src/app/buyer/profile/page.tsx`: server-side default buyer profile contract'ını `BuyerProfileWorkspace` client component'ine verir.
   * `src/app/seller/profile/page.tsx`: server-side default seller profile contract'ını `SellerProfileWorkspace` client component'ine verir.
   * `src/app/demo/page.tsx`: 8R demo rehearsal workspace'ini typed runbook contract ile açar.
-  * `public/catalog/buyer-product-sprite.png`: 8E buyer katalog ve kategori görselleri için kontrollü mock ürün sprite'ı.
+  * `public/catalog/buyer-product-sprite.png`: 48 ürünün tamamı için ürün açıklamasıyla uyumlu 6x8 mock ürün sprite'ı.
   * `src/app/globals.css`: light CommercePilot tokenları ve geçici `commerce-legacy-light` bridge'i.
   * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`: marketplace + agent pet pivot kararları, endpoint haritası ve revize milestone yol haritası.
   * Planlanan sonraki yapı: buyer `products/cart/agent/profile`, seller `overview/products/actions/agent/profile`, `src/lib/agents/prompts/*`, `src/lib/agents/tools/*`, `src/lib/agents/runtime/*`, cart/listing mock mutation ve audit katmanı.
@@ -1499,6 +1499,18 @@
   * Demo script İngilizce ve ASCII tutuldu; prompt örnekleri ürünün Türkçe UI kullanımına uygun şekilde bırakıldı.
 * Sıradaki adım:
   * Puppeteer/Playwright smoke akışı committed script haline getirilecek ve README/scripts kısmına bağlanacak.
+
+### 2026-05-18 Product Sprite Uniqueness MVP Polish
+
+* Karar:
+  * Buyer/seller ürün fotoğrafları 20 hücrelik tekrar eden sprite yerine ürün sırasına bağlı 48 hücrelik deterministik sprite kullanacak.
+* Kapsam:
+  * `public/catalog/buyer-product-sprite.png` 6 sütun x 8 satır olarak yeniden üretildi; her mock ürün için açıklamasıyla uyumlu ayrı görsel hücre bulunur.
+  * `src/lib/api/buyer-catalog.ts` ürün görsel pozisyonlarını ürün dizisi sırasından üretir; kategori görselleri seçili temsilci ürünlere bağlanır.
+  * Buyer ve seller ürün yüzeylerindeki Tailwind background-size sınıfları yeni `600%_800%` sprite grid'ine geçirildi.
+* Doğrulama:
+  * `npm run check` ve `npm run build` geçti.
+  * Puppeteer smoke: `/buyer/products` 48 ürün linkinde 48 unique sprite position doğrulandı; `/buyer/products/calliel-spf50-gunes-kremi` ve `/seller/products` ekran görüntüleriyle yeni sprite hücreleri kontrol edildi.
 
 ### Güncelleme Kaydı
 

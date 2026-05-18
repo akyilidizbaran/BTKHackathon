@@ -583,7 +583,7 @@ function ProductFindingCard({ finding }: { finding: SellerAgentProductFinding })
           <span
             data-seller-agent-media
             aria-label={product.image.alt}
-            className="block aspect-[4/3] bg-[length:500%_400%] bg-no-repeat transition duration-700 group-hover:scale-105"
+            className="block aspect-[4/3] bg-[length:600%_800%] bg-no-repeat transition duration-700 group-hover:scale-105"
             role="img"
             style={{
               backgroundImage: `url(${product.image.src})`,

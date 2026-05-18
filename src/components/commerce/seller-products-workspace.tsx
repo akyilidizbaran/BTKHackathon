@@ -318,7 +318,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                 <span
                   data-product-media
                   aria-label={selectedProduct.image.alt}
-                  className="block aspect-[4/3] bg-[length:500%_400%] bg-no-repeat transition duration-700 hover:scale-105"
+                  className="block aspect-[4/3] bg-[length:600%_800%] bg-no-repeat transition duration-700 hover:scale-105"
                   role="img"
                   style={{
                     backgroundImage: `url(${selectedProduct.image.src})`,
@@ -450,7 +450,7 @@ function ProductRow({
           <span
             data-product-media
             aria-label={product.image.alt}
-            className="block aspect-[4/3] bg-[length:500%_400%] bg-no-repeat transition duration-700 ease-out group-hover:scale-105"
+            className="block aspect-[4/3] bg-[length:600%_800%] bg-no-repeat transition duration-700 ease-out group-hover:scale-105"
             role="img"
             style={{
               backgroundImage: `url(${product.image.src})`,
@@ -512,7 +512,7 @@ function SelectedProductRail({ product }: { product: SellerProductApiRow }) {
         <div
           data-product-media
           aria-label={product.image.alt}
-          className="aspect-[4/3] bg-[length:500%_400%] bg-no-repeat"
+          className="aspect-[4/3] bg-[length:600%_800%] bg-no-repeat"
           role="img"
           style={{
             backgroundImage: `url(${product.image.src})`,

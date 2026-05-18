@@ -240,7 +240,7 @@ export function SellerOverviewWorkspace({ overview, products }: SellerOverviewWo
                 <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                   <div
                     aria-label={product.image.alt}
-                    className="aspect-square bg-[length:500%_400%] bg-no-repeat transition duration-700 group-hover:scale-105"
+                    className="aspect-square bg-[length:600%_800%] bg-no-repeat transition duration-700 group-hover:scale-105"
                     role="img"
                     style={{
                       backgroundImage: `url(${product.image.src})`,
@@ -300,7 +300,7 @@ function AlertCard({ card }: { card: SellerOverviewAlertCard }) {
           <span className="overflow-hidden rounded-lg bg-white">
             <span
               aria-label={card.primaryProduct.image.alt}
-              className="block aspect-square bg-[length:500%_400%] bg-no-repeat transition duration-700 group-hover:scale-105"
+              className="block aspect-square bg-[length:600%_800%] bg-no-repeat transition duration-700 group-hover:scale-105"
               role="img"
               style={{
                 backgroundImage: `url(${card.primaryProduct.image.src})`,
