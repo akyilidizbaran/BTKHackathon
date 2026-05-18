@@ -39,6 +39,24 @@ API smoke:
 * `POST /api/review-intelligence` returned OpenAI generated review intelligence.
 * `GET /api/seller/products`, `/api/seller/actions`, `/api/seller/profile`, `/api/buyer/profile` returned success.
 
+Reviewer proof route table:
+
+| Surface | Route/API | Proof signal |
+|---|---|---|
+| Role gateway | `/` | Buyer/seller entry points are separated but share one commerce system. |
+| Buyer catalog | `/buyer/products` | 48 contract-backed products, category filters, sorting, sprite-backed product images. |
+| Buyer product detail | `/buyer/products/calliel-spf50-gunes-kremi` | Purchase panel, store CTA, 4-item review/note pagination, Agent note. |
+| Buyer Agent | `/buyer/agent`, `POST /api/buyer/agent` | Catalog-bound recommendation and explicit append/replace approval. |
+| Buyer cart | `/buyer/cart` | Local cart state, quantity controls, suggested products. |
+| Seller overview | `/seller`, `GET /api/seller/overview` | Risk cards, buyer/seller signal loop and deduplicated priority queue. |
+| Seller products | `/seller/products`, `GET /api/seller/products` | Product radar, health score, search/sort/focus filters. |
+| Seller actions | `/seller/actions`, `GET /api/seller/actions` | Action queue grouped by focus, product evidence links. |
+| Seller action detail | `/seller/actions/[id]`, `GET /api/seller/actions/[id]` | Work steps, affected products, explanation contract, review highlights where relevant. |
+| Seller Agent | `/seller/agent`, `POST /api/seller/agent` | Findings, draft listing preview, approval and local rollback boundary. |
+| Floating Agent | `POST /api/agent/floating` | Route-aware buyer/seller/chat modes and role mismatch guardrails. |
+| Review Intelligence | `POST /api/review-intelligence` | Source review id/theme constrained LLM contract. |
+| Demo proof | `/demo` | Human-readable runbook and proof stack for jury/reviewer walkthrough. |
+
 Puppeteer component smoke:
 
 * `BuyerCatalogGrid`: horizontal slider exists, 48 product cards render, faded cards are gone, add-to-cart writes to local cart state.

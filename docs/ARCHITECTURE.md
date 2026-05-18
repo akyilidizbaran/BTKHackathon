@@ -20,7 +20,21 @@ curated mock commerce data
 
 The LLM never owns the source of truth. It can explain, rank, draft, and summarize. Product selection, mutation payloads, catalog boundaries, approval requirements, and rollback behavior remain typed application contracts.
 
-## 2. Layer Map
+## 2. Reviewer Proof Map
+
+This table maps the main technical claims to the files a reviewer should inspect first.
+
+| Claim | Primary files | How to verify |
+|---|---|---|
+| The catalog and commerce state are curated, not random fixtures. | `src/data/mock/*`, `src/lib/data/*` | Run `npm run validate:workflows` and inspect product/review counts. |
+| Product health and seller actions come from deterministic scoring. | `src/lib/scoring/*`, `src/lib/workflows/seller-actions.ts`, `src/lib/workflows/product-health.ts` | Inspect score evidence fields and run `npm run check`. |
+| Buyer recommendations are catalog-bound. | `src/lib/workflows/buyer-smart-cart.ts`, `src/lib/api/buyer-agent.ts`, `src/lib/agents/buyer-catalog-guardrails.ts` | Try unsupported prompts such as phones or consoles; validation blocks fake products. |
+| LLM output is validated before UI/apply usage. | `src/lib/llm/json.ts`, `src/lib/api/buyer-agent.ts`, `src/lib/api/seller-agent.ts`, `src/lib/api/review-intelligence.ts` | Inspect validator functions and fallback paths. |
+| Cart and seller listing mutations require approval. | `src/lib/agents/buyer-cart-apply.ts`, `src/lib/agents/seller-listing-apply.ts`, client apply helpers | Follow `/buyer/agent` and `/seller/agent`; apply buttons are explicit. |
+| Floating Agent shares route-agent boundaries. | `src/lib/api/floating-agent.ts`, `src/components/commerce/floating-agent-panel.tsx` | Route mismatch and unsupported catalog prompts are blocked. |
+| CI can run without API keys. | `.github/workflows/ci.yml`, `src/lib/llm/*`, `scripts/validate-workflows.js` | CI uses deterministic provider mode and runs `check` + `build`. |
+
+## 3. Layer Map
 
 ```text
 src/data/mock
@@ -55,7 +69,7 @@ src/app
   Next.js App Router pages and API routes.
 ```
 
-## 3. Data And Scoring
+## 4. Data And Scoring
 
 The app starts with curated mock data in `src/data/mock`. The mock data is intentionally shaped around demo stories rather than random fixtures.
 
@@ -86,7 +100,7 @@ Workflows in `src/lib/workflows` consume those scores and produce use-case outpu
 - `seller-actions.ts` creates seller growth/action recommendations.
 - `product-health.ts` creates product-level health analysis.
 
-## 4. API Contract Pattern
+## 5. API Contract Pattern
 
 CommercePilot avoids duplicating logic between pages and API routes. Shared builders in `src/lib/api` produce the typed data contracts; route handlers and server components both consume the same builders.
 
@@ -107,7 +121,7 @@ success/data/error
 
 The shared response helpers live in `src/lib/api/responses.ts`.
 
-## 5. LLM Provider Layer
+## 6. LLM Provider Layer
 
 The LLM layer is provider-neutral by design.
 
@@ -140,7 +154,7 @@ Structured generation uses `generateLlmJson<T>()`. It extracts JSON, normalizes 
 
 This matters because CommercePilot uses LLM output only after type-level and domain-level validation.
 
-## 6. Agent Runtime
+## 7. Agent Runtime
 
 The shared agent runtime registry lives in `src/lib/agents/runtime.ts`.
 
@@ -170,7 +184,7 @@ Important runtime concepts:
 - Trace items describe workflow, context, LLM, tool, guardrail, and approval layers.
 - Runtime snapshots let `/demo` and technical proof surfaces show what the agent is allowed to do.
 
-## 7. Buyer Agent Flow
+## 8. Buyer Agent Flow
 
 The buyer agent flow is catalog-bound.
 
@@ -203,7 +217,7 @@ Key boundaries:
 - Cart mutations require explicit user action.
 - Apply is deterministic and client-side over validated payloads.
 
-## 8. Seller Agent Flow
+## 9. Seller Agent Flow
 
 The seller agent flow is approval-bound.
 
@@ -235,7 +249,7 @@ Key boundaries:
 - LLM-generated drafts are normalized into the shared listing mutation preview contract.
 - Audit and rollback are local-only for the MVP, but the apply boundary is explicit.
 
-## 9. Floating Agent Flow
+## 10. Floating Agent Flow
 
 The floating agent is not a separate toy widget. It shares the same runtime and apply boundaries as the route-level buyer and seller agents.
 
@@ -266,7 +280,7 @@ Key boundaries:
 - Seller surfaces do not run buyer cart operations.
 - Approved cart/listing operations use the same shared apply contracts as full agent pages.
 
-## 10. Review Intelligence And Product Warnings
+## 11. Review Intelligence And Product Warnings
 
 Review intelligence is a separate typed LLM contract.
 
@@ -299,7 +313,7 @@ Buyer product warnings combine:
 - Product reviews and metric risk signals.
 - Route context for floating proactive state.
 
-## 11. UI Structure
+## 12. UI Structure
 
 Primary product surfaces:
 
@@ -323,7 +337,7 @@ Agent/proof surfaces:
 
 The app intentionally keeps technical proof mostly out of buyer/floating user surfaces while exposing it in seller/demo/proof surfaces where it helps technical review.
 
-## 12. Persistence Model
+## 13. Persistence Model
 
 This MVP does not use a real database.
 
@@ -337,7 +351,7 @@ Local storage keys:
 
 The important architectural choice is that apply contracts already exist. Replacing local storage with server persistence should not require the LLM or UI layers to own mutation semantics.
 
-## 13. Verification
+## 14. Verification
 
 Primary command:
 
@@ -366,7 +380,7 @@ LLM_PROVIDER=deterministic
 
 This keeps CI independent of API keys and external LLM availability.
 
-## 14. Current Technical Debt
+## 15. Current Technical Debt
 
 Known engineering gaps:
 

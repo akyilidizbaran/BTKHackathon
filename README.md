@@ -17,6 +17,32 @@ curated commerce data
 
 This is not a static UI prototype. The app contains typed API contracts, workflow validation, LLM provider abstraction, catalog and role guardrails, approval boundaries, local mutation/audit stores, component tests, and a repeatable validation script.
 
+## Reviewer Quick Run
+
+For a code reviewer, the fastest reproducible path is:
+
+```bash
+npm install
+npm run check
+npm run build
+npm run start
+```
+
+Then open:
+
+```text
+http://localhost:3000
+```
+
+Recommended review order:
+
+1. Run `npm run check` and inspect the workflow validation output.
+2. Open `/demo` for the proof-oriented walkthrough.
+3. Open `/buyer/products`, `/buyer/agent`, `/seller`, and `/seller/agent`.
+4. Read [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+The app is designed to be reviewable without API keys. If no LLM key is configured, supported flows use deterministic fallback behavior.
+
 ## Current Status
 
 CommercePilot is in delivery-ready hackathon MVP state.
@@ -163,6 +189,7 @@ The technical audit document records the latest route/API/component smoke covera
 The validation script checks mock data integrity, scoring, workflows, API contracts, agent runtime, LLM provider behavior, guardrails, demo contracts, and extracted component contracts:
 
 - `scripts/validate-workflows.js`
+- [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) records the expected high-signal validator output.
 
 ## Getting Started
 
@@ -245,9 +272,12 @@ Notes:
 
 ## Important Documents
 
+- [docs/README.md](docs/README.md) - reviewer-facing index for the documentation set.
 - [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - append-only project memory, decisions, milestones, conventions, and current state.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - detailed system architecture, agent boundaries, LLM provider layer, guardrails, persistence, and verification model.
 - [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) - guided reviewer and jury demo script with routes, prompts, expected results, and proof points.
+- [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) - environment, reviewer route order, verification commands, deterministic claims, and known non-reproducible parts.
+- [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) - expected `npm run validate:workflows` output and what it proves.
 - [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - technical audit, smoke results, component extraction status, mock/local inventory, and priorities.
 - [LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md](LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md) - provider-independent LLM and agent implementation plan.
 - [COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md](COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md) - product and milestone roadmap.
@@ -261,6 +291,20 @@ The core agent architecture is coherent for a hackathon MVP. The main remaining 
 - Local storage persistence should eventually move behind server persistence boundaries.
 - Hardcoded demo identities should become a typed auth/session abstraction before production.
 - LLM latency and telemetry should be measured more explicitly.
+
+## Known MVP Limits
+
+These are intentional scope boundaries for the hackathon submission:
+
+| Area | Current MVP behavior | Production direction |
+|---|---|---|
+| Data | Curated mock commerce data in `src/data/mock`. | Real database and ingestion layer. |
+| Identity | Hardcoded demo buyer/seller identities. | Auth, session and role model. |
+| Persistence | Cart, profile and audit state use `localStorage`. | Server-backed persistence with user/account ownership. |
+| Payments | Checkout is a mock surface. | Payment/order creation integration. |
+| Inventory | Stock and fulfillment are simulated. | Reservation, fulfillment and shipment integrations. |
+| Media | Product imagery uses a controlled sprite asset. | Product-specific media pipeline. |
+| LLM reliability | Provider-neutral adapter with deterministic fallback. | Latency budgets, retries, telemetry and provider monitoring. |
 
 ## Repository State For Reviewers
 

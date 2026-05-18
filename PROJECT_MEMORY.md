@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * MVP manuel demo öncesi buyer ürün detay ve profil polish'i tamamlandı.
+  * Talha Kilic reviewer profiline göre GitHub/repo sunumu reproducible engineering çizgisine güçlendirildi.
 * Son değişiklik neydi?
-  * Buyer ürün detayında mağaza CTA'ı gerçek mağaza filtre linkine döndü, ürün yorumları/notları 4'lü pagination ile görünür oldu ve `old-money` görünen metinleri daha genel `sade stil` diline taşındı.
+  * README quick-run, reproducibility guide, docs index, validation output reference, architecture proof map, audit proof table ve known MVP limits eklendi/güçlendirildi.
 * Bir sonraki net adım ne?
-  * Talha Kılıç reviewer profiline göre GitHub sunumunu reproducible/academic ML repo düzenine biraz daha yaklaştırmak değerlendirilecek.
+  * Kullanıcı manuel demo smoke yapacak; canlı demo/deploy URL hazırlığı bunun ardından ele alınacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -119,6 +119,9 @@
   * `src/app/buyer/profile/page.tsx`: server-side default buyer profile contract'ını `BuyerProfileWorkspace` client component'ine verir.
   * `src/app/seller/profile/page.tsx`: server-side default seller profile contract'ını `SellerProfileWorkspace` client component'ine verir.
   * `src/app/demo/page.tsx`: 8R demo rehearsal workspace'ini typed runbook contract ile açar.
+  * `docs/README.md`: reviewer odaklı doküman indeksidir.
+  * `docs/REPRODUCIBILITY.md`: environment, quick verification, route order, deterministic/LLM-assisted claim ve known non-reproducible parts özetidir.
+  * `docs/VALIDATION_OUTPUT.md`: `npm run validate:workflows` için beklenen high-signal çıktı referansıdır.
   * `public/catalog/buyer-product-sprite.png`: 48 ürünün tamamı için ürün açıklamasıyla uyumlu 6x8 mock ürün sprite'ı.
   * `src/app/globals.css`: light CommercePilot tokenları ve geçici `commerce-legacy-light` bridge'i.
   * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`: marketplace + agent pet pivot kararları, endpoint haritası ve revize milestone yol haritası.
@@ -1531,6 +1534,17 @@
   * Repo düzeninde README amaç/anlatı, folder structure, environment/requirements, run script, model-dataset tablosu, result figures ve deterministic seed/logging örüntüleri öne çıkıyor.
 * Etki:
   * CommercePilot GitHub sunumunda akademik reviewer için `reproducibility`, `data/workflow/LLM boundary`, `validation evidence`, `run commands`, `known limits` ve mümkünse ekran/proof görselleri daha görünür tutulmalı.
+
+### 2026-05-18 GitHub Reviewer Reproducibility Pass
+
+* Kapsam:
+  * README'ye `Reviewer Quick Run`, docs index linki, validation output referansı ve `Known MVP Limits` tablosu eklendi.
+  * `docs/REPRODUCIBILITY.md`, `docs/VALIDATION_OUTPUT.md` ve `docs/README.md` eklendi.
+  * `docs/ARCHITECTURE.md` içine reviewer proof map eklendi; teknik claim'ler ilgili dosya ve doğrulama yoluyla eşleşir hale geldi.
+  * `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` içine route/API proof table eklendi.
+* Doğrulama:
+  * `npm run validate:workflows`, `npm run check`, `npm run build`, `git diff --check` geçti.
+  * Markdown local link kontrolü geçti; `.DS_Store`, `.log`, `.tmp`, `.out` kalıntısı bulunmadı.
 
 ### Güncelleme Kaydı
 
