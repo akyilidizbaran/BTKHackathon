@@ -7,7 +7,7 @@
 * Son değişiklik neydi?
   * Buyer ürün detayında mağaza CTA'ı gerçek mağaza filtre linkine döndü, ürün yorumları/notları 4'lü pagination ile görünür oldu ve `old-money` görünen metinleri daha genel `sade stil` diline taşındı.
 * Bir sonraki net adım ne?
-  * Kullanıcı manuel demo smoke yapacak; canlı demo/deploy URL hazırlığı bunun ardından ele alınacak.
+  * Talha Kılıç reviewer profiline göre GitHub sunumunu reproducible/academic ML repo düzenine biraz daha yaklaştırmak değerlendirilecek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1523,6 +1523,14 @@
 * Doğrulama:
   * `npm run check`, `npm run build` geçti.
   * Puppeteer smoke: `/buyer/products/calliel-spf50-gunes-kremi` için mağaza linki, 4 görünür yorum/not, pagination ve Agent notu doğrulandı; `/buyer/profile` üzerinde `Sade stil` göründü ve old-money metni kalmadı.
+
+### 2026-05-18 Reviewer Style Research: Talha Kilic
+
+* Bulgular:
+  * Public GitHub adayı `mntalha`; profil/repo dili AI/ML, PyTorch, Jupyter, materials informatics ve reproducible experiment script'leri etrafında.
+  * Repo düzeninde README amaç/anlatı, folder structure, environment/requirements, run script, model-dataset tablosu, result figures ve deterministic seed/logging örüntüleri öne çıkıyor.
+* Etki:
+  * CommercePilot GitHub sunumunda akademik reviewer için `reproducibility`, `data/workflow/LLM boundary`, `validation evidence`, `run commands`, `known limits` ve mümkünse ekran/proof görselleri daha görünür tutulmalı.
 
 ### Güncelleme Kaydı
 
