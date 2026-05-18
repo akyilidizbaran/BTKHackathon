@@ -290,7 +290,7 @@ export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProp
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => togglePreference(preference.id)}
-                          className="mt-1 h-4 w-4 accent-orange-500"
+                          className="h-9 w-9 accent-orange-500"
                           aria-label={preference.label}
                         />
                       </span>
@@ -365,6 +365,7 @@ export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProp
                 <label className="sr-only" htmlFor="buyer-profile-color">Renk ekle</label>
                 <input
                   id="buyer-profile-color"
+                  aria-label="Renk ekle"
                   value={colorInput}
                   onChange={(event) => setColorInput(event.target.value)}
                   className="min-h-10 min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
@@ -445,7 +446,11 @@ export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProp
             <div className="mt-2 divide-y divide-slate-200">
               {visibleReviews.map((review) => (
                 <article key={review.id} className="grid gap-4 py-5 md:grid-cols-[96px_1fr]">
-                  <Link href={review.productHref} className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                  <Link
+                    href={review.productHref}
+                    aria-label={`${review.productName} ürün detayını aç`}
+                    className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+                  >
                     <div
                       aria-label={review.image.alt}
                       className="aspect-square bg-[length:500%_400%] bg-no-repeat transition duration-700 hover:scale-105"
@@ -460,7 +465,10 @@ export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProp
                     <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
                       <div>
                         <p className="text-xs font-semibold text-orange-600">{review.productBrand}</p>
-                        <Link href={review.productHref} className="mt-1 block text-sm font-semibold text-slate-950 hover:text-orange-700">
+                        <Link
+                          href={review.productHref}
+                          className="mt-1 inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold text-slate-950 transition hover:bg-orange-50 hover:text-orange-700 active:translate-y-px"
+                        >
                           {review.productName}
                         </Link>
                       </div>

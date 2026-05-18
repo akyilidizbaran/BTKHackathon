@@ -70,6 +70,7 @@ function isDenseFloatingSurface(role: FloatingAgentPanelProps["role"], pathname:
   return (
     pathname === "/buyer" ||
     pathname === "/buyer/products" ||
+    pathname.startsWith("/buyer/products/") ||
     pathname === "/buyer/cart" ||
     pathname === "/buyer/agent" ||
     pathname === "/buyer/profile"
@@ -104,6 +105,19 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
   const shouldShowCompactWarning = shouldShowProactiveCue && isProfileWarning;
   const shouldShowExpandedCue = shouldShowProactiveCue && !isDenseSurface && !isProfileWarning;
   const shouldShowIconBadge = shouldShowProactiveCue && (isProfileWarning || !isDenseSurface);
+  const shouldUseSideDock =
+    !isOpen &&
+    (role === "seller" ||
+      normalizedPathname.startsWith("/buyer/products/") ||
+      normalizedPathname === "/buyer/agent" ||
+      normalizedPathname === "/buyer/profile");
+  const dockPositionClass = isOpen
+    ? "bottom-4"
+    : shouldUseSideDock
+      ? "bottom-4 sm:bottom-auto sm:top-[58dvh] sm:-translate-y-1/2"
+      : shouldShowCompactWarning
+        ? "bottom-24"
+        : "bottom-4";
   const history = sessionTurns.slice(-6);
   const isLoading = requestState === "loading";
   const prompt = promptDraft.contextKey === contextKey ? promptDraft.value : "";
@@ -356,9 +370,7 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
   return (
     <div
       ref={rootRef}
-      className={`pointer-events-none fixed inset-x-0 z-50 px-4 sm:inset-x-auto sm:right-5 sm:px-0 ${
-        shouldShowCompactWarning && !isOpen ? "bottom-24" : "bottom-4"
-      }`}
+      className={`pointer-events-none fixed inset-x-0 z-50 px-4 sm:inset-x-auto sm:right-5 sm:px-0 ${dockPositionClass}`}
     >
       {shouldShowExpandedCue ? (
         <button

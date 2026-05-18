@@ -239,7 +239,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
               </div>
 
               <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_160px] lg:grid-cols-1">
-                <label className="relative block">
+                <label className="relative block" htmlFor="seller-products-search">
                   <span className="sr-only">Ürün ara</span>
                   <MagnifyingGlass
                     className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -247,6 +247,8 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                     weight="bold"
                   />
                   <input
+                    id="seller-products-search"
+                    aria-label="Ürün ara"
                     className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 px-11 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
                     placeholder="Ürün, SKU veya risk ara"
                     value={searchQuery}
@@ -264,7 +266,7 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                   ) : null}
                 </label>
 
-                <label className="relative block">
+                <label className="relative block" htmlFor="seller-products-sort">
                   <span className="sr-only">Sıralama</span>
                   <SlidersHorizontal
                     className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -272,6 +274,8 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                     weight="duotone"
                   />
                   <select
+                    id="seller-products-sort"
+                    aria-label="Ürün sıralaması"
                     className="h-11 w-full appearance-none rounded-full border border-slate-200 bg-slate-50 px-11 text-sm font-semibold text-slate-700 outline-none transition focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
                     value={sortKey}
                     onChange={(event) => setSortKey(event.target.value as SortKey)}
@@ -290,51 +294,57 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
 
         <aside
           data-seller-products-reveal
-          className="overflow-hidden rounded-lg bg-slate-950 text-[#fff] shadow-[0_22px_56px_-36px_rgba(15,23,42,0.95)]"
+          className="self-start rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)]"
         >
-          <div className="p-5">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#fff]">Canlı ürün bandı</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  Filtre değiştikçe listenin ilk adayı aksiyon rail&apos;ine taşınır.
-                </p>
-              </div>
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-white/10 text-orange-200">
-                <ChartLineUp size={21} weight="duotone" />
-              </span>
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Canlı ürün bandı</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Filtre değişince ilk aday burada kısaca görünür.
+              </p>
             </div>
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-orange-50 text-orange-600 ring-1 ring-orange-100">
+              <ChartLineUp size={21} weight="duotone" />
+            </span>
           </div>
-          <div className="border-y border-white/10 px-5 py-4">
-            <div className="flex flex-wrap gap-2">
-              {railChips.slice(0, 7).map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
-                >
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
+
           {selectedProduct ? (
-            <div className="p-5">
-              <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                <div
+            <Link
+              href={selectedProduct.href}
+              aria-label={`${selectedProduct.name} ürün detayını aç`}
+              className="mt-5 grid min-h-20 grid-cols-[80px_1fr] gap-3 rounded-lg border border-slate-200 bg-slate-50 p-2 transition hover:border-orange-200 hover:bg-orange-50 active:translate-y-px"
+            >
+              <span className="overflow-hidden rounded-md border border-slate-200 bg-white">
+                <span
                   data-product-media
                   aria-label={selectedProduct.image.alt}
-                  className="aspect-[4/3] bg-[length:500%_400%] bg-no-repeat"
+                  className="block aspect-[4/3] bg-[length:500%_400%] bg-no-repeat transition duration-700 hover:scale-105"
                   role="img"
                   style={{
                     backgroundImage: `url(${selectedProduct.image.src})`,
                     backgroundPosition: selectedProduct.image.position,
                   }}
                 />
-              </div>
-              <p className="mt-4 text-sm font-semibold leading-5 text-[#fff]">{selectedProduct.name}</p>
-              <p className="mt-1 text-xs text-slate-400">{selectedProduct.categoryLabel} · {selectedProduct.stockStatusLabel}</p>
-            </div>
+              </span>
+              <span className="min-w-0 self-center">
+                <span className="block truncate text-sm font-semibold text-slate-950">{selectedProduct.name}</span>
+                <span className="mt-1 block text-xs text-slate-500">
+                  {selectedProduct.categoryLabel} · {selectedProduct.stockStatusLabel}
+                </span>
+              </span>
+            </Link>
           ) : null}
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {railChips.slice(0, 5).map((item) => (
+              <span
+                key={item}
+                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
+              >
+                {item}
+              </span>
+            ))}
+          </div>
         </aside>
       </section>
 

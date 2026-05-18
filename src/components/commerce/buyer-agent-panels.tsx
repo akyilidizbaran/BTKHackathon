@@ -84,7 +84,11 @@ export function BuyerRecommendationCard({
       className="group grid min-h-[248px] overflow-hidden rounded-lg border border-slate-200 bg-slate-50 md:grid-cols-[168px_1fr]"
       style={{ animationDelay: `${index * 70}ms` }}
     >
-      <Link href={product.href} className="block overflow-hidden bg-white">
+      <Link
+        href={product.href}
+        aria-label={`${product.name} ürün detayını aç`}
+        className="block overflow-hidden bg-white"
+      >
         <div
           aria-label={product.image.alt}
           className="h-full min-h-44 bg-[length:500%_400%] bg-no-repeat transition duration-700 group-hover:scale-105"

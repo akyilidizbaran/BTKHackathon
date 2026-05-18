@@ -36,7 +36,10 @@ export default async function BuyerProductDetailPage({
 
   return (
     <div className="space-y-5">
-      <Link href="/buyer/products" className="inline-flex text-sm font-semibold text-orange-700 transition hover:text-orange-800">
+      <Link
+        href="/buyer/products"
+        className="inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 hover:text-orange-800 active:translate-y-px"
+      >
         Ürünlere dön
       </Link>
 

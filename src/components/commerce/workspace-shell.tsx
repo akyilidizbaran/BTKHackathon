@@ -186,7 +186,7 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
         </div>
       </div>
 
-      <div className="relative mx-auto max-w-[1500px] px-4 py-5 lg:px-5">
+      <div className="relative mx-auto max-w-[1500px] px-4 py-5 lg:pl-5 lg:pr-24">
         <section className="min-w-0 pb-10">
           <header
             data-shell-reveal

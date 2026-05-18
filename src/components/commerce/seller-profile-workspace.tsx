@@ -799,7 +799,7 @@ function NumberField({
           max={max}
           value={value}
           onChange={(event) => onChange(Number(event.target.value))}
-          className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-950 outline-none"
+          className="h-12 min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-950 outline-none"
         />
         <span className="text-xs font-semibold text-slate-500">{suffix}</span>
       </span>
@@ -902,17 +902,20 @@ function AlertRuleRow({
           <button
             type="button"
             onClick={() => onEnabledChange(!rule.enabled)}
-            className={`h-5 w-9 shrink-0 rounded-full p-0.5 transition active:translate-y-px ${
+            className={`h-8 w-12 shrink-0 rounded-full p-1 transition active:translate-y-px ${
               rule.enabled ? "bg-orange-500" : "bg-slate-300"
             }`}
             aria-label={`${rule.label} kuralını değiştir`}
           >
-            <span className={`block h-4 w-4 rounded-full bg-white transition ${
+            <span className={`block h-6 w-6 rounded-full bg-white transition ${
               rule.enabled ? "translate-x-4" : "translate-x-0"
             }`} />
           </button>
         </div>
-        <Link href={rule.href} className="mt-2 inline-flex text-xs font-semibold text-orange-700 hover:text-orange-800">
+        <Link
+          href={rule.href}
+          className="mt-2 inline-flex min-h-9 items-center rounded-full px-3 text-xs font-semibold text-orange-700 transition hover:bg-orange-50 hover:text-orange-800 active:translate-y-px"
+        >
           {rule.affectedProductCount} ürün etkileniyor
         </Link>
       </div>

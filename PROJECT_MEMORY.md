@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Gerçek DB öncesi tüm buyer/seller ürün, sepet, profil, agent ve aksiyon yüzeyleri tıklanabilir UI audit'ten geçirildi.
+  * Gerçek DB öncesi clickable UI audit'teki P1 sorunları kapatıldı.
 * Son değişiklik neydi?
-  * Puppeteer ile ana endpoint'ler ve tıklanabilir kontroller incelendi; kalan UI sorunları P1/P2 backlog olarak kaydedildi.
+  * Floating Agent çakışması için desktop agent lane eklendi, seller products üst bandı kompakt light düzene çekildi ve image-only link/form hit-area sorunları toparlandı.
 * Bir sonraki net adım ne?
-  * P1'den başlayarak floating agent çakışmaları, seller products boşluk düzeni ve tıklanabilir görsel/label erişilebilirliği kapatılacak.
+  * Kalan P2 işler: seller overview tekrarlarını prune etmek ve daha küçük metin yoğunluğu iyileştirmelerini manuel ilerletmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1425,6 +1425,20 @@
   * Seller overview öncelik listesinde aynı ürün/aksiyon tekrarları güven hissini azaltabilir; veri/öncelik listesi prune edilebilir.
 * Doğrulama notu:
   * Ekran görüntüleri: `audit-00-root` ile `audit-16-buyer-product-detail-1280x800` arası Puppeteer smoke seti.
+
+### 2026-05-18 UI Audit P1 Remediation
+
+* Kapsam:
+  * `WorkspaceShell` desktop içerik alanında sağda kalıcı agent lane bırakır; floating agent seller sayfaları ve buyer right-rail yüzeylerinde bu şeritte dock olur.
+  * `/seller/products` üst sağ `Canlı ürün bandı` dark/büyük görsel kart olmaktan çıkarıldı; light, kısa, kompakt ürün bandına çevrildi ve ürün listesi ilk ekranda daha erken görünür hale geldi.
+  * Buyer cart, buyer agent önerileri, buyer profile yorumları, seller agent bulguları ve seller action küçük ürün görsellerindeki image-only link'lere link seviyesinde `aria-label` eklendi.
+  * Seller products/actions arama ve sıralama kontrollerine explicit `id/htmlFor` ve `aria-label` eklendi.
+  * Buyer profile checkbox'ları, seller profile number input/toggle/affected product link'leri ve geri dönüş linkleri daha büyük hit-area ile düzenlendi.
+  * Seller actions küçük thumbnail linkleri iki ürün önizlemesine indirildi ve shrink kaynaklı 24px genişlik problemi kapatıldı.
+* Doğrulama:
+  * `npm run check`, `npm run build`, `git diff --check` geçti.
+  * Puppeteer DOM probe: `/seller/products`, `/seller/actions?focus=slow-movers`, `/seller/actions/review_attention-connectplus-usb-c-hub`, `/seller/profile`, `/buyer/profile`, `/buyer/cart` için `badLabel: []`, `tiny: []`, `overflowX: 0`.
+  * Puppeteer screenshot: `p1-seller-products-final`, `p1-buyer-product-detail-after`, `p1-seller-action-detail-after`.
 
 ### Güncelleme Kaydı
 

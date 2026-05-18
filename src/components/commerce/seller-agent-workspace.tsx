@@ -575,7 +575,11 @@ function ProductFindingCard({ finding }: { finding: SellerAgentProductFinding })
       className="group rounded-lg border border-slate-200 bg-white p-3 shadow-[0_16px_40px_-36px_rgba(15,23,42,0.55)] transition hover:-translate-y-0.5 hover:border-orange-200 hover:shadow-[0_24px_58px_-44px_rgba(15,23,42,0.68)]"
     >
       <div className="grid gap-5 lg:grid-cols-[112px_minmax(0,1fr)_128px] lg:items-center">
-        <Link href={product.href} className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+        <Link
+          href={product.href}
+          aria-label={`${product.name} ürün detayını aç`}
+          className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+        >
           <span
             data-seller-agent-media
             aria-label={product.image.alt}

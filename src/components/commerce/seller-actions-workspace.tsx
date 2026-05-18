@@ -265,7 +265,7 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
 
         <div data-seller-actions-reveal className="min-w-0 xl:col-span-6">
           <div className="mb-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px]">
-            <label className="relative block">
+            <label className="relative block" htmlFor="seller-actions-search">
               <span className="sr-only">Aksiyon ara</span>
               <MagnifyingGlass
                 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -273,6 +273,8 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
                 weight="bold"
               />
               <input
+                id="seller-actions-search"
+                aria-label="Aksiyon ara"
                 className="h-11 w-full rounded-full border border-slate-200 bg-white px-11 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
                 placeholder="Aksiyon, ürün veya sinyal ara"
                 value={searchQuery}
@@ -290,7 +292,7 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
               ) : null}
             </label>
 
-            <label className="relative block">
+            <label className="relative block" htmlFor="seller-actions-sort">
               <span className="sr-only">Sıralama</span>
               <SlidersHorizontal
                 className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
@@ -298,6 +300,8 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
                 weight="duotone"
               />
               <select
+                id="seller-actions-sort"
+                aria-label="Aksiyon sıralaması"
                 className="h-11 w-full appearance-none rounded-full border border-slate-200 bg-white px-11 text-sm font-semibold text-slate-700 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
                 value={sortKey}
                 onChange={(event) => setSortKey(event.target.value as SortKey)}
@@ -354,7 +358,7 @@ function ActionQueueCard({
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const previewProducts = card.affectedProducts.slice(0, 3);
+  const previewProducts = card.affectedProducts.slice(0, 2);
 
   return (
     <article
@@ -413,7 +417,8 @@ function ActionQueueCard({
             <Link
               key={product.id}
               href={product.href}
-              className="block h-12 w-12 overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+              aria-label={`${product.name} ürün detayını aç`}
+              className="block h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
               title={product.name}
             >
               <span

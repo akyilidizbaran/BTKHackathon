@@ -130,7 +130,11 @@ export function BuyerCartWorkspace({ products }: { products: BuyerCatalogProduct
           <div className="divide-y divide-slate-200">
             {lines.map(({ item, product }) => (
               <article key={product.id} data-cart-row className="grid gap-4 py-5 md:grid-cols-[116px_1fr_auto]">
-                <Link href={product.href} className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+                <Link
+                  href={product.href}
+                  aria-label={`${product.name} ürün detayını aç`}
+                  className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+                >
                   <div
                     aria-label={product.image.alt}
                     className="aspect-square bg-[length:500%_400%] bg-no-repeat transition duration-700 hover:scale-105"
@@ -207,14 +211,21 @@ export function BuyerCartWorkspace({ products }: { products: BuyerCatalogProduct
           <div className="mt-6 border-t border-slate-200 pt-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">Sepete eklenebilecekler</h2>
-              <Link href="/buyer/products" className="text-sm font-semibold text-orange-700 hover:text-orange-800">
+              <Link
+                href="/buyer/products"
+                className="inline-flex min-h-10 items-center rounded-full px-3 text-sm font-semibold text-orange-700 transition hover:bg-orange-50 hover:text-orange-800 active:translate-y-px"
+              >
                 Tüm ürünler
               </Link>
             </div>
             <div className="mt-4 grid grid-flow-dense gap-3 md:grid-cols-3">
               {suggestedProducts.map((product) => (
                 <article key={product.id} className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
-                  <Link href={product.href} className="block aspect-[4/3] overflow-hidden bg-white">
+                  <Link
+                    href={product.href}
+                    aria-label={`${product.name} ürün detayını aç`}
+                    className="block aspect-[4/3] overflow-hidden bg-white"
+                  >
                     <div
                       aria-label={product.image.alt}
                       className="h-full bg-[length:500%_400%] bg-no-repeat transition duration-700 hover:scale-105"
