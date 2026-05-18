@@ -43,6 +43,7 @@ Notlar:
 - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` ve legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` Supabase MCP ile okunabilir public client değerleridir.
 - `DATA_SOURCE=mock` şimdilik bilinçli. DB seed edilecek ama uygulama okuma katmanı sonraki fazda taşınacak.
 - Supabase dashboard Prisma için hazır connection string veriyorsa onu kullan.
+- `[DB-PASSWORD]` köşeli parantezle kalmaz; gerçek parola doğrudan yazılır. Parolada URL için özel karakter varsa encode etmek gerekebilir.
 - Secret değerleri chat'e veya GitHub'a yazma.
 
 ## 3. Lokal Prisma Kontrollerini Çalıştır
@@ -126,6 +127,8 @@ Seed script'i şu kaynakları DB'ye taşır:
 - `src/data/mock/product-relations.ts`
 - `src/data/mock/carts.ts`
 
+Seed tekrar çalıştırılabilir olacak şekilde tasarlandı. Önce ilişkili tabloları güvenli sırayla temizler, sonra aynı curated dataset'i yeniden yazar; Supabase pooler üzerinde transaction başlangıç timeout riskini azaltmak için temizleme adımları tek büyük transaction içinde çalışmaz.
+
 ## 6. Supabase Dashboard'da Kontrol Et
 
 Supabase Table Editor'da şu sayıları kontrol et:
@@ -147,6 +150,9 @@ Sipariş sayısı `src/data/mock/orders.ts` içindeki kayıt sayısıyla aynı o
 Vercel Project Settings -> Environment Variables içine şunları ekle:
 
 ```text
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+NEXT_PUBLIC_SUPABASE_ANON_KEY
 DATABASE_URL
 DIRECT_URL
 DATA_SOURCE

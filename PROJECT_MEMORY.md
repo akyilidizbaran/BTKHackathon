@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Supabase Postgres'e geçiş için Prisma schema, migration ve seed altyapısı kuruldu; Supabase MCP server yerel Codex config'inde OAuth ile bağlandı.
+  * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * `supabase` remote MCP server `klkkbbiujeklvialcyoe` project ref'iyle eklendi ve OAuth login doğrulandı.
+  * `.env.local` içine Supabase pooled/direct connection string'leri yerleştirildi; `prisma/seed.ts` pooler üzerinde transaction timeout yaşamamak için sıralı temizleme yapacak şekilde güncellendi.
 * Bir sonraki net adım ne?
-  * Kullanıcı Supabase DB password ve pooled `DATABASE_URL` değerini tamamlayacak; ardından `npm run db:migrate:deploy` ve `npm run db:seed` birlikte çalıştırılacak.
+  * Vercel env değerleri girilecek; ardından uygulama read layer'ı `DATA_SOURCE=database` desteğiyle kademeli olarak Supabase'den okumaya taşınacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -17,8 +17,10 @@
   * Buyer tarafı: marketplace homepage, kategori/search, ürün grid, ürün detay, yorumlar, sepet, sağ alt agent pet ve agent destekli sepet mutation'ları.
   * Seller tarafı: klasik satıcı paneli, ürün yönetimi, stok/satış/yorum sinyalleri, satılmayan ürün analizi, agent destekli listeleme mutation'ları.
   * İlk aşamada mock/kurgu veri kullanılacak; veriler rastgele değil, demo hikayesi taşıyacak şekilde tasarlanacak.
+  * Supabase Postgres P1'de schema/migration/seed hedefiyle kullanılacak; runtime okuma-yazma geçişi kademeli yapılacak.
 * Kapsam dışı:
-  * İlk fazda gerçek ödeme, gerçek kimlik doğrulama, gerçek veritabanı, kargo/lojistik ve scraping yok.
+  * İlk fazda gerçek ödeme, gerçek kimlik doğrulama, kargo/lojistik ve scraping yok.
+  * DB-backed cart/profile/audit mutation persistence ayrı fazda ele alınacak.
 
 ## 2) Non-negotiables / Kırmızı Çizgiler
 
@@ -277,6 +279,7 @@
 * 2026-05-17 — Karar: Buyer ürün detayında profil + geçmiş yorum/şikayet + ürün yorum sinyali tersliği sağ alt Agent warning'ine bağlanacak. | Gerekçe: Agent pet'in değeri yalnızca komut beklemek değil, kullanıcı profiline ters düşen ürünlerde zamanında uyarı vermek. | Etki: `buyer-profile-product-alerts.ts` eklendi; ürün detay route'unda kargo/iade/kalite/ses/materyal/renk riskleri profile göre hesaplanır ve `FloatingAgentContext.proactiveTone=warning` ile UI'a taşınır. | Alternatifler: Uyarıyı sadece ürün detay kartında statik metin olarak göstermek.
 * 2026-05-18 — Karar: Public/reviewer-facing dokümantasyon Türkçe tutulacak; route, env, komut, dosya ve kod identifier'ları çevrilmeyecek. | Gerekçe: Jüri Türkçe okuyacak, ancak teknik doğrulanabilirlik için executable identifier'lar birebir kalmalı. | Etki: README ve `docs/*` ana inceleme dosyaları Türkçeye taşındı; Vercel deploy öncesi repo vitrini Türkçe olacak. | Alternatifler: İngilizce README'i korumak veya tüm kod identifier'larını çevirerek kırılma riski almak.
 * 2026-05-18 — Karar: Database geçişi Supabase Postgres + Prisma ile fazlara bölünecek. | Gerekçe: Jüri/reviewer için gerçek database sinyali güçlenmeli, ancak tüm app data access ve mutation state aynı anda taşınırsa demo riski artar. | Etki: P1'de schema/migration/seed hazırlandı ve uygulama varsayılan olarak `DATA_SOURCE=mock` ile çalışmaya devam eder; P2'de `src/lib/data/*`, cart/profile/audit persistence DB okuma-yazma katmanına taşınacak. | Alternatifler: Tüm localStorage/mock katmanını tek adımda DB'ye geçirmek veya DB geçişini deploy sonrasına bırakmak.
+* 2026-05-18 — Karar: Supabase seed temizleme adımı transaction yerine sıralı `deleteMany` çağrılarıyla yapılacak. | Gerekçe: Supabase pooler üzerinde başlangıç transaction'ı `P2028 Unable to start a transaction` hatası verebildi; seed idempotency için atomiklikten çok tekrar çalıştırılabilirlik önemli. | Etki: `prisma/seed.ts` önce ilişkili tabloları sırayla temizler, sonra aynı mock commerce datasını tekrar yazar. | Alternatifler: Transaction timeout değerini artırmak veya seed'i yalnızca boş DB'de çalıştırmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -332,6 +335,7 @@
 * 2026-05-17 — Milestone: Extracted Agent component testleri tamamlandı. | Sonuç: Vitest/RTL stack kuruldu; Buyer Agent panelleri, Floating result paneli ve Seller listing approval panelleri için 3 test dosyasında 13 render/user-event testi eklendi; `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
 * 2026-05-17 — Milestone: Floating Agent fresh-session ve katalog dışı guard tamamlandı. | Sonuç: Panel her açılışta sıfır sohbetle başlar; unsupported buyer product prompt'ları öneri/apply üretmez; stale model `actionPrompt` current prompt ile override edilir; `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
 * 2026-05-17 — Milestone: Agent hallucination guardrail ve profil uyarısı tamamlandı. | Sonuç: Buyer/Floating unsupported catalog, role mismatch, stale narrative ve kelimeyle bütçe parse testleri validation'a eklendi; ürün detayında profil/yorum uyumsuzluğu sağ alt warning'e taşındı; `npm run check` ve `npm run build` geçti.
+* 2026-05-18 — Milestone: Supabase migration ve seed tamamlandı. | Sonuç: İlk Prisma migration Supabase Postgres'e uygulandı; seed sonrası DB'de 1 seller, 8 buyer, 48 product, 55 review, 24 order, 25 inventory event, 30 product relation ve 5 cart doğrulandı.
 
 ## 8) Yapılanlar
 
@@ -353,6 +357,7 @@
 * [x] Milestone 5.5C seller workflow output hardening tamamlandı.
 * [x] Milestone 5.5D validation/test hardening tamamlandı.
 * [x] Milestone 6A rol seçimi ve buyer/seller app shell omurgası eklendi.
+* [x] Supabase P1 migration ve seed gerçek DB üzerinde tamamlandı.
 * [x] Milestone 6B seller API contract ve ürün sağlık detay akışı tamamlandı.
 * [x] Milestone 6C buyer smart cart API ve canlı komut etkileşimi tamamlandı.
 * [x] Milestone 6D buyer-to-seller signal loop eklendi.

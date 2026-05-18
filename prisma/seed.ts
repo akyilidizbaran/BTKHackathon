@@ -49,19 +49,17 @@ function json(value: unknown): Prisma.InputJsonValue {
 }
 
 async function clearCommerceData() {
-  await prisma.$transaction([
-    prisma.sellerListingMutation.deleteMany(),
-    prisma.cartItem.deleteMany(),
-    prisma.cart.deleteMany(),
-    prisma.orderItem.deleteMany(),
-    prisma.commerceOrder.deleteMany(),
-    prisma.review.deleteMany(),
-    prisma.inventoryEvent.deleteMany(),
-    prisma.productRelation.deleteMany(),
-    prisma.product.deleteMany(),
-    prisma.buyer.deleteMany(),
-    prisma.seller.deleteMany(),
-  ]);
+  await prisma.sellerListingMutation.deleteMany();
+  await prisma.cartItem.deleteMany();
+  await prisma.cart.deleteMany();
+  await prisma.orderItem.deleteMany();
+  await prisma.commerceOrder.deleteMany();
+  await prisma.review.deleteMany();
+  await prisma.inventoryEvent.deleteMany();
+  await prisma.productRelation.deleteMany();
+  await prisma.product.deleteMany();
+  await prisma.buyer.deleteMany();
+  await prisma.seller.deleteMany();
 }
 
 async function seedCommerceData() {
