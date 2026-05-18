@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Seller {
+  id                         String                  @id
+  name                       String
+  displayName                String
+  market                     String
+  rating                     Float
+  totalProducts              Int
+  joinedAt                   DateTime
+  supportResponseHours       Int
+  defaultDeliveryPromiseDays Int
+  operatingModel             String
+  notes                      String[]
+  products                   Product[]
+  orders                     CommerceOrder[]
+  listingMutations           SellerListingMutation[]
+  createdAt                  DateTime                @default(now())
+  updatedAt                  DateTime                @updatedAt
+
+  @@map("sellers")
+}
+
+model Buyer {
+  id                      String          @id
+  name                    String
+  city                    String
+  persona                 String
+  sensitivities           String[]
+  preferredColors         String[]
+  budgetBand              String
+  previousComplaintThemes String[]
+  notes                   String[]
+  reviews                 Review[]
+  orders                  CommerceOrder[]
+  carts                   Cart[]
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
+
+  @@map("buyers")
+}
+
+model Product {
+  id               String                  @id
+  sellerId         String
+  seller           Seller                  @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  sku              String                  @unique
+  slug             String                  @unique
+  name             String
+  brand            String
+  category         String
+  subcategory      String
+  currency         String
+  price            Decimal                 @db.Decimal(12, 2)
+  compareAtPrice   Decimal?                @db.Decimal(12, 2)
+  unitCost         Decimal                 @db.Decimal(12, 2)
+  stock            Json
+  fulfillment      Json
+  listing          Json
+  catalog          Json
+  specs            Json
+  metrics          Json
+  demoStoryFlags   String[]
+  reviews          Review[]
+  orderItems       OrderItem[]
+  inventoryEvents  InventoryEvent[]
+  sourceRelations  ProductRelation[]       @relation("ProductRelationSource")
+  relatedRelations ProductRelation[]       @relation("ProductRelationTarget")
+  cartItems        CartItem[]
+  listingMutations SellerListingMutation[]
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+
+  @@index([sellerId])
+  @@index([category])
+  @@map("products")
+}
+
+model Review {
+  id                   String   @id
+  productId            String
+  product              Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  buyerId              String
+  buyer                Buyer    @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  rating               Int
+  title                String
+  body                 String
+  sentiment            String
+  themes               String[]
+  createdAt            DateTime
+  verifiedPurchase     Boolean
+  deliveryDays         Int
+  needsSellerAttention Boolean
+
+  @@index([productId])
+  @@index([buyerId])
+  @@map("reviews")
+}
+
+model CommerceOrder {
+  id                 String      @id
+  sellerId           String
+  seller             Seller      @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  buyerId            String
+  buyer              Buyer       @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  status             String
+  createdAt          DateTime
+  deliveredAt        DateTime?
+  items              OrderItem[]
+  total              Decimal     @db.Decimal(12, 2)
+  deliveryDays       Int
+  returnedProductIds String[]
+
+  @@index([sellerId])
+  @@index([buyerId])
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String        @id
+  orderId   String
+  order     CommerceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+  unitPrice Decimal       @db.Decimal(12, 2)
+
+  @@unique([orderId, productId])
+  @@index([productId])
+  @@map("order_items")
+}
+
+model InventoryEvent {
+  id        String   @id
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type      String
+  quantity  Int
+  createdAt DateTime
+  note      String
+
+  @@index([productId])
+  @@map("inventory_events")
+}
+
+model ProductRelation {
+  id               String  @id
+  sourceProductId  String
+  sourceProduct    Product @relation("ProductRelationSource", fields: [sourceProductId], references: [id], onDelete: Cascade)
+  relatedProductId String
+  relatedProduct   Product @relation("ProductRelationTarget", fields: [relatedProductId], references: [id], onDelete: Cascade)
+  type             String
+  strength         Float
+  reason           String
+
+  @@index([sourceProductId])
+  @@index([relatedProductId])
+  @@map("product_relations")
+}
+
+model Cart {
+  id        String     @id
+  buyerId   String
+  buyer     Buyer      @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  prompt    String
+  budget    Decimal    @db.Decimal(12, 2)
+  items     CartItem[]
+  status    String
+  rationale String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([buyerId])
+  @@map("carts")
+}
+
+model CartItem {
+  id        String  @id
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+  quantity  Int
+
+  @@unique([cartId, productId])
+  @@index([productId])
+  @@map("cart_items")
+}
+
+model SellerListingMutation {
+  id           String    @id @default(cuid())
+  sellerId     String
+  seller       Seller    @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  productId    String?
+  product      Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  surface      String
+  status       String
+  summary      String
+  beforeListing Json?
+  afterListing  Json?
+  delta        Json?
+  auditEntry   Json?
+  createdAt    DateTime  @default(now())
+  rolledBackAt DateTime?
+
+  @@index([sellerId, createdAt])
+  @@index([productId])
+  @@map("seller_listing_mutations")
+}

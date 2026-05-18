@@ -8,6 +8,7 @@ Projeyi inceliyorsanız buradan başlayın:
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Sistem mimarisi, kanıt haritası, veri/skor/workflow/LLM/agent sınırları. |
 | [VALIDATION_OUTPUT.md](VALIDATION_OUTPUT.md) | `npm run validate:workflows` komutundan beklenen çıktı ve neyi kanıtladığı. |
 | [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Jüri/teknik inceleyici demo akışı, prompt örnekleri, beklenen ürün davranışı ve teknik kanıt noktaları. |
+| [SUPABASE_DATABASE.md](SUPABASE_DATABASE.md) | Supabase Postgres kurulumu, Prisma migration ve mock dataset seed adımları. |
 
 Kök dizindeki destek dokümanları:
 

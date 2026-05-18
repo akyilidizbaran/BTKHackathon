@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Vercel deploy öncesi GitHub'da görünen ana dokümantasyon ve açıklama dosyaları Türkçeye taşındı.
+  * Supabase Postgres'e geçiş için Prisma schema, migration ve seed altyapısı kuruldu.
 * Son değişiklik neydi?
-  * README, docs index, reproducibility, validation output, architecture, demo metni ve technical audit dosyaları Türkçe hale getirildi; route/env/komut/kod identifier'ları bilinçli olarak korunuyor.
+  * CommercePilot curated mock dataset'ini Supabase/Postgres'e taşıyacak Prisma 7 schema, migration, seed ve kurulum dokümanı eklendi.
 * Bir sonraki net adım ne?
-  * Değişiklikler GitHub'a pushlanacak; ardından kullanıcı manuel demo smoke yapacak ve Vercel deploy URL hazırlığına geçilecek.
+  * Kullanıcı Supabase project oluşturup `DATABASE_URL`/`DIRECT_URL` değerlerini `.env.local` içine koyacak; ardından `npm run db:migrate:deploy` ve `npm run db:seed` birlikte çalıştırılacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -270,6 +270,7 @@
 * 2026-05-17 — Karar: Buyer/Floating Agent hallucination guardrail'i deterministik katalog ve rol sınırıyla güçlendirilecek. | Gerekçe: Manuel testlerde LLM/router bazen katalog dışı ürünleri veya yanlış roldeki komutları eski agentic akışa taşıyabiliyordu. | Etki: `buyer-catalog-guardrails.ts` eklendi; `/api/buyer/agent` unsupported catalog prompt'larını 422 ile reddeder; Floating Agent buyer/seller role-mismatch prompt'larını chat boundary'ye çeker; buyer Agent LLM narrative alanları katalog dışı terimlere karşı sanitize edilir; kelimeyle yazılmış bütçeler (`iki bin tl`) workflow'da parse edilir. | Alternatifler: Sadece prompt engineering veya unsupported keyword listesini floating içinde tutmak.
 * 2026-05-17 — Karar: Buyer ürün detayında profil + geçmiş yorum/şikayet + ürün yorum sinyali tersliği sağ alt Agent warning'ine bağlanacak. | Gerekçe: Agent pet'in değeri yalnızca komut beklemek değil, kullanıcı profiline ters düşen ürünlerde zamanında uyarı vermek. | Etki: `buyer-profile-product-alerts.ts` eklendi; ürün detay route'unda kargo/iade/kalite/ses/materyal/renk riskleri profile göre hesaplanır ve `FloatingAgentContext.proactiveTone=warning` ile UI'a taşınır. | Alternatifler: Uyarıyı sadece ürün detay kartında statik metin olarak göstermek.
 * 2026-05-18 — Karar: Public/reviewer-facing dokümantasyon Türkçe tutulacak; route, env, komut, dosya ve kod identifier'ları çevrilmeyecek. | Gerekçe: Jüri Türkçe okuyacak, ancak teknik doğrulanabilirlik için executable identifier'lar birebir kalmalı. | Etki: README ve `docs/*` ana inceleme dosyaları Türkçeye taşındı; Vercel deploy öncesi repo vitrini Türkçe olacak. | Alternatifler: İngilizce README'i korumak veya tüm kod identifier'larını çevirerek kırılma riski almak.
+* 2026-05-18 — Karar: Database geçişi Supabase Postgres + Prisma ile fazlara bölünecek. | Gerekçe: Jüri/reviewer için gerçek database sinyali güçlenmeli, ancak tüm app data access ve mutation state aynı anda taşınırsa demo riski artar. | Etki: P1'de schema/migration/seed hazırlandı ve uygulama varsayılan olarak `DATA_SOURCE=mock` ile çalışmaya devam eder; P2'de `src/lib/data/*`, cart/profile/audit persistence DB okuma-yazma katmanına taşınacak. | Alternatifler: Tüm localStorage/mock katmanını tek adımda DB'ye geçirmek veya DB geçişini deploy sonrasına bırakmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -1559,6 +1560,25 @@
   * `git diff --check` geçti.
   * `npm run check` geçti: lint, typecheck, workflow validation ve 13 component testi başarılı.
   * `npm run build` geçti; Next.js production build 141 static page üretti.
+
+### 2026-05-18 Supabase Database P1 Scaffold
+
+* Kapsam:
+  * Prisma 7, `@prisma/client`, `@prisma/adapter-pg`, `pg`, `tsx` ve `dotenv` eklendi.
+  * `prisma/schema.prisma`, `prisma.config.ts`, ilk migration SQL'i ve `prisma/seed.ts` eklendi.
+  * Supabase/Postgres tabloları: sellers, buyers, products, reviews, orders, order_items, inventory_events, product_relations, carts, cart_items, seller_listing_mutations.
+  * `src/lib/db/prisma.ts` PrismaClient singleton + PostgreSQL adapter hazırlığı eklendi.
+  * `docs/SUPABASE_DATABASE.md` ile kullanıcıya Supabase project, connection string, migration ve seed adımları yazıldı.
+* Karar:
+  * Bu faz DB seed/readiness fazıdır; uygulama varsayılan olarak `DATA_SOURCE=mock` ile çalışmaya devam eder.
+  * App read layer ve mutable cart/profile/audit persistence P2'de taşınacak.
+* Doğrulama:
+  * `npm run db:validate` geçti.
+  * `npm run db:generate` geçti.
+  * `npm run check` geçti.
+  * `npm run build` geçti.
+  * `git diff --check` geçti.
+  * `npm audit --omit=dev` sonucu high severity yok; Prisma 7 sonrası kalan uyarılar moderate seviyede ve force downgrade/breaking change öneriyor.
 
 ### Güncelleme Kaydı
 

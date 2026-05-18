@@ -246,6 +246,11 @@ npm run start
 - `npm run typecheck` - TypeScript'i emit olmadan kontrol eder.
 - `npm run validate:workflows` - data, workflow, API contract, LLM/agent guardrail ve demo contract'larını doğrular.
 - `npm run test:components` - `src/components/commerce` altındaki Vitest component testlerini çalıştırır.
+- `npm run db:validate` - Prisma schema'yı Supabase bağlantısı gerektirmeden doğrular.
+- `npm run db:generate` - Prisma Client üretir.
+- `npm run db:migrate:deploy` - commitlenmiş Prisma migration'larını Supabase/Postgres DB'ye uygular.
+- `npm run db:seed` - curated CommercePilot dataset'ini Supabase/Postgres DB'ye seed eder.
+- `npm run db:studio` - Prisma Studio'yu açar.
 - `npm run check` - lint, typecheck, workflow validation ve component testlerini çalıştırır.
 
 ## Ortam Değişkenleri
@@ -264,6 +269,9 @@ OPENAI_MODEL
 OPENAI_API_KEY
 GEMINI_MODEL
 GEMINI_API_KEY
+DATA_SOURCE
+DATABASE_URL
+DIRECT_URL
 ```
 
 Notlar:
@@ -272,6 +280,7 @@ Notlar:
 - `LLM_PROVIDER=openai`, OpenAI adapter'ını kullanır.
 - Eksik key veya provider hatası durumunda desteklenen akışlar deterministik fallback'e döner.
 - Gerçek API key asla commitlenmemelidir.
+- Supabase Postgres kurulumu için [docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md) dosyasındaki adımları izleyin.
 
 ## Teknoloji Yığını
 
@@ -292,6 +301,7 @@ Notlar:
 - [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) - rota, prompt, beklenen sonuç ve kanıt noktaları içeren jüri/teknik inceleyici demo script'i.
 - [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) - ortam, teknik inceleyici rota sırası, doğrulama komutları, deterministik iddialar ve MVP dışında kalan kısımlar.
 - [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) - beklenen `npm run validate:workflows` çıktısı ve neyi kanıtladığı.
+- [docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md) - Supabase Postgres kurulumu, Prisma migration ve mock dataset seed adımları.
 - [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - teknik denetim, smoke sonuçları, component extraction durumu, mock/lokal envanter ve öncelikler.
 - [LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md](LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md) - provider bağımsız LLM ve agent uygulama planı.
 - [COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md](COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md) - ürün ve milestone roadmap'i.
