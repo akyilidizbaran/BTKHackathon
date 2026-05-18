@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Supabase Postgres'e geçiş için Prisma schema, migration ve seed altyapısı kuruldu.
+  * Supabase Postgres'e geçiş için Prisma schema, migration ve seed altyapısı kuruldu; Supabase MCP server yerel Codex config'inde OAuth ile bağlandı.
 * Son değişiklik neydi?
-  * CommercePilot curated mock dataset'ini Supabase/Postgres'e taşıyacak Prisma 7 schema, migration, seed ve kurulum dokümanı eklendi.
+  * `supabase` remote MCP server `klkkbbiujeklvialcyoe` project ref'iyle eklendi ve OAuth login doğrulandı.
 * Bir sonraki net adım ne?
-  * Kullanıcı Supabase project oluşturup `DATABASE_URL`/`DIRECT_URL` değerlerini `.env.local` içine koyacak; ardından `npm run db:migrate:deploy` ve `npm run db:seed` birlikte çalıştırılacak.
+  * Kullanıcı Supabase DB password ve pooled `DATABASE_URL` değerini tamamlayacak; ardından `npm run db:migrate:deploy` ve `npm run db:seed` birlikte çalıştırılacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1579,6 +1579,17 @@
   * `npm run build` geçti.
   * `git diff --check` geçti.
   * `npm audit --omit=dev` sonucu high severity yok; Prisma 7 sonrası kalan uyarılar moderate seviyede ve force downgrade/breaking change öneriyor.
+
+### 2026-05-18 Supabase MCP Local Setup
+
+* Kapsam:
+  * Yerel `~/.codex/config.toml` içinde remote MCP client desteği açıldı: `[mcp] remote_mcp_client_enabled = true`.
+  * `supabase` MCP server eklendi: project ref `klkkbbiujeklvialcyoe`, features `docs, account, database, debugging, development, functions, branching`.
+  * `codex mcp login supabase` OAuth akışı tamamlandı.
+* Doğrulama:
+  * `codex mcp list` içinde `supabase` server `enabled` ve `Auth=OAuth` görünüyor.
+* Not:
+  * MCP OAuth token ve Supabase secret'ları repo içinde tutulmaz; `.env.local` git tarafından ignore edilir.
 
 ### Güncelleme Kaydı
 
