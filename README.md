@@ -58,6 +58,8 @@ Use these routes to review the product quickly:
 - `/seller/profile` - seller store settings, agent permissions, alert rules, quiet hours, and audit trail.
 - `/demo` - rehearsal command center for buyer, seller, floating agent, QA, and proof routes.
 
+For the intended walkthrough order, use [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+
 ## Architecture Map
 
 For a fuller technical walkthrough, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
@@ -245,6 +247,7 @@ Notes:
 
 - [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - append-only project memory, decisions, milestones, conventions, and current state.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - detailed system architecture, agent boundaries, LLM provider layer, guardrails, persistence, and verification model.
+- [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) - guided reviewer and jury demo script with routes, prompts, expected results, and proof points.
 - [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - technical audit, smoke results, component extraction status, mock/local inventory, and priorities.
 - [LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md](LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md) - provider-independent LLM and agent implementation plan.
 - [COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md](COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md) - product and milestone roadmap.

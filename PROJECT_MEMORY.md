@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * GitHub teknik görünürlüğünü güçlendirme adımlarından mimari dokümantasyon eklendi.
+  * GitHub teknik görünürlüğünü güçlendirme adımlarından demo script dokümantasyonu eklendi.
 * Son değişiklik neydi?
-  * `docs/ARCHITECTURE.md` eklendi; README mimari dokümana link veriyor.
+  * `docs/DEMO_SCRIPT.md` eklendi; README demo walkthrough dokümanına link veriyor.
 * Bir sonraki net adım ne?
-  * GitHub görünürlüğü için sıradaki adım: demo akış dokümanı eklemek.
+  * GitHub görünürlüğü için sıradaki adım: Puppeteer/Playwright smoke script'ini repo komutu haline getirmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1488,6 +1488,17 @@
   * Mimari doküman README'den daha teknik tutuldu; GitHub reviewer'ın kod klasörlerini okuma sırası ve boundary'leri hızlı görmesi hedefleniyor.
 * Sıradaki adım:
   * `docs/DEMO_SCRIPT.md` ile jüri/reviewer demo akışı netleştirilecek.
+
+### 2026-05-18 GitHub Technical Presentation Step 4
+
+* Kapsam:
+  * `docs/DEMO_SCRIPT.md` eklendi.
+  * Doküman setup, pre-demo checks, 5 dakikalık reviewer path, 10-12 dakikalık full demo flow, buyer/seller/floating Agent adımları, review intelligence proof, `/demo` teknik proof route'u, guardrail senaryoları ve bilinen limitleri içerir.
+  * README demo route bölümünden demo script'e link verir; Important Documents listesi demo script'i içerir.
+* Karar:
+  * Demo script İngilizce ve ASCII tutuldu; prompt örnekleri ürünün Türkçe UI kullanımına uygun şekilde bırakıldı.
+* Sıradaki adım:
+  * Puppeteer/Playwright smoke akışı committed script haline getirilecek ve README/scripts kısmına bağlanacak.
 
 ### Güncelleme Kaydı
 
