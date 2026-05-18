@@ -1,5 +1,7 @@
 # CommercePilot
 
+[![CI](https://github.com/akyilidizbaran/BTKHackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/akyilidizbaran/BTKHackathon/actions/workflows/ci.yml)
+
 CommercePilot is a hackathon MVP for a dual-sided commerce intelligence platform: a familiar marketplace for buyers, a seller operations cockpit for merchants, and a context-aware commerce agent that can explain, recommend, preview, and apply approved actions.
 
 The core technical idea is simple:

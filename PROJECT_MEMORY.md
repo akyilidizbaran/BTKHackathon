@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * GitHub teknik görünürlüğünü güçlendirme adımlarının ilki olan README yenilemesi yapıldı.
+  * GitHub teknik görünürlüğünü güçlendirme adımlarından CI workflow ekleme işi yapıldı.
 * Son değişiklik neydi?
-  * README, mevcut agent/LLM mimarisi, guardrail'ler, demo route'ları, doğrulama komutları ve mock/real sınırlarını anlatacak şekilde yeniden yazıldı.
+  * `.github/workflows/ci.yml` eklendi; GitHub üzerinde `npm ci`, `npm run check` ve `npm run build` çalışacak. README'ye CI badge eklendi.
 * Bir sonraki net adım ne?
-  * GitHub görünürlüğü için sıradaki adım: CI workflow eklemek.
+  * GitHub görünürlüğü için sıradaki adım: `docs/ARCHITECTURE.md` eklemek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1465,6 +1465,18 @@
   * README dili İngilizce ve ASCII tutuldu; GitHub teknik incelemesinde daha geniş erişilebilirlik hedefleniyor.
 * Sıradaki adım:
   * GitHub Actions CI workflow'u eklenerek `npm run check` ve `npm run build` GitHub üzerinde görünür hale getirilecek.
+
+### 2026-05-18 GitHub Technical Presentation Step 2
+
+* Kapsam:
+  * `.github/workflows/ci.yml` eklendi.
+  * CI, `push` ve `pull_request` üzerinde `npm ci`, `npm run check` ve `npm run build` çalıştırır.
+  * CI ortamında `LLM_PROVIDER=deterministic` kullanılır; secret/API key olmadan doğrulama ve build çalışmalıdır.
+  * README'ye GitHub Actions CI badge eklendi.
+* Karar:
+  * Workflow tek job ile başlatıldı; bu MVP için görünür kalite sinyali ve hızlı feedback yeterli.
+* Sıradaki adım:
+  * `docs/ARCHITECTURE.md` ile agent/LLM/veri akışı GitHub reviewer için ayrı teknik dokümana taşınacak.
 
 ### Güncelleme Kaydı
 
