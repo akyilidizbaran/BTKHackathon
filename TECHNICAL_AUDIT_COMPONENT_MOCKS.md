@@ -180,7 +180,8 @@ Hâlâ eksik olanlar:
 Mock data kaynağı:
 
 * `src/data/mock/*`: ürünler, yorumlar, siparişler, sepetler, envanter event'leri, ilişkiler, buyer'lar ve seller'lar.
-* `src/lib/data/*`: yalnızca lokal mock data okur.
+* `prisma/schema.prisma`, migration SQL ve `prisma/seed.ts`: aynı curated dataset'i Supabase Postgres'e taşır; P1 migration ve seed gerçek DB üzerinde doğrulandı.
+* `src/lib/data/*`: runtime'da hâlâ lokal mock data okur; DB read layer P2 işidir.
 
 Mock commerce contract'ları:
 
@@ -251,7 +252,7 @@ Henüz gerçek olmayanlar:
    Buyer/Floating yüzeyleri ürün gibi kalmalı; jüri kanıtını `/demo`, validation ve API contract'ları taşımalı.
 
 8. Teslimde neyin bilerek mock kaldığını netleştir.
-   Gerçek operasyonlar kapsam dışı; sunum şu cümleyi açık taşımalı: "mock data, gerçek LLM orchestration, typed guardrails, local approved mutations."
+   Gerçek operasyonlar kapsam dışı; sunum şu cümleyi açık taşımalı: "Supabase'e seed edilmiş curated data, gerçek LLM orchestration, typed guardrails, local approved mutations."
 
 ## 8) Güncel Değerlendirme
 

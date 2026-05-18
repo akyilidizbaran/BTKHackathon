@@ -92,7 +92,7 @@ Kısa sunum için önerilen akış:
 
 Kapanış cümlesi:
 
-> CommercePilot bir AI wrapper değil; mock data üzerinde çalışan, deterministik workflow, LLM validation, kullanıcı onayı ve local apply boundary'leri olan agentic commerce MVP'sidir.
+> CommercePilot bir AI wrapper değil; Supabase'e seed edilmiş curated commerce dataset'i, deterministik workflow, LLM validation, kullanıcı onayı ve local apply boundary'leri olan agentic commerce MVP'sidir.
 
 ## 4. Hızlı Teknik İnceleyici Rotası
 
@@ -616,8 +616,8 @@ Final anlatıda bu noktaları kullanın:
 
 Bu limitleri doğrudan söyleyin:
 
-- Veri curated mock commerce verisidir.
-- Kimlik doğrulama ve veritabanı kalıcılığı uygulanmadı.
+- Veri curated commerce dataset'idir; Supabase Postgres'e migration + seed ile taşındı, runtime okuma katmanı bu fazda hâlâ mock helper'ları kullanır.
+- Kimlik doğrulama ve server-backed kullanıcı kalıcılığı uygulanmadı.
 - Cart/profile/listing audit state `localStorage` kullanır.
 - Ürün medyası kontrollü sprite kullanır.
 - Ödeme, sipariş oluşturma, fulfillment ve gerçek stok rezervasyonu scope dışında.

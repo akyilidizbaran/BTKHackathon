@@ -7,8 +7,9 @@ Bu doküman, CommercePilot'un içeride nasıl çalıştığını açıklar. Ama�
 CommercePilot, deterministik commerce logic ile LLM destekli dil/sıralama katmanını kesin şekilde ayırır.
 
 ```text
-curated mock commerce verisi
-  -> typed data access helper'ları
+curated commerce dataset
+  -> runtime mock data helper'ları
+  -> Supabase Postgres migration + seed kopyası
   -> deterministik scoring modülleri
   -> workflow builder'ları
   -> UI/API contract builder'ları
@@ -26,7 +27,7 @@ Bu tablo, ana teknik iddiaları teknik inceleyicinin önce incelemesi gereken do
 
 | İddia | Ana dosyalar | Nasıl doğrulanır |
 |---|---|---|
-| Catalog ve commerce state rastgele fixture değil, curated mock datadır. | `src/data/mock/*`, `src/lib/data/*` | `npm run validate:workflows` çalıştırın, product/review sayılarını inceleyin. |
+| Catalog ve commerce state rastgele fixture değil, curated dataset'tir. | `src/data/mock/*`, `prisma/schema.prisma`, `prisma/seed.ts` | `npm run validate:workflows` çalıştırın; Supabase P1 için `npm run db:migrate:deploy` ve `npm run db:seed` akışını inceleyin. |
 | Product health ve seller action'lar deterministik scoring'den gelir. | `src/lib/scoring/*`, `src/lib/workflows/seller-actions.ts`, `src/lib/workflows/product-health.ts` | Score evidence alanlarını inceleyin ve `npm run check` çalıştırın. |
 | Buyer önerileri katalogla sınırlıdır. | `src/lib/workflows/buyer-smart-cart.ts`, `src/lib/api/buyer-agent.ts`, `src/lib/agents/buyer-catalog-guardrails.ts` | Telefon/konsol gibi desteklenmeyen prompt'ları deneyin; validation fake ürünleri engeller. |
 | LLM çıktısı UI/apply kullanımından önce validate edilir. | `src/lib/llm/json.ts`, `src/lib/api/buyer-agent.ts`, `src/lib/api/seller-agent.ts`, `src/lib/api/review-intelligence.ts` | Validator fonksiyonlarını ve fallback yollarını inceleyin. |
@@ -40,8 +41,11 @@ Bu tablo, ana teknik iddiaları teknik inceleyicinin önce incelemesi gereken do
 src/data/mock
   Products, sellers, buyers, orders, reviews, carts, inventory events, relations.
 
+prisma
+  Supabase/Postgres schema, migration ve curated dataset seed script'i.
+
 src/lib/data
-  Mock dataset üzerinde read helper'ları ve birleşik commerce view'ları.
+  Runtime'da hâlâ mock dataset üzerinde read helper'ları ve birleşik commerce view'ları.
 
 src/lib/scoring
   Product health, inventory, reviews, listing, returns, shipping, profitability
@@ -70,7 +74,7 @@ src/app
 
 ## 4. Veri ve Scoring
 
-Uygulama `src/data/mock` içindeki curated mock data ile başlar. Mock data rastgele fixture gibi değil, demo hikayelerini taşıyacak şekilde tasarlanmıştır.
+Uygulama runtime'da `src/data/mock` içindeki curated mock data ile başlar. Mock data rastgele fixture gibi değil, demo hikayelerini taşıyacak şekilde tasarlanmıştır. Aynı dataset P1 database readiness adımı olarak Prisma migration ve `prisma/seed.ts` ile Supabase Postgres'e taşındı.
 
 Önemli giriş noktaları:
 
@@ -81,6 +85,9 @@ Uygulama `src/data/mock` içindeki curated mock data ile başlar. Mock data rast
 - `src/data/mock/product-relations.ts`
 - `src/data/mock/buyers.ts`
 - `src/data/mock/sellers.ts`
+- `prisma/schema.prisma`
+- `prisma/migrations/20260518190000_init_commercepilot_schema/migration.sql`
+- `prisma/seed.ts`
 
 Scoring katmanı `src/lib/scoring` altında yaşar ve ham commerce sinyallerini açıklanabilir skorlara çevirir:
 
@@ -348,7 +355,7 @@ Uygulama, teknik proof bilgisini buyer/floating kullanıcı yüzeylerinden büy�
 
 ## 13. Persistence Modeli
 
-Bu MVP gerçek veritabanı kullanmaz.
+Bu MVP'de Supabase Postgres schema/migration/seed hazırdır ve curated dataset DB'ye yazılmıştır. Ancak uygulamanın runtime read layer'ı bilinçli olarak hâlâ `src/lib/data/*` mock helper'ları üzerinden çalışır. Cart, profile ve listing audit gibi kullanıcıya ait mutable state'ler P2 öncesinde server-backed persistence'a taşınmadı.
 
 Local storage key'leri:
 
@@ -359,6 +366,12 @@ Local storage key'leri:
 - Floating Agent controls: `commercepilot.floatingAgent.v1`
 
 Önemli mimari karar, apply contract'larının şimdiden var olmasıdır. Local storage'ı server persistence ile değiştirmek LLM veya UI katmanının mutation semantics sahibi olmasını gerektirmemelidir.
+
+DB readiness dosyaları:
+
+- `prisma/schema.prisma`
+- `prisma/seed.ts`
+- `docs/SUPABASE_DATABASE.md`
 
 ## 14. Doğrulama
 

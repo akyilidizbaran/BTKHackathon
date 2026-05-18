@@ -72,11 +72,12 @@ Bilinçli olarak gerçek olan kısımlar:
 - Buyer cart apply ve seller listing apply akışları açık kullanıcı onayı ister.
 - Seller listing mutation'ları için local audit ve rollback davranışı var.
 - Ayrıştırılmış agent panelleri ve workflow contract validation için testler bulunur.
+- Curated commerce dataset Prisma migration ve seed script'iyle Supabase Postgres'e taşındı; DB tabloları ve seed sayıları doğrulandı.
 
 Bilinçli olarak mock veya yalnızca lokal olan kısımlar:
 
-- Commerce verisi `src/data/mock` içindeki curated mock dataset'lerden gelir.
-- Kimlik doğrulama, veritabanı kalıcılığı, ödeme, stok rezervasyonu ve fulfillment hackathon MVP kapsamı dışındadır.
+- Runtime data access hâlâ `src/data/mock` helper'larından okur; Supabase kopyası P1 database readiness kanıtıdır.
+- Kimlik doğrulama, ödeme, stok rezervasyonu ve fulfillment hackathon MVP kapsamı dışındadır.
 - Buyer cart, buyer profile, seller profile, seller listing audit ve floating agent controls `localStorage` kullanır.
 - Ürün görselleri gerçek SKU medyası yerine kontrollü sprite asset kullanır.
 
@@ -108,8 +109,11 @@ Daha detaylı teknik walkthrough için [docs/ARCHITECTURE.md](docs/ARCHITECTURE.
 src/data/mock
   curated demo products, sellers, buyers, orders, reviews, inventory, relations
 
+prisma
+  Supabase/Postgres schema, migration ve curated dataset seed
+
 src/lib/data
-  mock commerce dataset üzerinde typed data access helper'ları
+  runtime mock commerce dataset üzerinde typed data access helper'ları
 
 src/lib/scoring
   deterministik product health ve commerce scoring modülleri
@@ -325,7 +329,7 @@ Bunlar hackathon teslimi için bilinçli scope sınırlarıdır:
 
 | Alan | Mevcut MVP davranışı | Production yönü |
 |---|---|---|
-| Veri | `src/data/mock` içinde curated mock commerce verisi. | Gerçek veritabanı ve veri alma katmanı. |
+| Veri | Runtime `src/data/mock` okur; aynı curated dataset Supabase Postgres'e migration + seed ile taşındı. | `DATA_SOURCE=database` destekli DB read layer ve seed/production data ayrımı. |
 | Kimlik | Sabit demo buyer/seller kimlikleri. | Auth, session ve role model. |
 | Persistence | Cart, profile ve audit state `localStorage` kullanır. | Kullanıcı/account sahipliği olan server-backed persistence. |
 | Ödeme | Checkout mock yüzeydir. | Payment/order creation entegrasyonu. |

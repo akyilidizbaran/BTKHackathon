@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * `.env.local` içine Supabase pooled/direct connection string'leri yerleştirildi; `prisma/seed.ts` pooler üzerinde transaction timeout yaşamamak için sıralı temizleme yapacak şekilde güncellendi.
+  * README, mimari, demo, reproducibility ve teknik audit dokümanları Supabase P1 sonrası gerçek durumu anlatacak şekilde tutarlı hale getiriliyor.
 * Bir sonraki net adım ne?
   * Vercel env değerleri girilecek; ardından uygulama read layer'ı `DATA_SOURCE=database` desteğiyle kademeli olarak Supabase'den okumaya taşınacak.
 
@@ -1603,6 +1603,14 @@
   * Database password ve pooled `DATABASE_URL` MCP ile geri döndürülemiyor; Supabase dashboard/DB password gerekiyor.
 * Not:
   * MCP OAuth token ve Supabase secret'ları repo içinde tutulmaz; `.env.local` git tarafından ignore edilir.
+
+### 2026-05-18 Supabase Docs Consistency Pass
+
+* Kapsam:
+  * README, `docs/ARCHITECTURE.md`, `docs/REPRODUCIBILITY.md`, `docs/DEMO_SCRIPT.md` ve `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` Supabase P1 sonrası gerçeğe göre güncellendi.
+  * Public anlatı artık "veritabanı yok" demiyor; doğru sınır "curated dataset Supabase'e migration + seed ile taşındı, runtime read layer ve cart/profile/audit persistence P2'de" şeklinde anlatılıyor.
+* Not:
+  * Bu değişiklik runtime davranışını değiştirmez; sadece repo/dokümantasyon tutarlılığı sağlar.
 
 ### Güncelleme Kaydı
 

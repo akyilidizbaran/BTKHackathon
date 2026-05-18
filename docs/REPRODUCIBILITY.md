@@ -147,7 +147,8 @@ LLM açıklama, sıralama, özetleme ve draft üretme görevlerinde kullanılabi
 Aşağıdakiler bilinçli olarak MVP kapsamı dışındadır:
 
 - Gerçek kimlik doğrulama.
-- Gerçek veritabanı kalıcılığı.
+- Runtime için server-backed cart/profile/audit kalıcılığı.
+- Supabase Postgres schema/migration/seed hazırdır; curated dataset DB'ye taşındı, ancak uygulama read layer'ı bu fazda hâlâ mock helper'ları kullanır.
 - Ödeme veya gerçek checkout.
 - Gerçek stok rezervasyonu.
 - Gerçek kargo/fulfillment entegrasyonu.
