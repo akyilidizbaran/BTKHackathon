@@ -244,7 +244,7 @@ export function BuyerAgentWorkspace({ examples, initialData }: BuyerAgentWorkspa
                   value={prompt}
                   onChange={(event) => setPrompt(event.target.value)}
                   className="min-h-36 resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-base leading-7 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
-                  placeholder="Örn. 3000 TL altı old-money kazak ve pantolon getir."
+                  placeholder="Örn. 3000 TL altı sade stil kazak ve pantolon getir."
                 />
                 <span className="text-xs text-slate-500">
                   Bütçe, teslimat hızı, stil veya kullanım amacını birlikte yazabilirsin.

@@ -1,8 +1,24 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { BuyerProductPurchasePanel } from "@/components/commerce/buyer-product-purchase-panel";
+import {
+  BuyerProductReviewsPanel,
+  type BuyerProductReviewItem,
+} from "@/components/commerce/buyer-product-reviews-panel";
 import { getBuyerCatalogProductBySlug } from "@/lib/api/buyer-catalog";
-import { getProductBySlug, getProducts } from "@/lib/data";
+import {
+  getBuyerById,
+  getProductBySlug,
+  getProductDetail,
+  getProducts,
+  getSellerById,
+} from "@/lib/data";
+import type {
+  Product,
+  Review,
+  ReviewSentiment,
+  ReviewTheme,
+} from "@/types/commerce";
 
 export function generateStaticParams(): Array<{ slug: string }> {
   return getProducts().map((product) => ({ slug: product.slug }));
@@ -28,6 +44,11 @@ export default async function BuyerProductDetailPage({
   const availableStock = product.stock.onHand - product.stock.reserved;
   const specs = Object.entries(product.specs).slice(0, 6);
   const questionCount = Math.max(12, Math.round(product.metrics.reviewCount * 0.26));
+  const seller = getSellerById(product.sellerId);
+  const storeName = seller?.displayName ?? product.brand;
+  const storeHref = `/buyer/products?store=${encodeURIComponent(product.sellerId)}`;
+  const detail = getProductDetail(product.id);
+  const reviewItems = createBuyerProductReviewItems(product, detail?.reviews ?? []);
   const campaignItems = [
     "350 TL ve üzeri kargo bedava",
     catalogProduct.discountPercent ? `%${catalogProduct.discountPercent} indirimli fiyat` : "Avantajlı ürün fiyatı",
@@ -131,17 +152,17 @@ export default async function BuyerProductDetailPage({
           <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)]">
             <p className="text-sm font-semibold text-slate-500">Satıcı</p>
             <div className="mt-3 rounded-lg bg-slate-50 p-4">
-              <h3 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">{product.brand}</h3>
+              <h3 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">{storeName}</h3>
               <p className="mt-2 text-sm text-slate-600">
-                Puan {product.metrics.ratingAverage.toFixed(1)} · Hızlı cevap · {product.fulfillment.fastShippingRate.toLocaleString("tr-TR", { style: "percent", maximumFractionDigits: 0 })} hızlı teslimat
+                Puan {(seller?.rating ?? product.metrics.ratingAverage).toFixed(1)} · Marka {product.brand} · {product.fulfillment.fastShippingRate.toLocaleString("tr-TR", { style: "percent", maximumFractionDigits: 0 })} hızlı teslimat
               </p>
             </div>
-            <button
-              type="button"
-              className="mt-5 min-h-11 w-full rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
+            <Link
+              href={storeHref}
+              className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
             >
               Mağazaya Git
-            </button>
+            </Link>
           </div>
 
           <div className="rounded-lg border border-orange-200 bg-orange-50 p-5">
@@ -165,6 +186,135 @@ export default async function BuyerProductDetailPage({
           </Link>
         </aside>
       </section>
+
+      <BuyerProductReviewsPanel items={reviewItems} totalReviewCount={product.metrics.reviewCount} />
     </div>
   );
+}
+
+function createBuyerProductReviewItems(product: Product, reviews: Review[]): BuyerProductReviewItem[] {
+  const reviewItems = [...reviews]
+    .sort((first, second) => second.createdAt.localeCompare(first.createdAt))
+    .map(createReviewItem);
+  const noteItems = createProductNoteItems(product);
+
+  return [...reviewItems, ...noteItems].slice(0, 8);
+}
+
+function createReviewItem(review: Review): BuyerProductReviewItem {
+  const buyer = getBuyerById(review.buyerId);
+
+  return {
+    body: review.body,
+    chips: [
+      getSentimentLabel(review.sentiment),
+      ...review.themes.map(getReviewThemeLabel),
+      `${review.deliveryDays} gün teslimat`,
+    ],
+    id: review.id,
+    metaLabel: `${buyer?.name ?? "Alıcı"} · ${formatDateLabel(review.createdAt)}`,
+    rating: review.rating,
+    sentimentLabel: review.needsSellerAttention ? "Satıcı aksiyonu gerekli" : undefined,
+    sourceLabel: review.verifiedPurchase ? "Doğrulanmış alışveriş" : "Alıcı yorumu",
+    title: review.title,
+    tone: review.needsSellerAttention || review.sentiment === "negative" ? "attention" : "review",
+  };
+}
+
+function createProductNoteItems(product: Product): BuyerProductReviewItem[] {
+  const styleTags = product.catalog.styleTags.slice(0, 3);
+  const useCases = product.catalog.useCases.slice(0, 3);
+  const colors = product.catalog.colors.slice(0, 3);
+  const packageContents = product.catalog.packageContents.slice(0, 4);
+  const issueSummary = product.listing.issueTags.length > 0
+    ? product.listing.issueTags.join(", ")
+    : "Ürün açıklaması, stok ve teslimat sinyalleri dengeli görünüyor.";
+
+  return [
+    {
+      body: product.listing.longDescription,
+      chips: [product.subcategory, ...styleTags],
+      id: `${product.id}-note-listing`,
+      metaLabel: "Ürün notu",
+      sourceLabel: "Ürün notu",
+      title: "Ürün vaadi",
+      tone: "note",
+    },
+    {
+      body: `${product.fulfillment.deliveryPromiseDays} gün kargo vaadi ve ${product.fulfillment.fastShippingRate.toLocaleString("tr-TR", { style: "percent", maximumFractionDigits: 0 })} hızlı teslimat oranı var.`,
+      chips: ["Teslimat", `${product.fulfillment.averageDeliveryDays.toFixed(1)} gün ortalama`],
+      id: `${product.id}-note-delivery`,
+      metaLabel: "Teslimat notu",
+      sourceLabel: "Ürün notu",
+      title: "Teslimat görünümü",
+      tone: "note",
+    },
+    {
+      body: `${useCases.join(", ")} kullanım senaryoları için konumlanıyor. Renk paleti: ${colors.join(", ")}.`,
+      chips: [...useCases, ...colors],
+      id: `${product.id}-note-fit`,
+      metaLabel: "Kullanım notu",
+      sourceLabel: "Ürün notu",
+      title: "Kullanım ve stil uyumu",
+      tone: "note",
+    },
+    {
+      body: packageContents.length > 0
+        ? `Paket içeriği: ${packageContents.join(", ")}.`
+        : "Paket içeriği ürün açıklamasında ayrıca netleştirilebilir.",
+      chips: packageContents.length > 0 ? packageContents : ["Paket içeriği"],
+      id: `${product.id}-note-package`,
+      metaLabel: "Paket notu",
+      sourceLabel: "Ürün notu",
+      title: "Paket içeriği",
+      tone: "note",
+    },
+    {
+      body: issueSummary,
+      chips: [`Listeleme skoru ${product.listing.qualityScore}/100`, `Stok ${product.stock.onHand - product.stock.reserved}`],
+      id: `${product.id}-note-quality`,
+      metaLabel: "Karar notu",
+      sourceLabel: "Ürün notu",
+      title: "Karar sinyali",
+      tone: product.listing.issueTags.length > 0 ? "attention" : "note",
+    },
+  ];
+}
+
+function formatDateLabel(value: string): string {
+  return new Intl.DateTimeFormat("tr-TR", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function getSentimentLabel(sentiment: ReviewSentiment): string {
+  const labels: Record<ReviewSentiment, string> = {
+    negative: "Negatif",
+    neutral: "Nötr",
+    positive: "Pozitif",
+  };
+
+  return labels[sentiment];
+}
+
+function getReviewThemeLabel(theme: ReviewTheme): string {
+  const labels: Partial<Record<ReviewTheme, string>> = {
+    boyut: "Boyut",
+    dayaniklilik: "Dayanıklılık",
+    "fiyat-performans": "Fiyat/performans",
+    "iade-riski": "İade riski",
+    "kargo-hizi": "Kargo hızı",
+    konfor: "Konfor",
+    kurulum: "Kurulum",
+    "malzeme-kalitesi": "Malzeme kalitesi",
+    paketleme: "Paketleme",
+    "renk-uyumu": "Renk uyumu",
+    "ses-seviyesi": "Ses seviyesi",
+    tasarim: "Tasarım",
+    uyumluluk: "Uyumluluk",
+  };
+
+  return labels[theme] ?? theme;
 }

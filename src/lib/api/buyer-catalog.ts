@@ -1,4 +1,4 @@
-import { getProductBySlug, getProducts } from "@/lib/data";
+import { getProductBySlug, getProducts, getSellerById } from "@/lib/data";
 import type { Product, ProductCategory } from "@/types/commerce";
 
 export const buyerCatalogEndpoint = "/api/buyer/catalog";
@@ -35,6 +35,7 @@ export interface BuyerCatalogProductCard {
   href: string;
   name: string;
   brand: string;
+  sellerId: string;
   categoryId: BuyerMarketplaceCategoryId;
   categoryLabel: string;
   subcategory: string;
@@ -63,6 +64,13 @@ export interface BuyerCatalogApiData {
   request: {
     category?: BuyerMarketplaceCategoryId;
     sort: BuyerCatalogSort;
+    store?: string;
+  };
+  store?: {
+    id: string;
+    displayName: string;
+    rating: number;
+    productCount: number;
   };
   categories: BuyerCatalogCategory[];
   campaignChips: string[];
@@ -117,12 +125,16 @@ const categorySpriteProductIds: Record<BuyerMarketplaceCategoryId, string> = {
 export function getBuyerCatalogApiData(input: {
   category?: string | null;
   sort?: string | null;
+  store?: string | null;
 } = {}): BuyerCatalogApiData {
   const allProducts = getProducts().map(createBuyerCatalogProductCard);
   const category = normalizeCategory(input.category);
   const sort = normalizeSort(input.sort);
+  const store = normalizeStore(input.store);
+  const storeData = store ? getSellerById(store) : undefined;
+  const storeFilteredProducts = store ? allProducts.filter((product) => product.sellerId === store) : allProducts;
   const products = sortBuyerCatalogProducts(
-    category ? allProducts.filter((product) => product.categoryId === category) : allProducts,
+    category ? storeFilteredProducts.filter((product) => product.categoryId === category) : storeFilteredProducts,
     sort,
   );
   const fastDeliveryCount = allProducts.filter((product) => product.deliveryPromiseDays <= 2).length;
@@ -138,8 +150,17 @@ export function getBuyerCatalogApiData(input: {
     request: {
       category,
       sort,
+      store,
     },
-    categories: createBuyerCatalogCategories(allProducts),
+    store: storeData
+      ? {
+          displayName: storeData.displayName,
+          id: storeData.id,
+          productCount: storeFilteredProducts.length,
+          rating: storeData.rating,
+        }
+      : undefined,
+    categories: createBuyerCatalogCategories(storeFilteredProducts),
     campaignChips: [
       "Bugün fiyatı düşenler",
       "2 günde kargo",
@@ -197,6 +218,7 @@ function createBuyerCatalogProductCard(product: Product): BuyerCatalogProductCar
     href: `/buyer/products/${product.slug}`,
     name: product.name,
     brand: product.brand,
+    sellerId: product.sellerId,
     categoryId: category.id,
     categoryLabel: category.label,
     subcategory: product.subcategory,
@@ -261,6 +283,16 @@ function getCategorySpriteIndex(categoryId: BuyerMarketplaceCategoryId): number 
   const index = getProducts().findIndex((product) => product.id === productId);
 
   return index >= 0 ? index : 0;
+}
+
+function normalizeStore(value: string | null | undefined): string | undefined {
+  const normalizedValue = value?.trim();
+
+  if (!normalizedValue) {
+    return undefined;
+  }
+
+  return getSellerById(normalizedValue) ? normalizedValue : undefined;
 }
 
 function createSpritePositions(columns: number, rows: number): string[] {

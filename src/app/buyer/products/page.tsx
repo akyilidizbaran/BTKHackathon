@@ -17,17 +17,23 @@ const sortOptions: Array<{ id: BuyerCatalogSort; label: string }> = [
 export default async function BuyerProductsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ category?: string | string[]; sort?: string | string[] }>;
+  searchParams?: Promise<{ category?: string | string[]; sort?: string | string[]; store?: string | string[] }>;
 }) {
   const resolvedSearchParams = await searchParams;
   const activeCategory = getFirstParam(resolvedSearchParams?.category);
   const activeSort = getFirstParam(resolvedSearchParams?.sort);
+  const activeStore = getFirstParam(resolvedSearchParams?.store);
   const data = getBuyerCatalogApiData({
     category: activeCategory,
     sort: activeSort,
+    store: activeStore,
   });
   const selectedCategory = data.categories.find((category) => category.id === data.request.category);
   const heroProducts = data.products.slice(0, 5);
+  const productListTitle = data.store?.displayName ?? selectedCategory?.label ?? "Popüler Ürünler";
+  const productListSubtitle = data.store
+    ? `${data.summary.visibleProductCount} ürün · Mağaza puanı ${data.store.rating.toFixed(1)}`
+    : `${data.summary.visibleProductCount} ürün listeleniyor`;
 
   return (
     <div className="space-y-5">
@@ -42,6 +48,7 @@ export default async function BuyerProductsPage({
                 href={createCatalogHref({
                   category: isActive ? undefined : category.id,
                   sort: data.request.sort,
+                  store: data.request.store,
                 })}
                 className={`group flex w-[116px] shrink-0 flex-col items-center gap-2 rounded-lg border px-3 py-3 text-center transition active:translate-y-px ${
                   isActive
@@ -120,11 +127,9 @@ export default async function BuyerProductsPage({
       <section className="flex flex-col justify-between gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:flex-row md:items-center">
         <div>
           <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950 md:text-3xl">
-            {selectedCategory ? selectedCategory.label : "Popüler Ürünler"}
+            {productListTitle}
           </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            {data.summary.visibleProductCount} ürün listeleniyor
-          </p>
+          <p className="mt-1 text-sm text-slate-500">{productListSubtitle}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
@@ -139,6 +144,7 @@ export default async function BuyerProductsPage({
               href={createCatalogHref({
                 category: isBuyerMarketplaceCategory(data.request.category) ? data.request.category : undefined,
                 sort: option.id,
+                store: data.request.store,
               })}
               className={`inline-flex min-h-10 items-center rounded-full border px-4 text-sm font-semibold transition active:translate-y-px ${
                 data.request.sort === option.id
@@ -164,8 +170,13 @@ function getFirstParam(value: string | string[] | undefined): string | undefined
 function createCatalogHref(input: {
   category?: BuyerMarketplaceCategoryId;
   sort?: BuyerCatalogSort;
+  store?: string;
 }): string {
   const params = new URLSearchParams();
+
+  if (input.store) {
+    params.set("store", input.store);
+  }
 
   if (input.category) {
     params.set("category", input.category);

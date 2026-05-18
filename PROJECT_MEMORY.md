@@ -3,9 +3,9 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * MVP manuel demo öncesi ürün görsellerindeki tekrar hissi giderildi.
+  * MVP manuel demo öncesi buyer ürün detay ve profil polish'i tamamlandı.
 * Son değişiklik neydi?
-  * `public/catalog/buyer-product-sprite.png` 48 ürünü kapsayan 6x8 özgün ürün sprite'ına taşındı; tüm ürün görsel yüzeyleri `600%_800%` sprite oranını kullanıyor.
+  * Buyer ürün detayında mağaza CTA'ı gerçek mağaza filtre linkine döndü, ürün yorumları/notları 4'lü pagination ile görünür oldu ve `old-money` görünen metinleri daha genel `sade stil` diline taşındı.
 * Bir sonraki net adım ne?
   * Kullanıcı manuel demo smoke yapacak; canlı demo/deploy URL hazırlığı bunun ardından ele alınacak.
 
@@ -98,6 +98,7 @@
   * `src/components/commerce/buyer-catalog-grid.tsx`: fotoğraflı ürün kartları, puan/yorum/teslimat/indirim sinyalleri ve görünür `Sepete Ekle` aksiyonunu render eder.
   * `src/lib/cart/buyer-cart.ts`: buyer sepetini `localStorage` üzerinde okur/yazar; ekleme, adet güncelleme, silme ve clear helper'larını sağlar.
   * `src/components/commerce/buyer-product-purchase-panel.tsx`: ürün detayındaki adet, `Şimdi Al`, `Sepete Ekle` ve favori aksiyon yüzeyi.
+  * `src/components/commerce/buyer-product-reviews-panel.tsx`: buyer ürün detayındaki alıcı yorumları ve ürün notlarını 4 kayıtlık sayfalar halinde render eder.
   * `src/components/commerce/buyer-cart-workspace.tsx`: sepet satırları, adet/sil/temizle, toplam hesaplama, empty state ve checkout mock yüzeyi.
   * `src/components/commerce/buyer-agent-workspace.tsx`: `/buyer/agent` için prompt/API/cart apply orchestration'ını yönetir; sohbet, öneri kartı, onay paneli, FAQ, skeleton ve empty-state UI `buyer-agent-panels.tsx` içindedir.
   * `src/components/commerce/seller-agent-workspace.tsx`: `/seller/agent` için prompt/API/audit orchestration'ını, ürün kanıt sırası ve trace yüzeyini yönetir; before/after listing snapshot, onay, audit log ve rollback UI `seller-agent-listing-panels.tsx` içindedir.
@@ -1511,6 +1512,17 @@
 * Doğrulama:
   * `npm run check` ve `npm run build` geçti.
   * Puppeteer smoke: `/buyer/products` 48 ürün linkinde 48 unique sprite position doğrulandı; `/buyer/products/calliel-spf50-gunes-kremi` ve `/seller/products` ekran görüntüleriyle yeni sprite hücreleri kontrol edildi.
+
+### 2026-05-18 Buyer Product Detail Reviews and Store CTA
+
+* Kapsam:
+  * `/buyer/products/[slug]` sağ rail `Mağazaya Git` kontrolü button olmaktan çıkıp `/buyer/products?store=seller-commercepilot` mağaza filtre linkine bağlandı.
+  * Buyer katalog contract'ı opsiyonel `store` query desteği ve store metadata'sı taşır.
+  * Ürün detay sayfasına `BuyerProductReviewsPanel` eklendi; gerçek ürün yorumları ve ürün notları 4 kayıtlık sayfalar halinde gösterilir, Agent notu sağ rail'de korunur.
+  * Buyer profile hızlı tercihindeki `Old-money stil` görünür metni `Sade stil` olarak genelleştirildi; buyer agent örnek prompt'u ve ürün style tag metinleri aynı dile çekildi.
+* Doğrulama:
+  * `npm run check`, `npm run build` geçti.
+  * Puppeteer smoke: `/buyer/products/calliel-spf50-gunes-kremi` için mağaza linki, 4 görünür yorum/not, pagination ve Agent notu doğrulandı; `/buyer/profile` üzerinde `Sade stil` göründü ve old-money metni kalmadı.
 
 ### Güncelleme Kaydı
 

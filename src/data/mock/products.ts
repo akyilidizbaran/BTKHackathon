@@ -1787,7 +1787,7 @@ export const products: Product[] = [
     listing: {
       title: "Sera Krem Örgü Triko Kazak",
       shortDescription: "Yumuşak dokulu, sade örgü desenli krem triko kazak.",
-      longDescription: "Old-money ve sade günlük stil için regular fit, nefes alan örgü dokulu kadın triko kazak.",
+      longDescription: "Sade günlük stil için regular fit, nefes alan örgü dokulu kadın triko kazak.",
       qualityScore: 90,
       attributeCompleteness: 92,
       imageScore: 90,
@@ -1795,7 +1795,7 @@ export const products: Product[] = [
     },
     catalog: {
       colors: ["krem", "ekru"],
-      styleTags: ["old-money", "minimal", "günlük"],
+      styleTags: ["sade", "minimal", "günlük"],
       useCases: ["günlük kombin", "ofis", "hafta sonu"],
       packageContents: ["triko kazak"],
     },
@@ -1839,7 +1839,7 @@ export const products: Product[] = [
     },
     catalog: {
       colors: ["bej", "taş"],
-      styleTags: ["old-money", "ofis", "sade"],
+      styleTags: ["sade", "ofis", "klasik"],
       useCases: ["kombin", "ofis", "akşam yemeği"],
       packageContents: ["pantolon"],
     },

@@ -133,9 +133,9 @@ export const buyerProfilePreferences: BuyerProfilePreference[] = [
   },
   {
     id: "old_money_style",
-    label: "Old-money stil",
-    helper: "Sade renk ve logosuz görünüm tercih et.",
-    signal: "Stil filtresi",
+    label: "Sade stil",
+    helper: "Logosu az, temiz ve kolay kombinlenen ürünleri öne al.",
+    signal: "Stil tercihi",
   },
   {
     id: "premium_quality",
