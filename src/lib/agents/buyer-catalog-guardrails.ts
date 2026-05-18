@@ -51,7 +51,7 @@ export function analyzeBuyerCatalogPrompt(prompt: string): BuyerCatalogPromptGua
     return {
       message: createUnsupportedBuyerCatalogAnswer(unsupportedTerms),
       ok: false,
-      reason: "Prompt CommercePilot kataloğunda ürün olarak bulunmayan belirgin bir ürün ailesi içeriyor.",
+      reason: "Prompt Alışveriş Arkadaşım kataloğunda ürün olarak bulunmayan belirgin bir ürün ailesi içeriyor.",
       unsupportedTerms,
     };
   }
@@ -66,7 +66,7 @@ export function analyzeBuyerCatalogPrompt(prompt: string): BuyerCatalogPromptGua
 export function createUnsupportedBuyerCatalogAnswer(terms: string[] = []): string {
   const termLabel = terms.length > 0 ? ` (${terms.join(", ")})` : "";
 
-  return `Bu ürün tipi${termLabel} şu an CommercePilot kataloğunda yok. Katalogda bulunan ürünlerden bütçe, teslimat, kategori veya kullanım amacına göre seçim yapabilirim; örneğin 2000 TL altı mevcut ürünleri sıralayabilirim.`;
+  return `Bu ürün tipi${termLabel} şu an Alışveriş Arkadaşım kataloğunda yok. Katalogda bulunan ürünlerden bütçe, teslimat, kategori veya kullanım amacına göre seçim yapabilirim; örneğin 2000 TL altı mevcut ürünleri sıralayabilirim.`;
 }
 
 export function getUnsupportedBuyerCatalogTerms(prompt: string): string[] {

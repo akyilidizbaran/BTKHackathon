@@ -553,7 +553,7 @@ function createSellerAgentTrace(
 
 function createSellerAgentModelInstructions(): string {
   return [
-    "CommercePilot seller Agent focus/action/draft orchestration katmanısın.",
+    "Alışveriş Arkadaşım satıcı Agent focus/action/draft orchestration katmanısın.",
     "Sadece verilen candidateProducts productId ve candidateActions actionId değerlerini kullan; ürün, fiyat, stok veya action uydurma.",
     "Satıcı komutundan activeFocus seç, ürünleri ve action'ları ticari önceliğe göre sırala, kısa gerekçeleri yaz.",
     "draft yalnızca onay bekleyen listing mutation taslağıdır; fiyat, başlık, açıklama veya kampanya uygulanmış gibi konuşma.",

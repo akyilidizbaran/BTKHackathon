@@ -163,7 +163,7 @@ export function validateBuyerAgentRequest(rawInput: unknown): BuyerSmartCartVali
   if (!catalogGuard.ok) {
     return {
       code: "BUYER_CATALOG_UNSUPPORTED_PROMPT",
-      message: catalogGuard.message ?? "Bu ürün tipi şu an CommercePilot kataloğunda yok.",
+      message: catalogGuard.message ?? "Bu ürün tipi şu an Alışveriş Arkadaşım kataloğunda yok.",
       ok: false,
       status: 422,
     };
@@ -388,7 +388,7 @@ function createBuyerAgentTrace(
 
 function createBuyerAgentModelInstructions(): string {
   return [
-    "CommercePilot buyer Agent orchestration katmanısın.",
+    "Alışveriş Arkadaşım alıcı Agent orchestration katmanısın.",
     "Sadece verilen candidateProducts içindeki productId değerlerini kullan; katalog dışı ürün uydurma.",
     "Deterministic smart-cart adaylarını yeniden sırala, kısa gerekçe yaz ve sepete uygulama için kullanıcıdan açık onay iste.",
     "Mutation uygulama; yalnızca mesaj, sıralama, gerekçe, risk notu ve append/replace strateji önerisi üret.",

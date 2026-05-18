@@ -13,7 +13,7 @@ function product(data: Omit<Product, "sellerId" | "currency">): Product {
 export const products: Product[] = [
   product({
     id: "prod-ergoflex-calisma-sandalyesi",
-    sku: "CP-EV-001",
+    sku: "AA-EV-001",
     slug: "ergoflex-calisma-sandalyesi",
     name: "ErgoFlex Bel Destekli Çalışma Sandalyesi",
     brand: "ErgoFlex",
@@ -57,7 +57,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-flowmate-kablosuz-mouse",
-    sku: "CP-EA-002",
+    sku: "AA-EA-002",
     slug: "flowmate-kablosuz-mouse",
     name: "FlowMate Sessiz Kablosuz Mouse",
     brand: "FlowMate",
@@ -101,7 +101,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-airbeat-spor-kulaklik",
-    sku: "CP-EA-003",
+    sku: "AA-EA-003",
     slug: "airbeat-spor-kulaklik",
     name: "AirBeat Spor Kablosuz Kulaklık",
     brand: "AirBeat",
@@ -145,7 +145,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-luma-led-masa-lambasi",
-    sku: "CP-MC-004",
+    sku: "AA-MC-004",
     slug: "luma-led-masa-lambasi",
     name: "Luma Ayarlanabilir LED Masa Lambası",
     brand: "Luma",
@@ -189,7 +189,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-riseup-laptop-standi",
-    sku: "CP-EV-005",
+    sku: "AA-EV-005",
     slug: "riseup-laptop-standi",
     name: "RiseUp Alüminyum Laptop Standı",
     brand: "RiseUp",
@@ -233,7 +233,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-keypro-mekanik-klavye",
-    sku: "CP-EA-006",
+    sku: "AA-EA-006",
     slug: "keypro-mekanik-klavye",
     name: "KeyPro Kompakt Mekanik Klavye",
     brand: "KeyPro",
@@ -277,7 +277,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-barista-kahve-ogutucu",
-    sku: "CP-KH-007",
+    sku: "AA-KH-007",
     slug: "barista-kahve-ogutucu",
     name: "BaristaPro Elektrikli Kahve Öğütücü",
     brand: "BaristaPro",
@@ -321,7 +321,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-brewday-french-press",
-    sku: "CP-KH-008",
+    sku: "AA-KH-008",
     slug: "brewday-french-press",
     name: "BrewDay Cam French Press 600 ml",
     brand: "BrewDay",
@@ -365,7 +365,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-mokaline-moka-pot",
-    sku: "CP-KH-009",
+    sku: "AA-KH-009",
     slug: "mokaline-moka-pot",
     name: "MokaLine Paslanmaz Moka Pot",
     brand: "MokaLine",
@@ -409,7 +409,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-nordik-masa-organizer",
-    sku: "CP-MC-010",
+    sku: "AA-MC-010",
     slug: "nordik-masa-organizer",
     name: "Nordik Ahşap Masa Organizer",
     brand: "Nordik",
@@ -453,7 +453,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-woodline-monitor-standi",
-    sku: "CP-MC-011",
+    sku: "AA-MC-011",
     slug: "woodline-monitor-standi",
     name: "WoodLine Ahşap Monitör Standı",
     brand: "WoodLine",
@@ -497,7 +497,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-connectplus-usb-c-hub",
-    sku: "CP-EA-012",
+    sku: "AA-EA-012",
     slug: "connectplus-usb-c-hub",
     name: "ConnectPlus 6 Port USB-C Hub",
     brand: "ConnectPlus",
@@ -541,7 +541,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-thermogo-termos-mug",
-    sku: "CP-KY-013",
+    sku: "AA-KY-013",
     slug: "thermogo-termos-mug",
     name: "ThermoGo Sızdırmaz Termos Mug",
     brand: "ThermoGo",
@@ -585,7 +585,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-tidy-kablo-duzenleyici",
-    sku: "CP-MC-014",
+    sku: "AA-MC-014",
     slug: "tidy-kablo-duzenleyici",
     name: "TidyDesk Kablo Düzenleyici Set",
     brand: "TidyDesk",
@@ -629,7 +629,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-focus-not-defteri-seti",
-    sku: "CP-HY-015",
+    sku: "AA-HY-015",
     slug: "focus-not-defteri-seti",
     name: "Focus Planlayıcı Not Defteri Seti",
     brand: "Focus",
@@ -673,7 +673,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-airmini-hava-temizleyici",
-    sku: "CP-KY-016",
+    sku: "AA-KY-016",
     slug: "airmini-hava-temizleyici",
     name: "AirMini Masaüstü Hava Temizleyici",
     brand: "AirMini",
@@ -717,7 +717,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-aromamist-difuzor",
-    sku: "CP-KY-017",
+    sku: "AA-KY-017",
     slug: "aromamist-difuzor",
     name: "AromaMist Ultrasonik Difüzör",
     brand: "AromaMist",
@@ -761,7 +761,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-minimal-duvar-saati",
-    sku: "CP-KY-018",
+    sku: "AA-KY-018",
     slug: "minimal-duvar-saati",
     name: "Minimal Sessiz Duvar Saati",
     brand: "MiraHome",
@@ -805,7 +805,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-warmline-led-serit",
-    sku: "CP-MC-019",
+    sku: "AA-MC-019",
     slug: "warmline-led-serit",
     name: "WarmLine Sıcak Beyaz LED Şerit",
     brand: "WarmLine",
@@ -849,7 +849,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-graphite-desk-mat",
-    sku: "CP-MC-020",
+    sku: "AA-MC-020",
     slug: "graphite-desk-mat",
     name: "Graphite XL Keçe Desk Mat",
     brand: "Graphite",
@@ -893,7 +893,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-comfort-ayak-destegi",
-    sku: "CP-EV-021",
+    sku: "AA-EV-021",
     slug: "comfort-ayak-destegi",
     name: "ComfortStep Ayarlanabilir Ayak Desteği",
     brand: "ComfortStep",
@@ -937,7 +937,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-clearcam-webcam",
-    sku: "CP-EA-022",
+    sku: "AA-EA-022",
     slug: "clearcam-webcam",
     name: "ClearCam 1080p Webcam",
     brand: "ClearCam",
@@ -981,7 +981,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-podcast-mini-mikrofon",
-    sku: "CP-EA-023",
+    sku: "AA-EA-023",
     slug: "podcast-mini-mikrofon",
     name: "Podcast Mini USB Mikrofon",
     brand: "PodKit",
@@ -1025,7 +1025,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-seatsoft-sandalye-minderi",
-    sku: "CP-EV-024",
+    sku: "AA-EV-024",
     slug: "seatsoft-sandalye-minderi",
     name: "SeatSoft Ortopedik Sandalye Minderi",
     brand: "SeatSoft",
@@ -1069,7 +1069,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-pourover-baslangic-seti",
-    sku: "CP-KH-025",
+    sku: "AA-KH-025",
     slug: "pourover-baslangic-seti",
     name: "PourOver Başlangıç Kahve Seti",
     brand: "BrewDay",
@@ -1113,7 +1113,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-precise-kahve-terazisi",
-    sku: "CP-KH-026",
+    sku: "AA-KH-026",
     slug: "precise-kahve-terazisi",
     name: "Precise Brew Dijital Kahve Terazisi",
     brand: "Precise Brew",
@@ -1157,7 +1157,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-foamgo-sut-kopurtucu",
-    sku: "CP-KH-027",
+    sku: "AA-KH-027",
     slug: "foamgo-sut-kopurtucu",
     name: "FoamGo Şarjlı Süt Köpürtücü",
     brand: "FoamGo",
@@ -1201,7 +1201,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-soywax-hediye-mum",
-    sku: "CP-HY-028",
+    sku: "AA-HY-028",
     slug: "soywax-hediye-mum",
     name: "SoyWax El Yapımı Hediye Mum",
     brand: "SoyWax",
@@ -1245,7 +1245,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-greenpod-saksi-seti",
-    sku: "CP-HY-029",
+    sku: "AA-HY-029",
     slug: "greenpod-saksi-seti",
     name: "GreenPod Seramik Saksı Seti",
     brand: "GreenPod",
@@ -1289,7 +1289,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-metal-kitap-tutucu",
-    sku: "CP-HY-030",
+    sku: "AA-HY-030",
     slug: "metal-kitap-tutucu",
     name: "Arc Metal Kitap Tutucu Çifti",
     brand: "Arc",
@@ -1333,7 +1333,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-chargepad-kablosuz-sarj",
-    sku: "CP-EA-031",
+    sku: "AA-EA-031",
     slug: "chargepad-kablosuz-sarj",
     name: "ChargePad Hızlı Kablosuz Şarj Standı",
     brand: "ChargePad",
@@ -1377,7 +1377,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-travelmax-powerbank",
-    sku: "CP-EA-032",
+    sku: "AA-EA-032",
     slug: "travelmax-powerbank",
     name: "TravelMax 10000 mAh Powerbank",
     brand: "TravelMax",
@@ -1421,7 +1421,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-runbuds-spor-kulakici",
-    sku: "CP-EA-033",
+    sku: "AA-EA-033",
     slug: "runbuds-spor-kulakici",
     name: "RunBuds Kulak Kancalı Spor Kulaklık",
     brand: "RunBuds",
@@ -1465,7 +1465,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-softrest-bilek-destegi",
-    sku: "CP-MC-034",
+    sku: "AA-MC-034",
     slug: "softrest-bilek-destegi",
     name: "SoftRest Klavye Bilek Desteği",
     brand: "SoftRest",
@@ -1509,7 +1509,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-widepad-xl-mousepad",
-    sku: "CP-MC-035",
+    sku: "AA-MC-035",
     slug: "widepad-xl-mousepad",
     name: "WidePad XL Kumaş Mousepad",
     brand: "WidePad",
@@ -1553,7 +1553,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-stackbox-saklama-kutusu",
-    sku: "CP-KY-036",
+    sku: "AA-KY-036",
     slug: "stackbox-saklama-kutusu",
     name: "StackBox Modüler Saklama Kutusu",
     brand: "StackBox",
@@ -1597,7 +1597,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-cinema-mini-projektor",
-    sku: "CP-EA-037",
+    sku: "AA-EA-037",
     slug: "cinema-mini-projektor",
     name: "CinemaMini Taşınabilir Projektör",
     brand: "CinemaMini",
@@ -1641,7 +1641,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-flexhold-tablet-standi",
-    sku: "CP-EA-038",
+    sku: "AA-EA-038",
     slug: "flexhold-tablet-standi",
     name: "FlexHold Ayarlanabilir Tablet Standı",
     brand: "FlexHold",
@@ -1685,7 +1685,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-bluecore-masa-seti",
-    sku: "CP-MC-039",
+    sku: "AA-MC-039",
     slug: "bluecore-masa-seti",
     name: "BlueCore Pastel Mavi Masa Seti",
     brand: "BlueCore",
@@ -1729,7 +1729,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-inkline-kalem-seti",
-    sku: "CP-HY-040",
+    sku: "AA-HY-040",
     slug: "inkline-kalem-seti",
     name: "InkLine Premium Kalem Seti",
     brand: "InkLine",
@@ -1773,7 +1773,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-sera-krem-triko-kazak",
-    sku: "CP-KG-041",
+    sku: "AA-KG-041",
     slug: "sera-krem-triko-kazak",
     name: "Sera Krem Örgü Triko Kazak",
     brand: "Sera",
@@ -1817,7 +1817,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-elya-bej-pileli-pantolon",
-    sku: "CP-KG-042",
+    sku: "AA-KG-042",
     slug: "elya-bej-pileli-pantolon",
     name: "Elya Bej Pileli Kumaş Pantolon",
     brand: "Elya",
@@ -1861,7 +1861,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-nordline-lacivert-polo-kazak",
-    sku: "CP-EG-043",
+    sku: "AA-EG-043",
     slug: "nordline-lacivert-polo-kazak",
     name: "Nordline Lacivert Polo Yaka Kazak",
     brand: "Nordline",
@@ -1905,7 +1905,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-atelier-kum-beji-chino",
-    sku: "CP-EG-044",
+    sku: "AA-EG-044",
     slug: "atelier-kum-beji-chino",
     name: "Atelier Kum Beji Slim Chino Pantolon",
     brand: "Atelier",
@@ -1949,7 +1949,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-calliel-spf50-gunes-kremi",
-    sku: "CP-KO-045",
+    sku: "AA-KO-045",
     slug: "calliel-spf50-gunes-kremi",
     name: "Calliel SPF50 Aydınlık Veren Güneş Kremi",
     brand: "Calliel",
@@ -1993,7 +1993,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-collaberry-gummy-kolajen",
-    sku: "CP-KO-046",
+    sku: "AA-KO-046",
     slug: "collaberry-gummy-kolajen",
     name: "CollaBerry Uyku Destekli Kolajen Gummy",
     brand: "CollaBerry",
@@ -2037,7 +2037,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-runwell-spor-matara",
-    sku: "CP-SP-047",
+    sku: "AA-SP-047",
     slug: "runwell-spor-matara",
     name: "RunWell Kilitli Kapaklı Spor Matarası",
     brand: "RunWell",
@@ -2081,7 +2081,7 @@ export const products: Product[] = [
   }),
   product({
     id: "prod-stride-kancali-spor-kulaklik",
-    sku: "CP-SP-048",
+    sku: "AA-SP-048",
     slug: "stride-kancali-spor-kulaklik",
     name: "Stride Kulak Kancalı Spor Kulaklık",
     brand: "Stride",

@@ -247,7 +247,7 @@ function createReviewIntelligenceBuildContext(
 
 function createReviewIntelligenceModelInstructions(): string {
   return [
-    "CommercePilot Review Intelligence orchestration katmanısın.",
+    "Alışveriş Arkadaşım Review Intelligence orchestration katmanısın.",
     "Sadece verilen sourceReviews, allowedThemes, product ve scorecard context'ini kullan; yeni yorum, yeni reviewId, yeni ürün veya yeni metrik uydurma.",
     "reviewClusters içindeki reviewIds sadece sourceReviews içinde verilen id'lerden seçilmeli.",
     "repeatedComplaintThemes sadece allowedThemes içindeki değerlerden oluşmalı.",

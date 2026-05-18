@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "CommercePilot",
+  title: "Alışveriş Arkadaşım",
   description:
     "Alıcı ihtiyaçları ve satıcı büyüme aksiyonları için çift taraflı ticaret zekası.",
 };

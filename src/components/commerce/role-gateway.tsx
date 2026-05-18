@@ -65,10 +65,10 @@ export function RoleGateway() {
         >
           <Link href="/" className="group inline-flex items-center gap-3">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-[0_12px_30px_-18px_rgba(249,115,22,0.8)]">
-              CP
+              AA
             </span>
             <span>
-              <span className="block text-sm font-semibold tracking-tight text-slate-950">CommercePilot</span>
+              <span className="block text-sm font-semibold tracking-tight text-slate-950">Alışveriş Arkadaşım</span>
               <span className="block text-xs text-slate-500">Agent destekli e-ticaret</span>
             </span>
           </Link>
@@ -92,7 +92,7 @@ export function RoleGateway() {
               Light marketplace pivotu başladı
             </div>
             <h1 className="max-w-5xl text-[clamp(2.65rem,5vw,5.25rem)] font-semibold leading-[0.95] tracking-[-0.055em] text-slate-950">
-              CommercePilot artık tanıdık bir alışveriş yüzeyi.
+              Alışveriş Arkadaşım artık tanıdık bir alışveriş yüzeyi.
             </h1>
             <p className="mt-7 max-w-[62ch] text-base leading-8 text-slate-600 sm:text-lg">
               Alıcı mağazada gezer, satıcı panelini yönetir. Sağ altta yaşayacak agent pet ise sepet

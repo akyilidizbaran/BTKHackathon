@@ -1,10 +1,10 @@
-# CommercePilot Mimarisi
+# Alışveriş Arkadaşım Mimarisi
 
-Bu doküman, CommercePilot'un içeride nasıl çalıştığını açıklar. Amaç, teknik inceleyicinin her route ve component'i tek tek okumadan önce mühendislik yapısını hızlıca anlamasıdır.
+Bu doküman, Alışveriş Arkadaşım'ın içeride nasıl çalıştığını açıklar. Amaç, teknik inceleyicinin her route ve component'i tek tek okumadan önce mühendislik yapısını hızlıca anlamasıdır.
 
 ## 1. Sistem Özeti
 
-CommercePilot, deterministik commerce logic ile LLM destekli dil/sıralama katmanını kesin şekilde ayırır.
+Alışveriş Arkadaşım, deterministik commerce logic ile LLM destekli dil/sıralama katmanını kesin şekilde ayırır.
 
 ```text
 curated commerce dataset
@@ -108,7 +108,7 @@ Scoring katmanı `src/lib/scoring` altında yaşar ve ham commerce sinyallerini 
 
 ## 5. API Contract Pattern
 
-CommercePilot, page ve API route arasında logic tekrarını önler. `src/lib/api` içindeki shared builder'lar typed data contract üretir; route handler'lar ve server component'ler aynı builder'ları kullanır.
+Alışveriş Arkadaşım, page ve API route arasında logic tekrarını önler. `src/lib/api` içindeki shared builder'lar typed data contract üretir; route handler'lar ve server component'ler aynı builder'ları kullanır.
 
 Örnekler:
 
@@ -164,7 +164,7 @@ Hackathon sunumunda ana pozisyon Gemini veya deterministik fallback olmalıdır.
 
 Structured generation `generateLlmJson<T>()` üzerinden yapılır. Bu helper JSON çıkarır, string/array normalize eder, caller-provided validator çalıştırır ve parsing/validation başarısız olursa deterministik fallback'e döner.
 
-Bu kritik çünkü CommercePilot LLM çıktısını yalnızca type-level ve domain-level validation sonrası kullanır.
+Bu kritik çünkü Alışveriş Arkadaşım LLM çıktısını yalnızca type-level ve domain-level validation sonrası kullanır.
 
 ## 7. Agent Runtime
 

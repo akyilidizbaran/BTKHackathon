@@ -1,8 +1,8 @@
-# CommercePilot
+# Alışveriş Arkadaşım
 
 [![CI](https://github.com/akyilidizbaran/BTKHackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/akyilidizbaran/BTKHackathon/actions/workflows/ci.yml)
 
-CommercePilot, hackathon MVP'si olarak geliştirilmiş çift taraflı bir ticaret zekası platformudur. Alıcı tarafında tanıdık bir marketplace deneyimi, satıcı tarafında operasyon paneli ve iki tarafın üzerinde çalışan context-aware bir commerce agent bulunur. Agent; açıklama yapabilir, ürün önerebilir, satıcı aksiyonlarını önizleyebilir ve yalnızca kullanıcı onayı sonrası geçerli aksiyonları uygulayabilir.
+Alışveriş Arkadaşım, hackathon MVP'si olarak geliştirilmiş çift taraflı bir ticaret zekası platformudur. Alıcı tarafında tanıdık bir marketplace deneyimi, satıcı tarafında operasyon paneli ve iki tarafın üzerinde çalışan context-aware bir commerce agent bulunur. Agent; açıklama yapabilir, ürün önerebilir, satıcı aksiyonlarını önizleyebilir ve yalnızca kullanıcı onayı sonrası geçerli aksiyonları uygulayabilir.
 
 Çekirdek teknik fikir:
 
@@ -59,7 +59,7 @@ Hackathon tesliminde demo anlatısı Gemini veya deterministik fallback üzerind
 
 ## Güncel Durum
 
-CommercePilot, teslim edilebilir hackathon MVP seviyesindedir.
+Alışveriş Arkadaşım, teslim edilebilir hackathon MVP seviyesindedir.
 
 Bilinçli olarak gerçek olan kısımlar:
 
@@ -169,9 +169,9 @@ Floating Agent:
 
 ## Guardrail'ler
 
-CommercePilot şu davranışları korur:
+Alışveriş Arkadaşım şu davranışları korur:
 
-- Buyer Agent yalnızca mevcut CommercePilot katalog ürünlerini önerir.
+- Buyer Agent yalnızca mevcut Alışveriş Arkadaşım katalog ürünlerini önerir.
 - Telefon, konsol, TV, beyaz eşya veya ayakkabı gibi desteklenmeyen katalog prompt'ları sahte öneri yerine boundary response döndürür.
 - Seller Agent listing, price, campaign, stock veya description değişikliklerini onay olmadan uygulayamaz.
 - LLM JSON route contract veya UI state'e girmeden önce parse ve validate edilir.
@@ -253,7 +253,7 @@ npm run start
 - `npm run db:validate` - Prisma schema'yı Supabase bağlantısı gerektirmeden doğrular.
 - `npm run db:generate` - Prisma Client üretir.
 - `npm run db:migrate:deploy` - commitlenmiş Prisma migration'larını Supabase/Postgres DB'ye uygular.
-- `npm run db:seed` - curated CommercePilot dataset'ini Supabase/Postgres DB'ye seed eder.
+- `npm run db:seed` - Alışveriş Arkadaşım curated dataset'ini Supabase/Postgres DB'ye seed eder.
 - `npm run db:studio` - Prisma Studio'yu açar.
 - `npm run check` - lint, typecheck, workflow validation ve component testlerini çalıştırır.
 
@@ -311,7 +311,7 @@ Notlar:
 - [docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md) - Supabase Postgres kurulumu, Prisma migration ve mock dataset seed adımları.
 - [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - teknik denetim, smoke sonuçları, component extraction durumu, mock/lokal envanter ve öncelikler.
 - [LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md](LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md) - provider bağımsız LLM ve agent uygulama planı.
-- [COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md](COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md) - ürün ve milestone roadmap'i.
+- [ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md](ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md) - ürün ve milestone roadmap'i.
 
 ## Bilinen Teknik Borçlar
 

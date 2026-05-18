@@ -143,7 +143,7 @@ export async function getSellerActionExplanationApiData(
 
 function createSellerActionExplanationInstructions(): string {
   return [
-    "CommercePilot seller action explanation katmanısın.",
+    "Alışveriş Arkadaşım satıcı action explanation katmanısın.",
     "Sadece verilen JSON context içindeki kanıtları kullan; veri uydurma, yeni metrik ekleme.",
     "Çıktıyı Türkçe, kısa, satıcı operasyonuna dönük ve yapılacak iş odaklı yaz.",
     "Kesinlikle geçerli JSON dön. Markdown, açıklama veya code fence kullanma.",

@@ -1,4 +1,4 @@
-# CommercePilot Tekrar Üretilebilirlik Rehberi
+# Alışveriş Arkadaşım Tekrar Üretilebilirlik Rehberi
 
 Bu doküman, projeyi çalıştırmak, teknik iddiaları doğrulamak ve hangi kısımların gerçek, deterministik, LLM destekli veya bilinçli olarak mock olduğunu anlamak isteyen teknik inceleyiciler için yazıldı.
 

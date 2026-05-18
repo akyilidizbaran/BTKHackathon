@@ -2,7 +2,7 @@
 
 ## 0) Amac
 
-CommercePilot Agent katmani, once OpenAI API key ile calisacak sekilde LLM destekli hale getirilecek; teslimden hemen once ayni contract'lar bozulmadan Gemini provider'ina kaydirilabilecek.
+Alışveriş Arkadaşım Agent katmani, once OpenAI API key ile calisacak sekilde LLM destekli hale getirilecek; teslimden hemen once ayni contract'lar bozulmadan Gemini provider'ina kaydirilabilecek.
 
 Hedef mimari:
 
@@ -29,7 +29,7 @@ Bu mimaride LLM karar, yorum ve taslak uretir; katalog disi urun uyduramaz, izin
 
 ## 2) Non-negotiables
 
-* Agent, buyer tarafinda yalnizca mevcut CommercePilot katalog urunlerinden secim yapabilir.
+* Agent, buyer tarafinda yalnizca mevcut Alışveriş Arkadaşım katalog urunlerinden secim yapabilir.
 * Agent, seller tarafinda kullanici onayi olmadan listing, fiyat, kampanya, stok veya aciklama mutation'i uygulayamaz.
 * LLM ciktisi ham sekilde UI veya mutation katmanina gecemez; her sonuc typed parse + validation + guardrail'den gecmelidir.
 * Fallback davranisi korunur; API key yoksa veya provider hata verirse demo tamamen kirilmaz.

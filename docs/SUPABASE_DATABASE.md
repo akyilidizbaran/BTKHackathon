@@ -1,6 +1,6 @@
 # Supabase Database Kurulum Rehberi
 
-Bu rehber, CommercePilot curated mock dataset'ini Supabase Postgres içine taşımak için izlenecek güvenli yolu anlatır.
+Bu rehber, Alışveriş Arkadaşım'ın curated mock dataset'ini Supabase Postgres içine taşımak için izlenecek güvenli yolu anlatır.
 
 Amaç bu aşamada uygulamanın tüm davranışını bir anda değiştirmek değildir. İlk fazda mevcut mock data PostgreSQL'e seed edilir; route, workflow, scoring ve Agent contract'ları kırılmadan korunur. Sonraki fazda data access layer DB'den okumaya alınabilir.
 
@@ -105,7 +105,7 @@ npm run db:seed
 Beklenen özet:
 
 ```text
-CommercePilot Supabase seed completed.
+Alışveriş Arkadaşım Supabase seed completed.
 Sellers: 1
 Buyers: 8
 Products: 48

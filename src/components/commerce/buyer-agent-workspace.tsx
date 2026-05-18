@@ -210,7 +210,7 @@ export function BuyerAgentWorkspace({ examples, initialData }: BuyerAgentWorkspa
                 Ne aradığını yaz, katalogdan seçeyim.
               </h2>
               <p className="mt-4 max-w-[62ch] text-sm leading-6 text-slate-600">
-                Agent yalnızca CommercePilot kataloğundaki ürünleri önerir. Onay vermeden sepete ürün eklemez.
+                Agent yalnızca Alışveriş Arkadaşım kataloğundaki ürünleri önerir. Onay vermeden sepete ürün eklemez.
               </p>
             </div>
 

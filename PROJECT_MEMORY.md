@@ -5,14 +5,14 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * GitHub About metadata dolduruldu: açıklama ve reviewer/deploy odaklı topic'ler eklendi; deploy URL olmadığı için homepage şimdilik boş bırakıldı.
+  * Public marka adı `Alışveriş Arkadaşım` olarak değiştirildi; kullanıcıya/reviewer'a görünen metinler, README/docs, Supabase seed çıktısı ve GitHub About açıklaması yeni isme taşındı.
 * Bir sonraki net adım ne?
-  * Vercel env değerleri girilecek ve deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
+  * Mini Sepet Arkadaşı figürü üretilecek; ardından Vercel env değerleri girilip deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
 
 ## 1) Proje Amacı ve Kapsam
 
 * Amaç:
-  * CommercePilot, klasik marketplace alışveriş deneyimi ile alıcı/satıcı tarafında yaşayan agent pet'i birleştiren çift taraflı bir e-ticaret zekası platformudur. Amaç kullanıcıya tanıdık bir e-ticaret arayüzü sunarken, AI agent'ın sepet kurma, ürün uyarısı, satılmayan ürün analizi ve izinli listeleme düzenleme aksiyonlarını doğal şekilde yürütmesidir.
+  * Alışveriş Arkadaşım, klasik marketplace alışveriş deneyimi ile alıcı/satıcı tarafında yaşayan agent pet'i birleştiren çift taraflı bir e-ticaret zekası platformudur. Amaç kullanıcıya tanıdık bir e-ticaret arayüzü sunarken, AI agent'ın sepet kurma, ürün uyarısı, satılmayan ürün analizi ve izinli listeleme düzenleme aksiyonlarını doğal şekilde yürütmesidir.
 * Kapsam içi:
   * Buyer tarafı: marketplace homepage, kategori/search, ürün grid, ürün detay, yorumlar, sepet, sağ alt agent pet ve agent destekli sepet mutation'ları.
   * Seller tarafı: klasik satıcı paneli, ürün yönetimi, stok/satış/yorum sinyalleri, satılmayan ürün analizi, agent destekli listeleme mutation'ları.
@@ -29,7 +29,7 @@
 * AI/LLM çıktıları kör şekilde kullanılmayacak; önce deterministik veri analizi yapılacak, LLM yalnızca açıklama, özetleme ve metin üretme katmanında kullanılacak.
 * Mock data rastgele olmayacak; her ürün net bir demo problemine hizmet edecek.
 * İlk kurulumda overengineering yapılmayacak; gerçek auth/database/payment ertelenecek.
-* Dark dashboard dili artık ana yön değil; CommercePilot light, klasik e-ticaret düzeniyle ilerleyecek.
+* Dark dashboard dili artık ana yön değil; Alışveriş Arkadaşım light, klasik e-ticaret düzeniyle ilerleyecek.
 * UI açıklama dashboard'u gibi davranmayacak; ürün, sepet, profil ve satıcı yönetim yüzeyleri önce gelecek, derin açıklama agent'a bırakılacak.
 * Buyer tarafında header ve sidebar aynı navigasyonu tekrar etmeyecek; buyer ana nav sadece `Ürünler`, `Sepet`, `Agent`, `Profil`.
 * Buyer ürün kartı ana tıklamada ürün detay/satış penceresine gider; sepete ekleme `Sepete Ekle` aksiyonuyla yapılır.
@@ -125,8 +125,8 @@
   * `docs/REPRODUCIBILITY.md`: environment, quick verification, route order, deterministic/LLM-assisted claim ve known non-reproducible parts özetidir.
   * `docs/VALIDATION_OUTPUT.md`: `npm run validate:workflows` için beklenen high-signal çıktı referansıdır.
   * `public/catalog/buyer-product-sprite.png`: 48 ürünün tamamı için ürün açıklamasıyla uyumlu 6x8 mock ürün sprite'ı.
-  * `src/app/globals.css`: light CommercePilot tokenları ve geçici `commerce-legacy-light` bridge'i.
-  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`: marketplace + agent pet pivot kararları, endpoint haritası ve revize milestone yol haritası.
+  * `src/app/globals.css`: light Alışveriş Arkadaşım tokenları ve geçici `commerce-legacy-light` bridge'i.
+  * `ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md`: marketplace + agent pet pivot kararları, endpoint haritası ve revize milestone yol haritası.
   * Planlanan sonraki yapı: buyer `products/cart/agent/profile`, seller `overview/products/actions/agent/profile`, `src/lib/agents/prompts/*`, `src/lib/agents/tools/*`, `src/lib/agents/runtime/*`, cart/listing mock mutation ve audit katmanı.
 
 ## 4) Konvansiyonlar ve Standartlar
@@ -177,14 +177,14 @@
 ## 6) Decision Log (append-only)
 
 * 2026-05-12 — Karar: Satıcı tarafı buyer tarafına göre biraz daha öncelikli olacak. | Gerekçe: Seller intelligence daha güçlü iş değeri ve hackathon demosu yaratıyor. | Etki: En güçlü demo noktası Seller Growth Actions olacak. | Alternatifler: Buyer-first akıllı alışveriş asistanı.
-* 2026-05-12 — Karar: CommercePilot "buyer assistant + seller dashboard" olarak değil, çift taraflı commerce intelligence sistemi olarak konumlanacak. | Gerekçe: Alıcı ihtiyaçları, ürün ilişkileri, yorumlar, satış ve stok verileri aynı zekâ katmanında birleşince ürün farklılaşıyor. | Etki: Satıcı aksiyonları buyer verisiyle ileride beslenebilecek.
+* 2026-05-12 — Karar: Alışveriş Arkadaşım "buyer assistant + seller dashboard" olarak değil, çift taraflı commerce intelligence sistemi olarak konumlanacak. | Gerekçe: Alıcı ihtiyaçları, ürün ilişkileri, yorumlar, satış ve stok verileri aynı zekâ katmanında birleşince ürün farklılaşıyor. | Etki: Satıcı aksiyonları buyer verisiyle ileride beslenebilecek.
 * 2026-05-12 — Karar: İlk AI sırası Seller Growth Action Agent -> Buyer Smart Cart Agent -> Review Intelligence Agent -> Listing Optimizer Agent olacak. | Gerekçe: Satıcı büyüme aksiyonları demo değerini en hızlı gösterir. | Etki: Phase 2 seller odaklı olacak.
 * 2026-05-12 — Karar: Phase 1'de Gemini kullanılmayacak; AI-ready alanlar deterministik/mock insight olarak tasarlanacak. | Gerekçe: Temel ürün zemini oturmadan LLM eklemek kırılgan ve sahte hissettirebilir. | Etki: UI, ileride Gemini ile zenginleşecek şekilde hazırlanacak.
 * 2026-05-12 — Karar: `lib/workflows/` veya benzeri bir use-case katmanı eklenecek. | Gerekçe: UI'ın ham veriye veya doğrudan agent/LLM çıktısına bağlanmasını önlemek. | Etki: Seller action, smart cart ve product health gibi akışlar daha sonra Gemini ile genişletilebilir.
 * 2026-05-13 — Karar: Alıcı tarafı "chatbot ile alışveriş" olarak değil, karar güveni ve ihtiyaç bazlı sepet kurma deneyimi olarak konumlanacak. | Gerekçe: Alıcıların temel problemi sonsuz seçenek içinde doğru ürüne güvenle karar vermek. | Etki: Buyer Smart Cart, product confidence, alternatives, complements ve review warnings önceliklendirilecek.
 * 2026-05-13 — Karar: İlk LLM geliştirme OpenAI ile yapılabilecek, mimari provider değiştirilebilir kurulacak ve final hedef Gemini olacak. | Gerekçe: Şu an Gemini API key yok; hackathon kuralına uyum için son sağlayıcı Gemini olmalı. | Etki: `LLM_PROVIDER`, `OPENAI_API_KEY`, `GEMINI_API_KEY` env isimleri ayrıldı.
 * 2026-05-13 — Karar: Backend/web temeli milestone'lar halinde kurulacak. | Gerekçe: Tek seferde tüm agentic işleri yapmak yerine sağlam, commitlenebilir adımlar isteniyor. | Etki: Milestone 0 tamamlandıktan sonra Milestone 1 için kullanıcıdan tüm mock data/domain kararları alınacak.
-* 2026-05-13 — Karar: Demo mağaza adı şimdilik CommercePilot olarak kalacak. | Gerekçe: Marka adı henüz kesin değil; geçici tutarlılık gerekli. | Etki: Mock seller/store isimleri daha sonra değiştirilebilir.
+* 2026-05-13 — Karar: Demo mağaza adı şimdilik Alışveriş Arkadaşım olarak kalacak. | Gerekçe: Marka adı henüz kesin değil; geçici tutarlılık gerekli. | Etki: Mock seller/store isimleri daha sonra değiştirilebilir.
 * 2026-05-13 — Karar: Milestone 1 veri seti zengin ama kontrollü olacak. | Gerekçe: Hackathon demosu için her ürünün net hikayesi olmalı; tamamen rastgele veya dış veri demosu zayıflatır. | Etki: Curated çekirdek mock data ana kaynak olacak, Kaggle/Hugging Face review datasetleri sadece zenginleştirme/referans için değerlendirilecek.
 * 2026-05-13 — Karar: İlk ürün fiyat aralığı 250-5000 TL olacak ve tüm görünen içerik Türkçe yazılacak. | Gerekçe: Türkiye/TL odaklı demo ve doğal kullanıcı dili isteniyor. | Etki: Product, review, action ve buyer prompt örnekleri Türkçe olacak.
 * 2026-05-13 — Karar: Seller Growth Actions ilk aşamada 5 öncelikli aksiyon gösterecek. | Gerekçe: Demo sırasında net, kısa ve güçlü görünmesi için. | Etki: Workflow çıktısı önceliklendirilmiş top 5 aksiyona odaklanacak.
@@ -196,7 +196,7 @@
 * 2026-05-13 — Karar: Milestone 5 buyer workflow 5 ana senaryoyu destekleyecek. | Gerekçe: Hackathon demosunda farklı alıcı ihtiyaçlarını göstermek için ev ofis, kahve seti, hediye, spor kulaklık ve renk uyumlu masa seti yeterli kapsama sağlar. | Etki: `BuyerIntentType` beş özel intent ve `generic` fallback içerir.
 * 2026-05-13 — Karar: Buyer bütçesi hard cap değil, %5 toleranslı soft cap olacak. | Gerekçe: Kullanıcı bütçe belirttiğinde gerçek alışverişte küçük aşım kabul edilebilir ama açıkça gösterilmelidir. | Etki: Workflow `budget`, `softBudgetLimit`, `isOverRequestedBudget` ve bütçe uyarısı döner.
 * 2026-05-13 — Karar: Buyer personalization ilk versiyonda aktif olacak. | Gerekçe: Ürünün farklılaştırıcı noktası alıcının geçmiş şikayet ve tercihlerini karar desteğine katmasıdır. | Etki: Buyer sensitivities, preferred colors, previous complaint themes ve manuel preferences skorlamaya dahil edilir.
-* 2026-05-13 — Karar: Buyer workflow satıcı tarafına sinyal adayı üretecek. | Gerekçe: CommercePilot'un çift taraflı intelligence iddiası için alıcı ihtiyaçları seller growth action tarafını beslemelidir. | Etki: Çıktıda `sellerSignalCandidates` alanı eklendi.
+* 2026-05-13 — Karar: Buyer workflow satıcı tarafına sinyal adayı üretecek. | Gerekçe: Alışveriş Arkadaşım'ın çift taraflı intelligence iddiası için alıcı ihtiyaçları seller growth action tarafını beslemelidir. | Etki: Çıktıda `sellerSignalCandidates` alanı eklendi.
 * 2026-05-13 — Karar: Brain hardening tek büyük değişiklik yerine alt adımlara bölünecek. | Gerekçe: Parser, sepet planlama, seller output ve validation farklı risk alanlarıdır; ayrı commitler kontrolü artırır. | Etki: Milestone 5.5A ile buyer parser/intent tarafı tamamlandı.
 * 2026-05-13 — Karar: Buyer workflow'a `meeting_setup` intent'i eklenecek. | Gerekçe: "Toplantı için kamera/mikrofon/hub öner" gibi gerçek kullanıcı komutları ev-ofis genel sepetine düşmemeli. | Etki: Toplantı/kamera/mikrofon/hub/sunum/online ders komutları ayrı intent'e yönlenir.
 * 2026-05-13 — Karar: Buyer bütçe parser Türkçe fiyat formatlarını destekleyecek. | Gerekçe: `3.000 TL`, `1.500 TL`, `₺3000`, `3 bin TL` gibi girişler demo sırasında çok olasıdır. | Etki: Budget extraction logic güncellendi.
@@ -221,7 +221,7 @@
 * 2026-05-14 — Karar: Milestone 7'de LLM açıklama katmanı OpenAI `gpt-4o-mini` ile çalışacak, Gemini final provider swap olarak sonraya bırakılacak. | Gerekçe: Kullanıcının mevcut API key'i OpenAI için; ürün mimarisi provider değişimine hazır kalmalı. | Etki: `LLM_PROVIDER=openai`, `OPENAI_MODEL=gpt-4o-mini`, direct Responses API `fetch`, runtime-only endpoint ve deterministic fallback eklendi. | Alternatifler: Gemini'yi hemen bağlamak veya LLM'i tamamen mock bırakmak.
 * 2026-05-14 — Karar: Milestone 8A buyer tarafında OpenAI explanation ve preview polish birlikte yapılacak. | Gerekçe: Seller action explanation tamamlandıktan sonra demo akışında buyer tarafı da karar güveni ve AI açıklaması göstermeli. | Etki: `POST /api/buyer/smart-cart/explanation`, buyer explanation client paneli, `/buyer/products` ürün karar ekranı ve `/buyer/cart` sepet karar özeti eklendi. | Alternatifler: Önce Gemini provider swap yapmak veya sadece ürün/sepet UI polish yapmak.
 * 2026-05-14 — Karar: Buyer explanation no-budget senaryolarında LLM bütçe iddiası post-process guard ile temizlenecek. | Gerekçe: Runtime OpenAI çıktısı bazen kullanıcı bütçe belirtmediği halde `bütçeniz` veya `%5 tolerans` gibi ifadeler üretebilir. | Etki: `src/lib/api/buyer-smart-cart-explanations.ts` budget context'i açık hale getirir, no-budget claim'leri fallback alanlarıyla değiştirir; validation sentetik model çıktısıyla bu guard'ı doğrular. | Alternatifler: Yalnızca prompt sıkılaştırmak.
-* 2026-05-14 — Karar: CommercePilot ana UI yönü light klasik marketplace düzenine dönecek. | Gerekçe: Kullanıcı premium siyah dashboard yerine Trendyol/Hepsiburada gibi tanıdık ama kendi markamıza ait e-ticaret görünümü istedi. | Etki: Dark theme ana deneyimden kalkacak; buyer homepage, ürün detay, sepet ve seller panel light commerce düzeniyle yeniden ele alınacak. | Alternatifler: Dark dashboard'u koruyup agent eklemek.
+* 2026-05-14 — Karar: Alışveriş Arkadaşım ana UI yönü light klasik marketplace düzenine dönecek. | Gerekçe: Kullanıcı premium siyah dashboard yerine Trendyol/Hepsiburada gibi tanıdık ama kendi markamıza ait e-ticaret görünümü istedi. | Etki: Dark theme ana deneyimden kalkacak; buyer homepage, ürün detay, sepet ve seller panel light commerce düzeniyle yeniden ele alınacak. | Alternatifler: Dark dashboard'u koruyup agent eklemek.
 * 2026-05-14 — Karar: AI deneyimi ayrı bir chatbot sayfası olmaktan çok sağ altta yaşayan agent pet olarak kurulacak. | Gerekçe: Ürün değeri, agent'ın alışveriş ve satıcı iş akışlarının üstünde bağlama göre konuşması ve aksiyon almasıyla daha net görünecek. | Etki: Floating draggable pet, küçük chat paneli, büyük agent sayfası, proactive balonlar, sessiz/gizle modları ve agent permission modeli roadmap'e girdi. | Alternatifler: Sadece klasik chat widget.
 * 2026-05-14 — Karar: Agent permission modeli `chat`, `suggest`, `assist`, `autopilot` katmanlarına ayrılacak. | Gerekçe: Buyer sepet mutation'ı ve seller listing mutation'ı gerçek davranmalı ama kullanıcı izni olmadan kontrolsüz aksiyon almamalı. | Etki: Mutation tool'ları audit log ve onay/autopilot ayrımıyla tasarlanacak. | Alternatifler: Her şeyi öneri olarak bırakmak veya baştan tam otomatik yapmak.
 * 2026-05-14 — Karar: LangChain hemen bağlanmayacak; önce typed internal agent runtime ve tool registry kurulacak. | Gerekçe: Tool contract'ları, UI state ve mutation sınırları oturmadan LangChain eklemek karmaşıklığı artırır. | Etki: `src/lib/agents/prompts`, `src/lib/agents/tools`, `src/lib/agents/runtime` planlandı; LangChain adapter readiness Milestone 8P'ye bırakıldı. | Alternatifler: LangChain'i ilk agent milestone'unda doğrudan kullanmak.
@@ -241,7 +241,7 @@
 * 2026-05-15 — Karar: Seller overview ana uyarı kartları `Satılmayan ürünler`, `Negatif yorumlar`, `İade riski`, `Stok riski` olacak. | Gerekçe: Satıcıya hızlı ve eyleme dönük dört problem alanı verir. | Etki: 8I overview endpoint kartları bu dörtlüyle başlar. | Alternatifler: Daha geniş ve dağınık uyarı seti.
 * 2026-05-15 — Karar: Seller mutation önce/sonra preview ve satıcı onayı olmadan uygulanmayacak. | Gerekçe: Satıcı listing değişikliklerinde kontrolü kaybetmemeli. | Etki: Agent önerisi draft/preview olarak görünür; onay sonrası mock state ve audit log güncellenir. | Alternatifler: Agent'ın tam yetkiyle anında uygulaması.
 * 2026-05-15 — Karar: Ürün görselleri 8E veya sonrasında kontrollü mock/generated görsel setiyle üretilebilir. | Gerekçe: Marketplace hissi için ürün görselleri kritik; placeholder kalıcı çözüm olmaz. | Etki: 8E katalog veri/görsel metadata tasarımında görsel seti için alan açılır. | Alternatifler: Kalıcı placeholder kullanmak.
-* 2026-05-15 — Karar: Floating Agent tüm buyer/seller sayfalarında görünecek ve route Agent sayfalarının tam yetkili mini hali olacak. | Gerekçe: Sağ alttaki ikon klasik müşteri temsilcisi değil, CommercePilot Agent'ın her yerde erişilebilir kompakt yüzeyi olmalı. | Etki: `/buyer/agent` ve `/seller/agent` ile aynı runtime/history kullanılır; ürün önerisi, sepet apply, seller analiz ve seller mutation preview panel içinde yapılabilir. | Alternatifler: Sadece Agent sayfasına yönlendiren pasif ikon.
+* 2026-05-15 — Karar: Floating Agent tüm buyer/seller sayfalarında görünecek ve route Agent sayfalarının tam yetkili mini hali olacak. | Gerekçe: Sağ alttaki ikon klasik müşteri temsilcisi değil, Alışveriş Arkadaşım Agent'ın her yerde erişilebilir kompakt yüzeyi olmalı. | Etki: `/buyer/agent` ve `/seller/agent` ile aynı runtime/history kullanılır; ürün önerisi, sepet apply, seller analiz ve seller mutation preview panel içinde yapılabilir. | Alternatifler: Sadece Agent sayfasına yönlendiren pasif ikon.
 * 2026-05-15 — Karar: Floating Agent context-aware ve proactive olacak ama ilk fazda ses kullanmayacak. | Gerekçe: Agent sayfa bağlamını yorumlamalı fakat kullanıcıyı agresif popup/ses ile rahatsız etmemeli. | Etki: Route/ürün/sepet/seller bağlamı runtime'a taşınır; uyarı halinde badge, ünlem, kafa kaldırma veya benzeri sessiz görsel mikro etkileşim kullanılır. | Alternatifler: Sesli bildirim veya otomatik açılan chat.
 * 2026-05-15 — Karar: Floating Agent kullanıcı kontrolleri zorunlu olacak: `Gizle`, `Sessize al`, `Bu sayfada uyarma`. | Gerekçe: Her sayfada görünen agent kullanıcı kontrolü olmadan rahatsız edici olabilir. | Etki: 8Q kapsamında state ve UI kontrolleri tasarlanacak. | Alternatifler: Sadece kapatma ikonu.
 * 2026-05-15 — Karar: Floating Agent ilk fazda web/desktop odaklı olacak ve Codex pet benzeri avatarla başlayacak. | Gerekçe: Kullanıcı bu adımda mobil davranışı önceliklendirmedi; görsel karakter daha sonra değiştirilebilir. | Etki: Mobil bottom sheet veya responsive özel davranış ilk 8Q kapsamına alınmaz. | Alternatifler: Mobil-first widget davranışı veya marka avatarını hemen üretmek.
@@ -267,7 +267,7 @@
 * 2026-05-16 — Karar: Seller Agent canlı POST akışı LLM destekli focus/action/draft orchestration'a taşınacak, fakat initial page/default GET build-time LLM çağrısı yapmayacak. | Gerekçe: Satıcı agent değerini focus seçimi, ürün/action önceliklendirme ve onaylı listing draft üretiminde göstermeli; build ve demo fallback kırılgan olmamalı. | Etki: `getSellerAgentApiData` async LLM orchestration'a taşındı, `getDefaultSellerAgentApiData` deterministic preview olarak kaldı, `/api/seller/agent` POST `await` eder, LLM draft çıktısı `SellerListingMutationPreview.applyRequest.mutation` ile uyumlu normalize edilir. | Alternatifler: Seller Agent'i deterministik bırakmak veya LLM draft'ını apply contract'ından ayrı yalnızca metin olarak göstermek.
 * 2026-05-17 — Karar: Review Intelligence bağımsız typed LLM contract olarak kurulacak ve seller/buyer explanation katmanlarını besleyecek. | Gerekçe: Review LLM çıktıları hem negatif yorum seller action'ını hem de buyer uyarı metnini zenginleştirmeli, fakat ürün datasını veya mutation state'ini doğrudan değiştirmemeli. | Etki: `src/lib/api/review-intelligence.ts`, `POST /api/review-intelligence`, review id/theme whitelist guard'ı, seller action explanation review enrichment ve buyer smart-cart explanation review enrichment eklendi. | Alternatifler: Review özetlerini yalnızca seller action explanation prompt'una gömmek veya buyer warning'leri deterministik bırakmak.
 * 2026-05-17 — Karar: LLM provider/status görünürlüğü UI'da ortak `LlmStatusBadge` ile standardize edilecek. | Gerekçe: OpenAI'den Gemini'ye geçiş öncesinde kullanıcı/jüri hangi provider/model/status/fallback hattının çalıştığını her kritik yüzeyde görebilmeli. | Etki: Buyer Agent, Seller Agent, Floating Agent, buyer smart-cart explanation, seller action explanation ve `/demo` LLM proof yüzeyleri provider bağımsız trace gösterir; validation demo proof contract'ını doğrular. | Alternatifler: Her panelde ayrı rozet yazmak veya bu bilgiyi yalnızca API response içinde bırakmak.
-* 2026-05-17 — Karar: Tool-calling/Agent trace görünürlüğü provider-native tool calling iddiası yerine application-level `AgentExecutionTrace` contract'ı olarak kurulacak. | Gerekçe: CommercePilot LangChain kullanmadan typed runtime, tool registry, guardrail, approval, apply ve audit sınırları kurduğu için jüriye gösterilecek doğru kanıt uygulama seviyesindeki agent execution trace'tir. | Etki: `src/lib/agents/runtime.ts` trace tipleri/helper'ı eklendi; buyer/seller Agent API'leri top-level `agentTrace` döner, floating context plan trace taşır, `/demo` agent trace proof contract'ı validation'a bağlandı. | Alternatifler: LangChain tool trace eklemek veya trace bilgisini sadece UI metni olarak yazmak.
+* 2026-05-17 — Karar: Tool-calling/Agent trace görünürlüğü provider-native tool calling iddiası yerine application-level `AgentExecutionTrace` contract'ı olarak kurulacak. | Gerekçe: Alışveriş Arkadaşım LangChain kullanmadan typed runtime, tool registry, guardrail, approval, apply ve audit sınırları kurduğu için jüriye gösterilecek doğru kanıt uygulama seviyesindeki agent execution trace'tir. | Etki: `src/lib/agents/runtime.ts` trace tipleri/helper'ı eklendi; buyer/seller Agent API'leri top-level `agentTrace` döner, floating context plan trace taşır, `/demo` agent trace proof contract'ı validation'a bağlandı. | Alternatifler: LangChain tool trace eklemek veya trace bilgisini sadece UI metni olarak yazmak.
 * 2026-05-17 — Karar: Agent trace UI görünürlüğü tek ortak `AgentExecutionTracePanel` bileşeniyle standardize edilecek; ancak Buyer/Floating kullanıcı akışında teknik trace doğrudan gösterilmeyecek. | Gerekçe: Teknik proof için ortak görünürlük gerekir, fakat buyer kullanıcı deneyimi smoke-test ekranı gibi görünmemeli. | Etki: `src/components/commerce/agent-execution-trace-panel.tsx` eklendi; teknik proof/demo yüzeyleri trace gösterir, Buyer/Floating kullanıcı yüzeyleri SSS/chatbot diline sadeleşti; validation bu ayrımı kontrol ediyor. | Alternatifler: Her ekranda ayrı trace kartları yazmak veya tüm trace bilgisini son kullanıcı ekranında tutmak.
 * 2026-05-17 — Karar: Buyer kullanıcı akışı teknik kanıt ekranı gibi davranmayacak; trace/runtime/provider smoke kanıtları code/test/demo tarafında kalacak, kullanıcı ana yüzeyleri ürün kullanımı ve kısa yardım diline indirgenecek. | Gerekçe: Amaç yalnızca jüri sunumu değil uygulanabilir bir uygulama; buyer tarafında fazla teknik açıklama güven ve hız yerine karmaşa yaratıyor. | Etki: `BuyerCatalogGrid` yatay slider oldu, `BuyerAgentWorkspace` teknik panellerden arındı ve SSS aldı, `BuyerProfileWorkspace` yorumları 5'li sayfaladı, `FloatingAgentPanel` chatbot yüzeyine sadeleşti, validation bu ürünleşme kuralını kontrol ediyor. | Alternatifler: Tüm trace/proof bilgisini buyer UI'da göstermeye devam etmek.
 * 2026-05-17 — Karar: Floating Agent mesajları doğrudan buyer/seller agent endpoint'lerine gönderilmeyecek; önce provider bağımsız LLM intent router karar verecek. | Gerekçe: Sağ alt chatbot yalnızca agentic komut çalıştırırsa normal kullanıcı sorularında rastgele veya uygunsuz aksiyon üretebilir; ürünleşmiş davranış için chat/clarify/action ayrımı gerekir. | Etki: `src/lib/api/floating-agent.ts`, `POST /api/agent/floating`, `FloatingAgentPanel` entegrasyonu ve validation contract'ları eklendi; chat soruları action kartı üretmez, action istekleri buyer/seller Agent data üretir. | Alternatifler: Frontend keyword heuristiğiyle ayrım yapmak veya tüm mesajları route Agent endpoint'lerine göndermeye devam etmek.
@@ -302,7 +302,7 @@
 * 2026-05-14 — Milestone: Milestone 7 OpenAI Seller Action Explanation tamamlandı. | Sonuç: `/api/seller/actions/[id]/explanation` route'u, `gpt-4o-mini` OpenAI Responses API wrapper'ı, JSON parse/fallback contract'ı, seller action detail UI paneli ve validation kontrolleri eklendi; check/build/runtime/UI doğrulandı.
 * 2026-05-14 — Milestone: Milestone 8A Buyer Smart Cart Explanation + Product/Cart Preview Polish tamamlandı. | Sonuç: `/api/buyer/smart-cart/explanation` route'u, `gpt-4o-mini` buyer explanation contract'ı, `/buyer` explanation paneli, `/buyer/products` ürün karar ekranı ve `/buyer/cart` sepet karar özeti eklendi; check/build/runtime/UI doğrulandı.
 * 2026-05-14 — Milestone: Milestone 8A QA hardening tamamlandı. | Sonuç: Buyer explanation no-budget guard eklendi; 5 buyer örneği live OpenAI ile generated döndü, invalid prompt 400 verdi, mobil browser QA ve build/check tekrar geçti.
-* 2026-05-14 — Milestone: Milestone 8B Marketplace + Agent Pet Roadmap tamamlandı. | Sonuç: `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md` ile light marketplace pivotu, agent pet deneyimi, permission modeli ve 17 milestone planı yazıldı.
+* 2026-05-14 — Milestone: Milestone 8B Marketplace + Agent Pet Roadmap tamamlandı. | Sonuç: `ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md` ile light marketplace pivotu, agent pet deneyimi, permission modeli ve 17 milestone planı yazıldı.
 * 2026-05-14 — Milestone: Milestone 8C Light Marketplace Design System tamamlandı. | Sonuç: Dark ana tema kaldırıldı; root gateway ve buyer/seller workspace shell klasik light e-ticaret düzenine döndü; scoped legacy theme bridge ile mevcut içerikler okunur hale getirildi; check/build ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-15 — Milestone: Milestone 8D IA ve Navigasyon Reset tamamlandı. | Sonuç: Buyer nav `Ürünler/Sepet/Agent/Profil`, seller nav `Ana Sayfa/Ürünler/Aksiyonlar/Agent/Profil` oldu; sidebar nav tekrarı kaldırıldı; `/buyer` `/buyer/products`'a yönleniyor; `/buyer/products/[slug]`, buyer/seller Agent ve Profil route iskeletleri eklendi; seller overview dört uyarı kartlı kısa panele indi; `npm run check`, `npm run build` ve Puppeteer QA geçti.
 * 2026-05-15 — Milestone: Milestone 8E Buyer Catalog Data + Ürün Grid tamamlandı. | Sonuç: 48 ürünlü buyer catalog contract'ı, 7 görselli marketplace kategorisi, kampanya/Agent üst alanı, fotoğraflı ürün grid'i, görünür `Sepete Ekle` aksiyonu, `GET /api/buyer/catalog` route'u, sprite görselleri ve validation kontrolleri eklendi; `npm run check`, `npm run build` ve Puppeteer QA geçti.
@@ -339,7 +339,7 @@
 
 ## 8) Yapılanlar
 
-* [x] CommercePilot'un genel ürün hikayesi çıkarıldı.
+* [x] Alışveriş Arkadaşım'ın genel ürün hikayesi çıkarıldı.
 * [x] Satıcı tarafının demo için daha güçlü öncelik olduğu belirlendi.
 * [x] Agent yol haritası ilk sıraya Seller Growth Action Agent gelecek şekilde güncellendi.
 * [x] Kalıcı proje hafızası dosyası oluşturuldu.
@@ -570,7 +570,7 @@
 * Seller overview kartları `src/lib/api/seller.ts` içindeki `alertCards` ve `priorityQueue` üzerinden gelir; risk kartı id'leri, href/apiEndpoint veya evidence shape'i değişirse `scripts/validate-workflows.js` içindeki overview kontrolleri birlikte güncellenmeli.
 * Seller products UI/API `src/lib/api/seller.ts`, `/api/seller/products` ve `src/components/commerce/seller-products-workspace.tsx` üzerinden çalışır; product `focusTags`, `riskSignals`, `linkedAction`, segment id'leri veya product image contract'ı değişirse `scripts/validate-workflows.js` içindeki seller products kontrolleri birlikte güncellenmeli.
 * Buyer explanation no-budget guard: kullanıcı bütçe belirtmediyse model `bütçeniz`, `%5 tolerans`, `bütçe içinde/altında` gibi iddiaları UI contract'ına geçirmemeli; bu kontrol `scripts/validate-workflows.js` içinde sentetik model çıktısıyla korunur.
-* 8B sonrası roadmap tek kaynak: `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`. Milestone sırası değişirse bu dosya ve `PROJECT_MEMORY.md` birlikte güncellenmeli.
+* 8B sonrası roadmap tek kaynak: `ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md`. Milestone sırası değişirse bu dosya ve `PROJECT_MEMORY.md` birlikte güncellenmeli.
 * 8C theme bridge sadece `WorkspaceShell` içindeki children wrapper'ında çalışmalı; body seviyesine taşınırsa header/nav/CTA gibi bilinçli koyu kontrast alanları bozulur.
 * Seller tarafında "gerçek mutation" ilk aşamada dış marketplace entegrasyonu değil, mock app state üzerinde uygulanmış ve audit log'a yazılmış değişiklik anlamına gelir.
 * Agent proactive balonları bağlama özel ve susturulabilir olmalı; her sayfada sürekli konuşan bir widget demo değerini düşürür.
@@ -670,7 +670,7 @@
   * Reklam verimliliği ve görünürlük: artan reklam maliyetleri ve yoğun rekabet satıcıların kârlı büyümesini zorlaştırıyor.
   * Müşteri tutundurma: birçok mağaza yeni müşteri kazanmaya odaklanırken mevcut müşteriyi elde tutma araçları zayıf kalıyor.
   * Platform bağımlılığı ve kanal karmaşası: marketplace kuralları, komisyonlar, buybox/görünürlük ve farklı kanallarda stok/fiyat yönetimi satıcıyı zorluyor.
-* CommercePilot için çıkarım:
+* Alışveriş Arkadaşım için çıkarım:
   * Seller Growth Actions yalnızca stok/satış/yorum değil, mümkünse "kârı koru", "operasyonu sadeleştir", "iadeyi azalt", "reklamı verimli kullan" gibi aksiyonları da kapsamalı.
 
 ## 14) Alıcı Tarafı Stratejisi
@@ -679,7 +679,7 @@
 
 * Alıcı tarafı basit bir chatbot olmayacak.
 * Alıcının asıl problemi "ürün bulmak" değil, çok seçenek arasında doğru ürüne güvenle karar vermek.
-* CommercePilot alıcıya ihtiyaç, bütçe, senaryo, yorumlar ve ürün ilişkilerine göre karar desteği verecek.
+* Alışveriş Arkadaşım alıcıya ihtiyaç, bütçe, senaryo, yorumlar ve ürün ilişkilerine göre karar desteği verecek.
 * Alıcı tarafı aynı zamanda satıcı tarafını besleyen sinyal kaynağı olacak: talep senaryoları, birlikte düşünülen ürünler, fiyat hassasiyeti ve yorum kaynaklı tereddütler ileride satıcı aksiyonlarına dönüşecek.
 
 ### Üzerine gidilecek alıcı problemleri
@@ -760,7 +760,7 @@
   * Sepet terk etme: beklenmeyen ek maliyetler, güven eksikliği, uzun/karmaşık checkout ve belirsiz iade/kargo bilgisi önemli sebepler.
   * Güven ve şeffaflık: iade, kargo, ürün açıklaması, yorumlar ve satıcı güveni satın alma kararını etkiliyor.
   * AI alışveriş asistanlarına ilgi artıyor ama kullanıcılar tam otomatik satın alma konusunda temkinli; bu nedenle ilk aşamada AI "karar destekçisi" olarak konumlanmalı.
-* CommercePilot için çıkarım:
+* Alışveriş Arkadaşım için çıkarım:
   * Alıcı tarafında ilk hedef otomatik checkout değil, ihtiyaç anlama, akıllı sepet, alternatif/tamamlayıcı öneri ve yorum bazlı güven desteği olmalı.
 
 ## 16) Alıcı Tarafı Yapılacak / Yapılmayacak Listesi
@@ -826,7 +826,7 @@
 ## 17) Milestone 1 Veri ve Agentic Karar Notları
 
 * Demo mağaza:
-  * Şimdilik CommercePilot adı kullanılacak.
+  * Şimdilik Alışveriş Arkadaşım adı kullanılacak.
 * Veri dili:
   * Tüm ürün, yorum, aksiyon ve demo metinleri Türkçe olacak.
 * Fiyat aralığı:
@@ -858,7 +858,7 @@
   * İlk aşamada doğrudan kullanılmayacak; önce deterministic workflow katmanı kurulacak.
   * Sonra LangChain structured output, tool calling, provider swap ve stateful workflow ihtiyaçlarında devreye alınabilir.
 * Milestone 1 sonucu:
-  * 1 seller: CommercePilot Demo Store.
+  * 1 seller: Alışveriş Arkadaşım Demo Mağazası.
   * 40 ürün: ev ofis, elektronik aksesuar, kahve ekipmanları, masa/çalışma alanı, küçük ev/yaşam, hediye/yaşam tarzı.
   * 55 Türkçe yorum: kargo hızı, paketleme, kurulum, kalite, fiyat/performans, renk uyumu, ses, konfor, uyumluluk, iade riski gibi temalar.
   * 24 sipariş, 25 stok hareketi, 30 ürün ilişkisi, 8 buyer persona, 5 smart cart taslağı.
@@ -1155,7 +1155,7 @@
 
 * Amaç:
   * Buyer Smart Cart çıktısındaki `sellerSignalCandidates` alanını satıcı dashboard'unda görünür ve API-testable hale getirmek.
-  * CommercePilot'un çift taraflı zekâ iddiasını demo akışında net göstermek: alıcı komutu -> sepet sonucu -> satıcı sinyali -> önerilen hamle.
+  * Alışveriş Arkadaşım'ın çift taraflı zekâ iddiasını demo akışında net göstermek: alıcı komutu -> sepet sonucu -> satıcı sinyali -> önerilen hamle.
 * Eklenen API route:
   * `GET /api/seller/buyer-signals`: buyer örnek prompt'larını çalıştırır, seller'a ait ürünlerle eşleşen sinyalleri `{ success, data, error }` envelope içinde döner.
 * Contract:
@@ -1255,12 +1255,12 @@
 ### 8B Marketplace + Agent Pet Roadmap
 
 * Amaç:
-  * CommercePilot'u premium dark dashboard hissinden çıkarıp light, klasik marketplace düzenine taşımak.
+  * Alışveriş Arkadaşım'ı premium dark dashboard hissinden çıkarıp light, klasik marketplace düzenine taşımak.
   * AI deneyimini sağ altta yaşayan, sürüklenebilir ve proactive konuşabilen agent pet etrafında ürünleştirmek.
 * Roadmap dosyası:
-  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`.
+  * `ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md`.
 * Kilit kararlar:
-  * Site adı `CommercePilot` kalır.
+  * Site adı `Alışveriş Arkadaşım` kalır.
   * Dark theme ana deneyimden kalkar.
   * Buyer tarafı marketplace homepage, ürün detay, yorumlar ve cart mutation'larıyla ilerler.
   * Seller tarafı ayrı `/seller` alanında klasik satıcı paneli olarak kalır.
@@ -1277,7 +1277,7 @@
 ### 8C Light Marketplace Design System
 
 * Amaç:
-  * Dark dashboard ana deneyimini kaldırıp CommercePilot'u Trendyol/Hepsiburada gibi tanıdık ama kendi markasına ait light e-ticaret düzenine taşımak.
+  * Dark dashboard ana deneyimini kaldırıp Alışveriş Arkadaşım'ı Trendyol/Hepsiburada gibi tanıdık ama kendi markasına ait light e-ticaret düzenine taşımak.
   * Agent pet ve sonraki marketplace sayfaları için header, search, nav, sidebar ve role switch omurgasını kurmak.
 * Değişen UI:
   * Root gateway light role selection yüzeyine çevrildi; hero metni, search mock'u ve satıcı/alıcı kartları klasik marketplace tonuna alındı.
@@ -1297,7 +1297,7 @@
 ### 2026-05-15 Roadmap IA Revizyonu
 
 * Amaç:
-  * CommercePilot'u açıklama yoğun demo panelinden çıkarıp gerçek e-ticaret endpoint akışına oturtmak.
+  * Alışveriş Arkadaşım'ı açıklama yoğun demo panelinden çıkarıp gerçek e-ticaret endpoint akışına oturtmak.
 * Buyer kararları:
   * Header-only nav: `Ürünler`, `Sepet`, `Agent`, `Profil`.
   * `Ana sayfa` buyer menüsünden kalkar; `/buyer` ürünler deneyimine yönlenir veya aynı yüzeyi render eder.
@@ -1327,7 +1327,7 @@
   * Kullanıcı kontrolleri: `Gizle`, `Sessize al`, `Bu sayfada uyarma`.
   * İlk faz web/desktop odaklıdır; ilk avatar Codex pet benzeri teknik/sevimli avatar olabilir.
 * Güncellenen roadmap dosyası:
-  * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`.
+  * `ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md`.
 
 ### 2026-05-17 LLM Provider/Status UI
 
@@ -1375,7 +1375,7 @@
 ### 2026-05-17 Seller Light UI Cleanup
 
 * Karar:
-  * Seller kullanıcı endpoint'leri dark dashboard/teknik proof diliyle görünmeyecek; turuncu/beyaz CommercePilot ürün dili seller shell içinde zorlanacak.
+  * Seller kullanıcı endpoint'leri dark dashboard/teknik proof diliyle görünmeyecek; turuncu/beyaz Alışveriş Arkadaşım ürün dili seller shell içinde zorlanacak.
 * Kapsam:
   * `WorkspaceShell` seller aktif nav'ı turuncuya alındı ve seller content için `commerce-seller-light` scoped bridge eklendi.
   * Seller profile/products/actions/agent/product detail/action detail yüzeylerinde `endpoint/API/contract/mutation/audit/fallback reason` gibi demo-teknik kopyalar kullanıcı diline çevrildi.
@@ -1476,7 +1476,7 @@
 
 * Kapsam:
   * README artık proje durumunu `Milestone 0` gibi eski bir seviyede göstermiyor.
-  * İlk ekran anlatısı CommercePilot'u çift taraflı commerce intelligence MVP'si olarak konumlandırıyor.
+  * İlk ekran anlatısı Alışveriş Arkadaşım'ı çift taraflı commerce intelligence MVP'si olarak konumlandırıyor.
   * Demo route'ları, mimari dizin haritası, Agent/LLM boundary, guardrail listesi, kalite/doğrulama komutları, ortam değişkenleri, mock/real sınırı ve teknik borçlar README içinde görünür hale geldi.
 * Karar:
   * README dili İngilizce ve ASCII tutuldu; GitHub teknik incelemesinde daha geniş erişilebilirlik hedefleniyor.
@@ -1546,7 +1546,7 @@
   * Public GitHub adayı `mntalha`; profil/repo dili AI/ML, PyTorch, Jupyter, materials informatics ve reproducible experiment script'leri etrafında.
   * Repo düzeninde README amaç/anlatı, folder structure, environment/requirements, run script, model-dataset tablosu, result figures ve deterministic seed/logging örüntüleri öne çıkıyor.
 * Etki:
-  * CommercePilot GitHub sunumunda akademik reviewer için `reproducibility`, `data/workflow/LLM boundary`, `validation evidence`, `run commands`, `known limits` ve mümkünse ekran/proof görselleri daha görünür tutulmalı.
+  * Alışveriş Arkadaşım GitHub sunumunda akademik reviewer için `reproducibility`, `data/workflow/LLM boundary`, `validation evidence`, `run commands`, `known limits` ve mümkünse ekran/proof görselleri daha görünür tutulmalı.
 
 ### 2026-05-18 GitHub Reviewer Reproducibility Pass
 
@@ -1615,10 +1615,30 @@
 ### 2026-05-19 GitHub About Metadata
 
 * Kapsam:
-  * `akyilidizbaran/BTKHackathon` public repo About description alanı CommercePilot'un approval-bound buyer/seller commerce intelligence MVP olduğunu anlatacak şekilde dolduruldu.
+  * `akyilidizbaran/BTKHackathon` public repo About description alanı Alışveriş Arkadaşım'ın approval-bound buyer/seller commerce intelligence MVP olduğunu anlatacak şekilde dolduruldu.
+  * Marka değişikliği sonrası description `Alışveriş Arkadaşım: buyer/seller e-ticaret zekası MVP'si; deterministik workflow, LLM guardrail, onay sınırı ve Supabase seed.` metnine güncellendi.
   * Topic'ler eklendi: `nextjs`, `react`, `typescript`, `supabase`, `prisma`, `gemini`, `ai-agent`, `ecommerce`, `hackathon`, `vercel`.
 * Not:
   * Homepage/deploy URL alanı deploy yapılana kadar boş bırakıldı; yanlış veya placeholder URL koyulmayacak.
+
+### 2026-05-19 Brand Rename: Alışveriş Arkadaşım
+
+* Karar:
+  * Public ürün adı eski çalışma adından `Alışveriş Arkadaşım` markasına taşındı.
+* Kapsam:
+  * Site metadata, header/logo metinleri, floating Agent label'ları, buyer/seller kullanıcı metinleri, README ve docs yeni marka adına taşındı.
+  * Görünen seller store adı `Alışveriş Arkadaşım Demo Mağazası` oldu.
+  * Görünen mock SKU prefix'i yeni marka uyumlu `AA-` değerine taşındı.
+  * Roadmap dosyası `ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md` adına taşındı.
+* Korunanlar:
+  * `seller-commercepilot` id'si ve `commercepilot.*` localStorage/event key'leri geriye uyumluluk ve contract stabilitesi için korunur; bunlar public marka claim'i değildir.
+* Doğrulama:
+  * Eski public marka/SKU araması temiz.
+  * Markdown local link kontrolü geçti.
+  * `git diff --check`, `npm run check`, `npm run build` geçti.
+  * `npm run db:seed` Supabase dataset'ini yeni seller adı ve `AA-` SKU prefix'iyle yeniden seed etti.
+* Sıradaki adım:
+  * Sağ alttaki Agent görseli için `Mini Sepet Arkadaşı` figürü üretilecek.
 
 ### Güncelleme Kaydı
 

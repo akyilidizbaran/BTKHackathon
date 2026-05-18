@@ -335,7 +335,7 @@ function createReviewRows(reviews: Review[]): BuyerProfileReviewRow[] {
         position: "0% 0%",
         src: "/catalog/buyer-product-sprite.png",
       },
-      productBrand: product?.brand ?? "CommercePilot",
+      productBrand: product?.brand ?? "Alışveriş Arkadaşım",
       productHref: product?.href ?? "/buyer/products",
       productId: review.productId,
       productName: product?.name ?? review.title,

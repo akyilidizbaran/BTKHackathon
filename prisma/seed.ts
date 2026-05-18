@@ -209,7 +209,7 @@ async function main() {
   await clearCommerceData();
   await seedCommerceData();
 
-  console.log("CommercePilot Supabase seed completed.");
+  console.log("Alışveriş Arkadaşım Supabase seed completed.");
   console.log(`Sellers: ${sellers.length}`);
   console.log(`Buyers: ${buyers.length}`);
   console.log(`Products: ${products.length}`);

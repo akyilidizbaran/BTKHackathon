@@ -157,7 +157,7 @@ export const agentPromptTemplates: AgentPromptTemplate[] = [
     maxPromptLength: 280,
     responseContract: "recommendations + confirmationQuestion + shared apply preview boundary",
     role: "buyer",
-    systemInstruction: "Sadece CommercePilot katalog ürünlerinden seç; kullanıcı onayı olmadan sepete ürün ekleme.",
+    systemInstruction: "Sadece Alışveriş Arkadaşım katalog ürünlerinden seç; kullanıcı onayı olmadan sepete ürün ekleme.",
     version: "8Q.1",
   },
   {

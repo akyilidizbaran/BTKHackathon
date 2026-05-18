@@ -142,10 +142,10 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
         >
           <Link href="/" className="inline-flex min-w-0 items-center gap-3">
             <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-orange-500 text-sm font-bold text-white">
-              CP
+              AA
             </span>
             <span className="hidden sm:block">
-              <span className="block text-sm font-semibold tracking-tight">CommercePilot</span>
+              <span className="block text-sm font-semibold tracking-tight">Alışveriş Arkadaşım</span>
               <span className="block text-xs text-slate-500">Demo rehearsal</span>
             </span>
           </Link>
@@ -186,7 +186,7 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
                 aria-hidden="true"
                 data-demo-media
                 className="mx-1 inline-block h-[0.62em] w-[1.45em] translate-y-[0.05em] rounded-full bg-cover bg-center align-baseline grayscale contrast-125"
-                style={{ backgroundImage: "url(https://picsum.photos/seed/commercepilot-rehearsal/520/240)" }}
+                style={{ backgroundImage: "url(https://picsum.photos/seed/alisveris-arkadasim-rehearsal/520/240)" }}
               />
               tek nefeste.
             </h1>
@@ -296,7 +296,7 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
               >
                 <div
                   className="absolute inset-0 bg-cover bg-center opacity-24 grayscale transition duration-700 group-hover:scale-105 group-hover:opacity-32"
-                  style={{ backgroundImage: `url(https://picsum.photos/seed/commercepilot-${lane.id}/900/900)` }}
+                  style={{ backgroundImage: `url(https://picsum.photos/seed/alisveris-arkadasim-${lane.id}/900/900)` }}
                 />
                 <div className="relative flex h-full min-h-[360px] flex-col justify-between">
                   <div>
@@ -397,7 +397,7 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
                 <div
                   data-demo-media
                   className="absolute inset-0 bg-cover bg-center opacity-28 grayscale contrast-125"
-                  style={{ backgroundImage: "url(https://picsum.photos/seed/commercepilot-terminal/1200/900)" }}
+                  style={{ backgroundImage: "url(https://picsum.photos/seed/alisveris-arkadasim-terminal/1200/900)" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950/80 to-slate-950/40" />
                 <div className="relative flex h-full flex-col justify-between">

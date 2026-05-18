@@ -1,10 +1,10 @@
-# CommercePilot Demo Metni
+# Alışveriş Arkadaşım Demo Metni
 
-Bu metin; jüri, teknik inceleyici ve ekip arkadaşlarının uygulama içinde doğru yolu tahmin etmek zorunda kalmadan CommercePilot'u hızlı değerlendirebilmesi için yazıldı.
+Bu metin; jüri, teknik inceleyici ve ekip arkadaşlarının uygulama içinde doğru yolu tahmin etmek zorunda kalmadan Alışveriş Arkadaşım'ı hızlı değerlendirebilmesi için yazıldı.
 
 Demo üç şeyi göstermeli:
 
-1. CommercePilot statik dashboard değil, gerçek bir buyer/seller commerce ürünü gibi davranır.
+1. Alışveriş Arkadaşım statik dashboard değil, gerçek bir buyer/seller commerce ürünü gibi davranır.
 2. Agent öneri yapabilir, açıklayabilir, preview üretebilir ve yalnızca onaylanan aksiyonları uygulayabilir.
 3. Teknik sınır açıktır: önce deterministik commerce logic, sonra LLM desteği, mutation öncesi typed validation ve kullanıcı onayı.
 
@@ -82,7 +82,7 @@ Kısa sunum için önerilen akış:
 
 | Süre | Rota | Ne gösterilecek |
 |---:|---|---|
-| 0:00-0:30 | `/` veya `/demo` | CommercePilot'un çift taraflı commerce intelligence ürünü olduğu anlatılır. |
+| 0:00-0:30 | `/` veya `/demo` | Alışveriş Arkadaşım'ın çift taraflı commerce intelligence ürünü olduğu anlatılır. |
 | 0:30-1:30 | `/buyer/products` | Buyer marketplace, kategori, ürün görseli, fiyat, rating, teslimat ve sepet girişi gösterilir. |
 | 1:30-2:30 | `/buyer/agent` | “Toplantı için uyumlu kamera mikrofon hub öner.” prompt'u ile katalogla sınırlı öneri ve cart approval gösterilir. |
 | 2:30-3:30 | `/seller` | Satıcı risk kartları, öncelik kuyruğu ve seller intelligence yüzeyi gösterilir. |
@@ -92,7 +92,7 @@ Kısa sunum için önerilen akış:
 
 Kapanış cümlesi:
 
-> CommercePilot bir AI wrapper değil; Supabase'e seed edilmiş curated commerce dataset'i, deterministik workflow, LLM validation, kullanıcı onayı ve local apply boundary'leri olan agentic commerce MVP'sidir.
+> Alışveriş Arkadaşım bir AI wrapper değil; Supabase'e seed edilmiş curated commerce dataset'i, deterministik workflow, LLM validation, kullanıcı onayı ve local apply boundary'leri olan agentic commerce MVP'sidir.
 
 ## 4. Hızlı Teknik İnceleyici Rotası
 
@@ -127,7 +127,7 @@ Rota:
 
 Söylenecek:
 
-> CommercePilot iki taraflı bir commerce intelligence platformu. Alıcı tarafı tanıdık bir alışveriş deneyimi sunar; satıcı tarafı stok, yorum, iade, margin ve product health sinyallerini onaylanabilir aksiyonlara çevirir.
+> Alışveriş Arkadaşım iki taraflı bir commerce intelligence platformu. Alıcı tarafı tanıdık bir alışveriş deneyimi sunar; satıcı tarafı stok, yorum, iade, margin ve product health sinyallerini onaylanabilir aksiyonlara çevirir.
 
 Gösterilecekler:
 
@@ -468,7 +468,7 @@ Gösterilecekler:
 
 Söylenecek:
 
-> Proactive Agent kullanıcı kontrolü gerektirir. CommercePilot mute ve page-level kontrolleri local state'te tutar.
+> Proactive Agent kullanıcı kontrolü gerektirir. Alışveriş Arkadaşım mute ve page-level kontrolleri local state'te tutar.
 
 Beklenen sonuç:
 
@@ -604,7 +604,7 @@ Beklenen:
 
 Final anlatıda bu noktaları kullanın:
 
-- CommercePilot LLM çıktısını ham gerçeklik olarak kullanmaz.
+- Alışveriş Arkadaşım LLM çıktısını ham gerçeklik olarak kullanmaz.
 - Deterministik workflow'lar candidate universe'ü seçer.
 - LLM çıktısı parse, normalize ve validate edilir.
 - Buyer Agent katalogla sınırlıdır.

@@ -3,8 +3,8 @@ import type { Seller } from "@/types/commerce";
 export const sellers: Seller[] = [
   {
     id: "seller-commercepilot",
-    name: "CommercePilot",
-    displayName: "CommercePilot Demo Store",
+    name: "Alışveriş Arkadaşım",
+    displayName: "Alışveriş Arkadaşım Demo Mağazası",
     market: "turkey",
     rating: 4.6,
     totalProducts: 40,

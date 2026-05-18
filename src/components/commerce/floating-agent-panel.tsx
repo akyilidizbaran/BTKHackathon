@@ -410,14 +410,14 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
       {isOpen ? (
         <section
           data-floating-agent-reveal
-          aria-label="CommercePilot floating agent"
+          aria-label="Alışveriş Arkadaşım floating agent"
           className="pointer-events-auto ml-auto max-h-[76dvh] w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_28px_90px_-42px_rgba(15,23,42,0.95)] sm:w-[410px]"
         >
           <div className="border-b border-slate-200 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-orange-600">{context.routeLabel}</p>
-                <h2 className="mt-1 truncate text-xl font-semibold text-slate-950">CommercePilot Agent</h2>
+                <h2 className="mt-1 truncate text-xl font-semibold text-slate-950">Alışveriş Arkadaşım Agent</h2>
                 <p className="mt-2 text-xs leading-5 text-slate-500">{context.panelTitle}</p>
               </div>
               <button
@@ -526,7 +526,7 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
       ) : shouldShowCompactWarning ? null : (
         <button
           type="button"
-          aria-label="CommercePilot Agent panelini aç"
+          aria-label="Alışveriş Arkadaşım Agent panelini aç"
           onClick={openFreshSession}
           className="pointer-events-auto ml-auto grid h-16 w-16 place-items-center rounded-[1.35rem] bg-slate-950 text-white shadow-[0_24px_60px_-28px_rgba(15,23,42,0.95)] ring-1 ring-white/20 transition hover:-translate-y-1 hover:bg-slate-900 active:translate-y-0"
         >

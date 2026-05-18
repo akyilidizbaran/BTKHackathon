@@ -1,4 +1,4 @@
-# CommercePilot Dokümantasyonu
+# Alışveriş Arkadaşım Dokümantasyonu
 
 Projeyi inceliyorsanız buradan başlayın:
 

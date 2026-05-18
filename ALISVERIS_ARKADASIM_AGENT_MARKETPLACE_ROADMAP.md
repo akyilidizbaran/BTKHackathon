@@ -1,10 +1,10 @@
-# COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP
+# ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP
 
 ## 0) Durum
 
 * Son güncelleme: 2026-05-17
 * Roadmap kararı:
-  * CommercePilot önce gerçek bir e-ticaret ürünü gibi davranacak.
+  * Alışveriş Arkadaşım önce gerçek bir e-ticaret ürünü gibi davranacak.
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
@@ -15,7 +15,7 @@
 
 ## 1) Kilit Ürün Kararları
 
-* Site adı `CommercePilot` kalacak.
+* Site adı `Alışveriş Arkadaşım` kalacak.
 * Dark theme ana deneyimden kalktı; light klasik e-ticaret dili ana yön.
 * Trendyol/Hepsiburada birebir kopyalanmayacak; kullanıcıya tanıdık gelen şu kalıplar kullanılacak:
   * Üst header.

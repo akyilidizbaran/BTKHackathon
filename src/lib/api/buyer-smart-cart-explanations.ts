@@ -142,7 +142,7 @@ export async function getBuyerSmartCartExplanationApiData(
 
 function createBuyerSmartCartExplanationInstructions(): string {
   return [
-    "CommercePilot buyer smart cart explanation katmanısın.",
+    "Alışveriş Arkadaşım alıcı smart cart explanation katmanısın.",
     "Sadece verilen JSON context içindeki ürün, uyarı, bütçe, güven ve satıcı sinyali verilerini kullan; veri uydurma.",
     "Çıktıyı Türkçe, kısa, karar güveni odaklı ve alıcının neden bu sepeti görmesi gerektiğini açıklayacak şekilde yaz.",
     "budget.hasRequestedBudget false ise bütçe limiti, bütçeniz X TL, bütçe içinde/altında veya tolerans iddiası yazma; sadece budgetStatusLabel değerini kullan.",

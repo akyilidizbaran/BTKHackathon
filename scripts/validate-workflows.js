@@ -1759,7 +1759,7 @@ async function validateFloatingAgentApiContracts() {
   assert(!sellerAction.buyerAgent, "floating seller action buyerAgent üretmemeli");
   assert(outOfScope.decision.mode === "chat", "floating out-of-scope soru chat boundary dönmeli");
   assert(
-    outOfScope.message.content.includes("CommercePilot"),
+    outOfScope.message.content.includes("Alışveriş Arkadaşım"),
     "floating out-of-scope cevabı commerce sınırını belirtmeli",
   );
   assert(modelRoutedChat.orchestration.status === "generated", "floating model override generated olmalı");
@@ -1893,7 +1893,7 @@ function validateSellerProfileApiContracts() {
     },
     returnWindowDays: 21,
     sellerId: "seller-commercepilot",
-    storeDisplayName: "CommercePilot Store",
+    storeDisplayName: "Alışveriş Arkadaşım Mağazası",
     supportResponseHours: 3,
   });
   const longNamePatch = validateSellerProfilePatchRequest({
@@ -1902,13 +1902,13 @@ function validateSellerProfileApiContracts() {
   });
   const missingSellerPatch = validateSellerProfilePatchRequest({
     sellerId: "missing-seller",
-    storeDisplayName: "CommercePilot Store",
+    storeDisplayName: "Alışveriş Arkadaşım Mağazası",
   });
   const chatOnlyPatch = validateSellerProfilePatchRequest({
     enabledCapabilityIds: ["product-analysis", "listing-draft", "stock-alert"],
     permissionMode: "chat-only",
     sellerId: "seller-commercepilot",
-    storeDisplayName: "CommercePilot Store",
+    storeDisplayName: "Alışveriş Arkadaşım Mağazası",
   });
   const patchedData = validPatch.ok
     ? getSellerProfileApiData({
@@ -1928,7 +1928,7 @@ function validateSellerProfileApiContracts() {
   assert(!defaultData.summary.autoApplyAllowed, "seller profile auto apply default kapalı olmalı");
   assert(defaultData.notificationChannels.length >= 4, "seller profile notification channel sayısı yetersiz");
   assert(defaultData.editable.alertRules.length === 4, "seller profile alert rule sayısı yanlış");
-  assert(defaultData.auditTrail.some((item) => item.actorName === "CommercePilot Agent"), "seller profile audit Agent izi eksik");
+  assert(defaultData.auditTrail.some((item) => item.actorName === "Alışveriş Arkadaşım Agent"), "seller profile audit Agent izi eksik");
   assert(defaultData.agentPreview.appliedRules.length >= 3, "seller profile agent preview kuralları eksik");
   assert(!missingSellerData, "olmayan seller profile undefined dönmeli");
   assert(validPatch.ok, "seller profile valid PATCH reddedildi");

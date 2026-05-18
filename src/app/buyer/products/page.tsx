@@ -80,7 +80,7 @@ export default async function BuyerProductsPage({
                 İyi ürün. Doğru fiyat. Güvenli alışveriş.
               </h2>
               <p className="mt-3 max-w-[58ch] text-sm leading-6 text-slate-700">
-                CommercePilot katalog ürünlerini fiyat, teslimat, yorum ve sepet sinyaliyle birlikte gösterir.
+                Alışveriş Arkadaşım katalog ürünlerini fiyat, teslimat, yorum ve sepet sinyaliyle birlikte gösterir.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 {data.campaignChips.map((chip) => (

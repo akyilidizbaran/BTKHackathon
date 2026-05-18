@@ -717,7 +717,7 @@ function createAuditTrail(editable: SellerProfileEditableState): SellerProfileAu
     },
     {
       action: "Otomatik uygulama engellendi",
-      actorName: "CommercePilot Agent",
+      actorName: "Alışveriş Arkadaşım Agent",
       createdAt: "2026-05-16 14:03",
       detail: "Agent taslak üretti, satıcı onayı olmadan değişiklik uygulamadı.",
       id: "audit-agent-boundary",

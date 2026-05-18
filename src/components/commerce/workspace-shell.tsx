@@ -100,10 +100,10 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
           <div className="flex items-center gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3 rounded-2xl py-1 pr-2 transition hover:bg-slate-50">
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-[0_12px_30px_-18px_rgba(249,115,22,0.8)]">
-                CP
+                AA
               </span>
               <span className="hidden sm:block">
-                <span className="block text-sm font-semibold tracking-tight text-slate-950">CommercePilot</span>
+                <span className="block text-sm font-semibold tracking-tight text-slate-950">Alışveriş Arkadaşım</span>
                 <span className="block text-xs text-slate-500">{config.eyebrow}</span>
               </span>
             </Link>
@@ -115,7 +115,7 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
                 weight="bold"
               />
               <input
-                aria-label="CommercePilot arama"
+                aria-label="Alışveriş Arkadaşım arama"
                 className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 px-11 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
                 placeholder={config.searchPlaceholder}
               />
@@ -195,7 +195,7 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-600">{config.eyebrow}</p>
               <h1 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-slate-950 md:text-3xl">
-                {role === "buyer" ? "CommercePilot alışveriş" : "CommercePilot satıcı merkezi"}
+                {role === "buyer" ? "Alışveriş Arkadaşım" : "Alışveriş Arkadaşım satıcı merkezi"}
               </h1>
             </div>
             <span className="inline-flex min-h-10 items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-600">

@@ -280,13 +280,13 @@ export function getDefaultFloatingAgentApiData(): FloatingAgentApiData {
 
 function createFloatingAgentModelInstructions(): string {
   return [
-    "CommercePilot floating chatbot için intent router olarak davran.",
+    "Alışveriş Arkadaşım sağ alt sohbet yardımcısı için intent router olarak davran.",
     "Yanıtı yalnızca JSON object olarak üret.",
     "mode alanı sadece chat, clarify, buyer-agent veya seller-agent olabilir.",
     "Kullanıcı ürün önerisi, sepet hazırlama, sepet değiştirme, listing taslağı, satıcı ürün analizi veya operasyonel aksiyon isterse agent mode seç.",
     "Kullanıcı ürünün nasıl çalıştığını, ne yapabileceğini, güvenlik/onay sınırlarını, kargo/yorum/ürün seçimi mantığını veya genel yardım sorarsa chat mode seç.",
     "Kullanıcı belirsiz bir şey isterse clarify mode seç ve kısa netleştirme sorusu sor.",
-    "CommercePilot dışı açık alan sorularında uydurma bilgi verme; commerce bağlamına dönerek kibarca sınır belirt.",
+    "Alışveriş Arkadaşım dışı açık alan sorularında uydurma bilgi verme; commerce bağlamına dönerek kibarca sınır belirt.",
     "Mutation yapıldığını iddia etme; action mode sadece onay bekleyen öneri/taslak hazırlar.",
     "Türkçe, kısa, kullanıcı dostu ve uygulama içi chatbot tonu kullan.",
     'Şema: {"mode":"chat|clarify|buyer-agent|seller-agent","confidence":0.0,"answer":"kısa yanıt","actionPrompt":"agent için normalize edilmiş komut","reason":"karar gerekçesi"}',
@@ -336,10 +336,10 @@ function createFallbackFloatingAgentModelBody(
 
   if (isOutOfScopePrompt(normalizedPrompt)) {
     return {
-      answer: "Ben CommercePilot içinde alışveriş, sepet, ürün yorumu ve satıcı operasyonları için yardımcı olurum. Bu konuda bir ürün, sepet ya da mağaza sorusu sorarsan net şekilde ilerleyebilirim.",
+      answer: "Ben Alışveriş Arkadaşım içinde alışveriş, sepet, ürün yorumu ve satıcı operasyonları için yardımcı olurum. Bu konuda bir ürün, sepet ya da mağaza sorusu sorarsan net şekilde ilerleyebilirim.",
       confidence: 0.72,
       mode: "chat",
-      reason: "Soru CommercePilot commerce bağlamı dışında.",
+      reason: "Soru Alışveriş Arkadaşım commerce bağlamı dışında.",
     };
   }
 
@@ -489,7 +489,7 @@ function sanitizeChatAnswer(answer: string, request: FloatingAgentApiRequest): s
 
   if (hasUnsupportedBuyerCatalogTerm(answer)) {
     return request.role === "buyer"
-      ? "Katalog dışı ürün veya marka uydurmam. Mevcut CommercePilot ürünlerinden seçim yapabilirim."
+      ? "Katalog dışı ürün veya marka uydurmam. Mevcut Alışveriş Arkadaşım ürünlerinden seçim yapabilirim."
       : "Katalog dışı ürün veya marka uydurmam. Mevcut satıcı verileriyle analiz yapabilirim.";
   }
 
