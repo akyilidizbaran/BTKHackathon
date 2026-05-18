@@ -96,7 +96,8 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
 
   const activeSegment = data.segments.find((segment) => segment.id === activeFocus) ?? data.segments[0];
   const maxCategoryCount = Math.max(...data.categoryBreakdown.map((category) => category.productCount), 1);
-  const marqueeItems = data.segments
+  const activeProductsHref = activeFocus === "all" ? "/seller/products" : `/seller/products?focus=${activeFocus}`;
+  const railChips = data.segments
     .map((segment) => `${segment.label} ${segment.productCount}`)
     .concat(["Fotoğraflı ürün yönetimi", "Sağlık skoru", "Stok eşiği", "Yorum sinyali"]);
 
@@ -155,30 +156,18 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
         <div className="space-y-5">
           <div
             data-seller-products-reveal
-            className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-7"
+            className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-6"
           >
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_310px]">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
               <div>
-                <h2 className="max-w-5xl text-4xl font-semibold leading-[0.96] tracking-[-0.06em] text-slate-950 md:text-5xl">
-                  Ürünleri
-                  {selectedProduct ? (
-                    <span
-                      aria-label={selectedProduct.image.alt}
-                      className="mx-2 inline-block h-10 w-24 overflow-hidden rounded-full border border-slate-200 bg-slate-50 bg-[length:500%_400%] bg-no-repeat align-middle md:h-12 md:w-32"
-                      role="img"
-                      style={{
-                        backgroundImage: `url(${selectedProduct.image.src})`,
-                        backgroundPosition: selectedProduct.image.position,
-                      }}
-                    />
-                  ) : null}
-                  tek bakışta yönet.
+                <h2 className="max-w-5xl text-3xl font-semibold leading-[1.02] tracking-[-0.055em] text-slate-950 md:text-[2.65rem]">
+                  Ürünleri tek bakışta yönet.
                 </h2>
-                <p className="mt-4 max-w-[68ch] text-sm leading-6 text-slate-600">
+                <p className="mt-3 max-w-[68ch] text-sm leading-6 text-slate-600">
                   Fotoğraf, stok, satış, fiyat, yorum ve risk sinyali aynı satırda okunur. Overview kartlarından gelen
-                  focus query&apos;leri bu ekranda gerçek filtreye dönüşür.
+                  odaklar bu ekranda gerçek filtreye dönüşür.
                 </p>
-                <div className="mt-6 flex flex-wrap gap-3">
+                <div className="mt-5 flex flex-wrap gap-3">
                   <button
                     type="button"
                     className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-[#fff] transition hover:bg-slate-800 active:translate-y-px"
@@ -316,10 +305,15 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
               </span>
             </div>
           </div>
-          <div className="border-y border-white/10 py-4">
-            <div className="seller-products-marquee flex min-w-max gap-8 whitespace-nowrap px-5 text-sm font-semibold text-slate-300">
-              {[...marqueeItems, ...marqueeItems].map((item, index) => (
-                <span key={`${item}-${index}`}>{item}</span>
+          <div className="border-y border-white/10 px-5 py-4">
+            <div className="flex flex-wrap gap-2">
+              {railChips.slice(0, 7).map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
+                >
+                  {item}
+                </span>
               ))}
             </div>
           </div>
@@ -353,13 +347,13 @@ export function SellerProductsWorkspace({ data, initialFocus }: SellerProductsWo
                 {visibleProducts.length} ürün görünüyor. Fiyat, satış, stok, yorum ve risk sinyalleri aynı akışta.
               </p>
             </div>
-            <a
-              href={activeSegment?.apiEndpoint ?? "/api/seller/products"}
+            <Link
+              href={activeProductsHref}
               className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
             >
-              API contract
+              Odağı aç
               <ArrowRight size={15} weight="bold" />
-            </a>
+            </Link>
           </div>
 
           {visibleProducts.length > 0 ? (
@@ -519,7 +513,7 @@ function SelectedProductRail({ product }: { product: SellerProductApiRow }) {
       <p className="mt-4 text-xs font-semibold text-orange-600">{product.brand}</p>
       <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-slate-950">{product.name}</h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">
-        {product.healthLabel}. Agent bu ürünü açtığında stok, satış, yorum ve iade kanıtlarıyla ilerler.
+        {product.healthLabel}. Agent bu ürünü açtığında stok, satış, yorum ve iade sinyalleriyle ilerler.
       </p>
 
       <div className="mt-5 divide-y divide-slate-200 border-y border-slate-200">
@@ -611,7 +605,7 @@ function EmptyProductsState({ onReset, searchQuery }: { onReset: () => void; sea
       <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
         {searchQuery
           ? "Arama ve risk filtresi birlikte çok daraldı. Listeyi sıfırlayıp tüm ürünlere dönebilirsin."
-          : "Bu focus filtresine giren ürün bulunamadı. Overview kartları yeni sinyal geldiğinde bu listeyi doldurur."}
+          : "Bu odağa giren ürün bulunamadı. Yeni sinyal geldiğinde bu liste otomatik güncellenir."}
       </p>
       <button
         type="button"

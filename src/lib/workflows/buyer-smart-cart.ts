@@ -500,6 +500,12 @@ function extractBudget(normalizedPrompt: string): number | undefined {
     return parseAmount(contextualMatch[1]);
   }
 
+  const wordAmount = extractTurkishWordAmount(normalizedPrompt);
+
+  if (wordAmount) {
+    return wordAmount;
+  }
+
   return undefined;
 }
 
@@ -508,6 +514,84 @@ function parseAmount(rawAmount: string): number | undefined {
   const parsedAmount = Number(normalizedAmount);
 
   return Number.isFinite(parsedAmount) && parsedAmount > 0 ? parsedAmount : undefined;
+}
+
+function extractTurkishWordAmount(normalizedPrompt: string): number | undefined {
+  const tokens = normalizedPrompt
+    .split(/\s+/)
+    .map((token) => token.replace(/[^\p{L}]/gu, ""))
+    .filter(Boolean);
+  const cueIndex = tokens.findIndex((token) => ["altında", "kadar", "civarında", "bütçe", "butce", "tl", "lira"].includes(token));
+
+  if (cueIndex <= 0) {
+    return undefined;
+  }
+
+  const amountTokens = tokens.slice(Math.max(0, cueIndex - 5), cueIndex);
+  const parsedAmount = parseTurkishNumberWords(amountTokens);
+
+  return parsedAmount && parsedAmount > 0 ? parsedAmount : undefined;
+}
+
+function parseTurkishNumberWords(tokens: string[]): number | undefined {
+  const values: Record<string, number> = {
+    bir: 1,
+    iki: 2,
+    üç: 3,
+    uc: 3,
+    dört: 4,
+    dort: 4,
+    beş: 5,
+    bes: 5,
+    altı: 6,
+    alti: 6,
+    yedi: 7,
+    sekiz: 8,
+    dokuz: 9,
+    on: 10,
+    yirmi: 20,
+    otuz: 30,
+    kırk: 40,
+    kirk: 40,
+    elli: 50,
+    altmış: 60,
+    altmis: 60,
+    yetmiş: 70,
+    yetmis: 70,
+    seksen: 80,
+    doksan: 90,
+  };
+  let total = 0;
+  let current = 0;
+  let matched = false;
+
+  tokens.forEach((token) => {
+    if (token === "bin") {
+      total += (current || 1) * 1000;
+      current = 0;
+      matched = true;
+      return;
+    }
+
+    if (token === "yüz" || token === "yuz") {
+      current = (current || 1) * 100;
+      matched = true;
+      return;
+    }
+
+    const value = values[token];
+
+    if (value) {
+      current += value;
+      matched = true;
+    }
+  });
+
+  if (!matched) {
+    return undefined;
+  }
+
+  return total + current;
 }
 
 function extractMaxDeliveryDays(normalizedPrompt: string): number | undefined {

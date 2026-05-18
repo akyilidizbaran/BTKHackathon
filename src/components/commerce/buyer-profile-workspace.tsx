@@ -54,11 +54,14 @@ const preferenceIconMap: Partial<Record<BuyerProfilePreferenceId, typeof Truck>>
   color_match: Palette,
 };
 
+const reviewsPerPage = 5;
+
 export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState(initialData);
   const [editable, setEditable] = useState(initialData.editable);
   const [colorInput, setColorInput] = useState("");
+  const [reviewPage, setReviewPage] = useState(1);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>({ state: "idle" });
 
   const selectedPreferenceSet = useMemo(
@@ -68,6 +71,12 @@ export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProp
   const selectedPreferenceLabels = data.preferences
     .filter((preference) => selectedPreferenceSet.has(preference.id))
     .map((preference) => preference.label);
+  const reviewPageCount = Math.max(1, Math.ceil(data.reviews.length / reviewsPerPage));
+  const safeReviewPage = Math.min(reviewPage, reviewPageCount);
+  const visibleReviews = data.reviews.slice(
+    (safeReviewPage - 1) * reviewsPerPage,
+    safeReviewPage * reviewsPerPage,
+  );
 
   useEffect(() => {
     const draft = readBuyerProfileDraft(initialData.editable.buyerId);
@@ -434,7 +443,7 @@ export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProp
 
           {data.reviews.length > 0 ? (
             <div className="mt-2 divide-y divide-slate-200">
-              {data.reviews.map((review) => (
+              {visibleReviews.map((review) => (
                 <article key={review.id} className="grid gap-4 py-5 md:grid-cols-[96px_1fr]">
                   <Link href={review.productHref} className="block overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                     <div
@@ -481,6 +490,32 @@ export function BuyerProfileWorkspace({ initialData }: BuyerProfileWorkspaceProp
               </p>
             </div>
           )}
+
+          {data.reviews.length > reviewsPerPage ? (
+            <div className="mt-5 flex flex-col justify-between gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center">
+              <p className="text-sm text-slate-500">
+                Sayfa {safeReviewPage}/{reviewPageCount} · {data.reviews.length} yorum
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  disabled={safeReviewPage === 1}
+                  onClick={() => setReviewPage((current) => Math.max(1, current - 1))}
+                  className="inline-flex min-h-10 items-center rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  Önceki
+                </button>
+                <button
+                  type="button"
+                  disabled={safeReviewPage === reviewPageCount}
+                  onClick={() => setReviewPage((current) => Math.min(reviewPageCount, current + 1))}
+                  className="inline-flex min-h-10 items-center rounded-full bg-slate-950 px-4 text-sm font-semibold text-[#fff] transition hover:bg-slate-800 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-45"
+                >
+                  Sonraki
+                </button>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <aside

@@ -45,8 +45,8 @@ export default async function SellerProductDetailPage({
             {data.product.name}
           </h2>
           <p className="mt-5 max-w-[68ch] text-sm leading-7 text-zinc-500">
-            Bu detay ekranı `GET {data.product.apiHealthEndpoint}` contract’ının UI karşılığıdır. Skor kırılımı,
-            zayıf sinyaller ve ilgili aksiyonlar tek ürün üzerinden okunur.
+            Skor kırılımı, zayıf sinyaller ve önerilen aksiyonlar tek ürün üzerinden okunur. Satıcı bu ekranda
+            hangi alanın bugün iyileştirileceğini hızlıca görür.
           </p>
 
           <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 md:grid-cols-4">
@@ -58,14 +58,10 @@ export default async function SellerProductDetailPage({
         </div>
 
         <div className="rounded-[1.75rem] border border-white/10 bg-zinc-950/45 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <p className="text-sm text-zinc-500">Endpoint izi</p>
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-4 font-mono text-xs leading-6 text-zinc-500">
-            {data.product.apiHealthEndpoint}
-            <br />
-            envelope: {data.contract.envelope}
-            <br />
-            source: {data.contract.source}
-          </div>
+          <p className="text-sm text-zinc-500">Satış sinyalleri</p>
+          <p className="mt-5 text-sm leading-7 text-zinc-500">
+            Dönüşüm, puan, yorum hacmi ve stok durumu ürünün güncel aksiyon önceliğini belirler.
+          </p>
           <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10">
             <Metric label="Dönüşüm" value={formatPercent(data.product.conversionRate)} />
             <Metric label="Puan" value={data.product.ratingAverage.toFixed(1)} />
@@ -116,7 +112,7 @@ export default async function SellerProductDetailPage({
           </div>
 
           <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-            <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">Kanıt özeti</h3>
+            <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">Özet sinyaller</h3>
             <div className="mt-5 divide-y divide-white/10">
               {data.evidenceSnapshot.map((item) => (
                 <div key={item.label} className="py-4">
@@ -149,7 +145,7 @@ export default async function SellerProductDetailPage({
             ) : (
               <EmptyPanel
                 title="Bu ürüne bağlı aksiyon yok"
-                description="Top 5 seller action listesinde bu ürün için doğrudan aksiyon üretilmedi."
+                description="Şu an bu ürün için öncelikli yapılacak iş görünmüyor."
               />
             )}
           </div>
@@ -171,7 +167,7 @@ export default async function SellerProductDetailPage({
             ) : (
               <EmptyPanel
                 title="İlişkili ürün yok"
-                description="Bu ürün için seller içinde bundle, alternatif veya tamamlayıcı ürün ilişkisi bulunamadı."
+                description="Bu ürün için henüz bundle, alternatif veya tamamlayıcı ürün ilişkisi yok."
               />
             )}
           </div>

@@ -189,7 +189,7 @@ export const sellerProfilePermissionModes: SellerProfilePermissionModeOption[] =
     summary: "Satıcı onayı olmadan değişiklik yok; Agent güvenli taslak üretir.",
   },
   {
-    helper: "Satıcı onayı sonrası mock listing mutation uygulanabilir ve audit'e yazılır.",
+    helper: "Satıcı onayı sonrası listeleme taslağı uygulanabilir ve işlem geçmişine yazılır.",
     id: "approved-apply",
     label: "Onaylı uygulama",
     recommendedCapabilityIds: [
@@ -692,8 +692,8 @@ function createPolicyPreview(editable: SellerProfileEditableState): SellerProfil
         : "Proactive uyarılar badge ve panel bildirimiyle sınırlı.",
       `Sessiz saatler ${editable.quietHours.start} - ${editable.quietHours.end}.`,
     ],
-    summary: "Floating Agent ve route Agent aynı permission sınırını kullanır.",
-    title: "Onay ve audit politikası",
+    summary: "Floating Agent ve route Agent aynı izin sınırını kullanır.",
+    title: "Onay ve işlem geçmişi politikası",
   };
 }
 
@@ -719,7 +719,7 @@ function createAuditTrail(editable: SellerProfileEditableState): SellerProfileAu
       action: "Otomatik uygulama engellendi",
       actorName: "CommercePilot Agent",
       createdAt: "2026-05-16 14:03",
-      detail: "Agent taslak üretti, satıcı onayı olmadan mutation uygulamadı.",
+      detail: "Agent taslak üretti, satıcı onayı olmadan değişiklik uygulamadı.",
       id: "audit-agent-boundary",
       tone: "warning",
     },

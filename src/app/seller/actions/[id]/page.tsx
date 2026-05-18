@@ -47,66 +47,77 @@ export default async function SellerActionDetailPage({
     notFound();
   }
 
-  const factEntries = Object.entries(data.llmReadyContext.facts).slice(0, 5);
+  const isReviewAttention = data.action.type === "review_attention";
+  const visibleReviewHighlights = data.reviewHighlights.slice(0, 3);
+  const visibleExecutionSteps = data.executionPreview.steps.slice(0, isReviewAttention ? 3 : 2);
+  const visibleEvidenceItems = data.evidenceSnapshot.slice(0, 3);
+  const visibleDrafts = data.executionPreview.generatedDrafts.slice(0, isReviewAttention ? 2 : 1);
+  const detailSummary = isReviewAttention
+    ? "Alıcının üründe gördüğü temel itirazları topla; ürün sayfası ve destek cevabı aynı yönde güncellensin."
+    : data.action.summary;
+  const detailOutcome = isReviewAttention && visibleReviewHighlights[0]
+    ? `Ana sinyal: "${visibleReviewHighlights[0].title}"`
+    : data.action.expectedOutcome;
 
   return (
     <div className="space-y-5">
-      <section className="grid gap-5 xl:grid-cols-[1.18fr_0.82fr]">
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.045] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <Link href="/seller/actions" className="text-sm text-emerald-200 transition hover:text-emerald-100">
+      <section className="grid items-start gap-5 xl:grid-cols-[1.18fr_0.82fr]">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-7">
+          <Link href="/seller/actions" className="text-sm font-semibold text-orange-600 transition hover:text-orange-700">
             Aksiyonlara dön
           </Link>
 
           <div className="mt-6 flex flex-wrap gap-2 text-xs">
-            <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-400">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600">
               {data.action.categoryLabel}
             </span>
-            <span className="rounded-full bg-emerald-300/10 px-3 py-1 text-emerald-200">
+            <span className="rounded-full bg-orange-50 px-3 py-1 text-orange-700">
               {data.action.urgencyLabel}
             </span>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-zinc-400">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600">
               {data.action.timeHorizonLabel}
             </span>
           </div>
 
-          <h2 className="mt-5 max-w-5xl text-4xl font-semibold leading-none tracking-[-0.06em] text-white md:text-5xl">
+          <h2 className="mt-5 max-w-5xl text-[clamp(2.15rem,4vw,3.85rem)] font-semibold leading-[1] tracking-[-0.055em] text-slate-950">
             {data.action.title}
           </h2>
-          <p className="mt-5 max-w-[70ch] text-sm leading-7 text-zinc-500">{data.action.summary}</p>
-          <p className="mt-5 max-w-[70ch] text-sm leading-7 text-emerald-100/85">
-            {data.action.expectedOutcome}
+          <p className="mt-5 max-w-[70ch] text-sm leading-7 text-slate-600">
+            {detailSummary}
+          </p>
+          <p className="mt-4 max-w-[70ch] text-sm font-semibold leading-6 text-orange-700">
+            {detailOutcome}
           </p>
 
-          <div className="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-3xl border border-white/10 bg-white/10 md:grid-cols-4">
+          <div className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-slate-200 bg-slate-200 md:grid-cols-4">
             <Metric label="Öncelik" value={`${data.action.priorityScore}/100`} />
             <Metric label="Etki" value={data.action.impactLabel} />
             <Metric label="Efor" value={data.action.effortLabel} />
-            <Metric label="Ürün" value={String(data.affectedProducts.length)} />
+            <Metric
+              label={isReviewAttention ? "Yorum" : "Ürün"}
+              value={String(isReviewAttention ? visibleReviewHighlights.length : data.affectedProducts.length)}
+            />
           </div>
         </div>
 
-        <div className="rounded-[1.75rem] border border-white/10 bg-zinc-950/45 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <p className="text-sm text-zinc-500">Endpoint izi</p>
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.035] p-4 font-mono text-xs leading-6 text-zinc-500">
-            {data.contract.method} {data.contract.endpoint}
-            <br />
-            envelope: {data.contract.envelope}
-            <br />
-            source: {data.contract.source}
-          </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-7">
+          <p className="text-sm font-semibold text-slate-950">Etkilenen ürünler</p>
+          <p className="mt-3 text-sm leading-6 text-slate-500">
+            Aksiyonun doğrudan dokunduğu ürünler.
+          </p>
 
-          <div className="mt-6 divide-y divide-white/10">
+          <div className="mt-5 divide-y divide-slate-200">
             {data.affectedProducts.slice(0, 3).map((product) => (
               <Link
                 key={product.id}
                 href={product.href}
-                className="grid gap-3 py-4 transition hover:bg-white/[0.025] md:grid-cols-[1fr_100px]"
+                className="grid gap-3 py-4 transition hover:bg-slate-50 md:grid-cols-[1fr_100px]"
               >
                 <div>
-                  <p className="text-sm font-medium text-white">{product.name}</p>
-                  <p className="mt-1 text-xs text-zinc-500">{product.brand} · {product.stockStatusLabel}</p>
+                  <p className="text-sm font-semibold text-slate-950">{product.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">{product.brand} · {product.stockStatusLabel}</p>
                 </div>
-                <p className="font-mono text-sm text-emerald-200/80">{product.healthScore}/100</p>
+                <p className="font-mono text-sm font-semibold text-orange-700">{product.healthScore}/100</p>
               </Link>
             ))}
           </div>
@@ -114,67 +125,90 @@ export default async function SellerActionDetailPage({
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[1fr_420px]">
-        <div className="rounded-[1.75rem] border border-emerald-200/15 bg-emerald-300/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-5 md:flex-row md:items-end">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-7">
+          <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-end">
             <div>
-              <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">
-                {data.executionPreview.title}
+              <h3 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">
+                {isReviewAttention ? "Görünen yorumlar" : "Yapılacak iş"}
               </h3>
-              <p className="mt-2 max-w-[68ch] text-sm leading-7 text-zinc-500">
-                {data.executionPreview.summary}
+              <p className="mt-2 max-w-[68ch] text-sm leading-7 text-slate-500">
+                {isReviewAttention
+                  ? "Bu aksiyonun nedeni olan müşteri itirazları."
+                  : "Satıcının bugün uygulayacağı kısa akış."}
               </p>
             </div>
-            <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-zinc-400">
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
               Sahip: {data.executionPreview.primaryOwner}
             </span>
           </div>
 
-          <div className="mt-5 divide-y divide-white/10">
-            {data.executionPreview.steps.map((step, index) => (
-              <div key={step.id} className="grid gap-4 py-5 md:grid-cols-[96px_1fr_120px]">
-                <p className="font-mono text-3xl tracking-[-0.06em] text-white">
-                  {String(index + 1).padStart(2, "0")}
-                </p>
-                <div>
-                  <p className="text-sm font-medium text-white">{step.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-zinc-500">{step.detail}</p>
-                </div>
-                <div className="text-xs leading-5 text-zinc-500">
-                  <p className="text-emerald-200/80">{step.priorityLabel}</p>
-                  <p className="mt-2">Sahip: {step.owner}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">Kanıt çizgisi</h3>
-          <div className="mt-5 divide-y divide-white/10">
-            {data.evidenceSnapshot.slice(0, 6).map((item) => (
-              <div key={`${item.label}-${item.value}`} className="py-4">
-                <div className="flex items-start justify-between gap-4">
-                  <p className="text-sm text-zinc-500">{item.label}</p>
-                  <p className={item.tone === "warning" ? "font-mono text-sm text-amber-200" : "font-mono text-sm text-emerald-200/80"}>
-                    {item.value}
+          {isReviewAttention ? (
+            <div className="mt-5 grid gap-3">
+              {visibleReviewHighlights.map((review) => (
+                <ReviewHighlightCard key={review.id} review={review} />
+              ))}
+            </div>
+          ) : (
+            <div className="mt-5 divide-y divide-slate-200">
+              {visibleExecutionSteps.map((step) => (
+                <div key={step.id} className="grid gap-3 py-4 md:grid-cols-[minmax(0,1fr)_112px]">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-950">{step.title}</p>
+                    <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">{step.detail}</p>
+                  </div>
+                  <p className="rounded-full bg-orange-50 px-3 py-2 text-center text-xs font-semibold leading-5 text-orange-700">
+                    {step.priorityLabel}
                   </p>
                 </div>
-                <p className="mt-2 text-sm leading-6 text-zinc-500">{item.helper}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-7">
+          <h3 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">
+            {isReviewAttention ? "Kısa aksiyon" : "Sinyal"}
+          </h3>
+          {isReviewAttention ? (
+            <div className="mt-5 grid gap-3">
+              {visibleExecutionSteps.map((step) => (
+                <div key={step.id} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-sm font-semibold text-slate-950">{step.title}</p>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">{step.detail}</p>
+                  <p className="mt-3 text-xs font-semibold text-orange-700">{step.priorityLabel}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-5 divide-y divide-slate-200">
+              {visibleEvidenceItems.map((item) => (
+                <div key={`${item.label}-${item.value}`} className="py-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <p className="text-sm font-semibold text-slate-700">{item.label}</p>
+                    <p className={item.tone === "warning" ? "font-mono text-sm font-semibold text-orange-700" : "font-mono text-sm font-semibold text-emerald-700"}>
+                      {item.value}
+                    </p>
+                  </div>
+                  <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">{item.helper}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
       <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">Hazır taslaklar</h3>
-          <div className="mt-5 divide-y divide-white/10">
-            {data.executionPreview.generatedDrafts.map((draft) => (
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-7">
+          <h3 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Hazır metin</h3>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Ürün sayfası veya destek cevabı için kısa öneri.
+          </p>
+          <div className="mt-5 divide-y divide-slate-200">
+            {visibleDrafts.map((draft) => (
               <div key={draft.label} className="py-4">
-                <p className="text-sm text-zinc-500">{draft.label}</p>
-                <p className="mt-2 text-sm font-medium leading-6 text-white">{draft.body}</p>
-                <p className="mt-3 text-xs text-emerald-200/80">{draft.helper}</p>
+                <p className="text-sm font-semibold text-slate-700">{draft.label}</p>
+                <p className="mt-2 line-clamp-4 text-sm font-medium leading-6 text-slate-950">{draft.body}</p>
+                <p className="mt-3 text-xs font-semibold text-orange-700">{draft.helper}</p>
               </div>
             ))}
           </div>
@@ -182,109 +216,52 @@ export default async function SellerActionDetailPage({
 
         <SellerActionExplanationPanel actionId={data.action.id} />
       </section>
-
-      <section className="rounded-[1.75rem] border border-white/10 bg-zinc-950/45 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-        <div className="flex flex-col justify-between gap-3 border-b border-white/10 pb-5 md:flex-row md:items-end">
-          <div>
-            <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">LLM-ready context</h3>
-            <p className="mt-2 text-sm leading-6 text-zinc-500">
-              Model açıklama endpointi bu deterministik contexti kullanır; build sırasında LLM çağrısı yapılmaz.
-            </p>
-          </div>
-          <p className="font-mono text-xs text-zinc-500">{data.llmReadyContext.task}</p>
-        </div>
-
-        <div className="mt-5 grid gap-5 lg:grid-cols-[1fr_1fr]">
-          <div className="divide-y divide-white/10">
-            {factEntries.map(([key, value]) => (
-              <div key={key} className="py-3">
-                <p className="font-mono text-xs text-zinc-500">{key}</p>
-                <p className="mt-2 text-sm leading-6 text-white">{formatFactValue(value)}</p>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
-            <p className="text-sm text-zinc-500">Instruction</p>
-            <p className="mt-3 text-sm leading-7 text-zinc-400">{data.llmReadyContext.instruction}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-[1fr_1fr]">
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">Alıcıdan gelen bağlam</h3>
-          <div className="mt-5 divide-y divide-white/10">
-            {data.relatedBuyerSignals.length > 0 ? (
-              data.relatedBuyerSignals.map((signal) => (
-                <div key={signal.id} className="py-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <p className="text-sm font-medium text-white">{signal.typeLabel}</p>
-                    <p className="font-mono text-xs text-emerald-200/80">{signal.priorityScore}/100</p>
-                  </div>
-                  <p className="mt-2 text-sm leading-6 text-zinc-500">{signal.summary}</p>
-                  <p className="mt-3 text-xs leading-5 text-zinc-500">{signal.sourcePrompt}</p>
-                </div>
-              ))
-            ) : (
-              <EmptyPanel
-                title="Buyer sinyali yok"
-                description="Bu aksiyon henüz buyer smart cart sinyaliyle doğrudan eşleşmiyor."
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
-          <h3 className="text-2xl font-semibold tracking-[-0.04em] text-white">Checklist</h3>
-          <div className="mt-5 divide-y divide-white/10">
-            {data.action.todayChecklist.map((item) => (
-              <div key={item.label} className="py-4">
-                <p className="text-sm font-medium text-white">{item.label}</p>
-                <p className="mt-2 text-sm leading-6 text-zinc-500">{item.detail}</p>
-                <p className="mt-3 text-xs text-emerald-200/80">Sahip: {item.owner}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-zinc-950/55 p-4">
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className="mt-2 font-mono text-lg font-medium tracking-[-0.04em] text-white">{value}</p>
+    <div className="bg-slate-50 p-4">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-2 font-mono text-lg font-semibold tracking-[-0.04em] text-slate-950">{value}</p>
     </div>
   );
 }
 
-function EmptyPanel({ title, description }: { title: string; description: string }) {
+function ReviewHighlightCard({
+  review,
+}: {
+  review: {
+    body: string;
+    createdAt: string;
+    id: string;
+    rating: number;
+    sentimentLabel: string;
+    themeLabels: string[];
+    title: string;
+  };
+}) {
   return (
-    <div className="rounded-[1.5rem] border border-dashed border-white/10 bg-zinc-950/35 p-5">
-      <p className="text-sm font-medium text-white">{title}</p>
-      <p className="mt-2 text-sm leading-6 text-zinc-500">{description}</p>
-    </div>
+    <article className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full bg-orange-50 px-2.5 py-1 text-xs font-semibold text-orange-700">
+          {review.sentimentLabel}
+        </span>
+        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600">
+          {review.rating}/5
+        </span>
+        <span className="text-xs text-slate-500">{review.createdAt}</span>
+      </div>
+      <p className="mt-4 text-base font-semibold tracking-[-0.03em] text-slate-950">{review.title}</p>
+      <p className="mt-2 text-sm leading-6 text-slate-600">{review.body}</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {review.themeLabels.map((theme) => (
+          <span key={`${review.id}-${theme}`} className="rounded-full bg-white px-2.5 py-1 text-xs text-slate-500">
+            {theme}
+          </span>
+        ))}
+      </div>
+    </article>
   );
-}
-
-function formatFactValue(value: unknown): string {
-  if (typeof value === "string") {
-    return value;
-  }
-
-  if (typeof value === "number" || typeof value === "boolean") {
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    return value.slice(0, 4).map((item) => formatFactValue(item)).join(", ");
-  }
-
-  if (typeof value === "object" && value !== null) {
-    return JSON.stringify(value);
-  }
-
-  return "Yok";
 }

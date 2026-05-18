@@ -2,14 +2,15 @@
 
 ## 0) Durum
 
-* Son güncelleme: 2026-05-16
+* Son güncelleme: 2026-05-17
 * Roadmap kararı:
   * CommercePilot önce gerçek bir e-ticaret ürünü gibi davranacak.
   * Agent deneyimi açıklama dashboard'u değil, alışveriş ve satıcı paneli üzerinde aksiyon alan sohbet/yardımcı katmanı olacak.
   * Uygulama artık endpoint endpoint ilerleyecek; her route kendi net işlevine sahip olacak.
 * Planlanan kapsam:
   * 8B, 8C, 8D, 8E, 8F, 8G, 8H, 8I, 8J, 8K, 8L, 8M, 8N, 8O, 8P, 8Q ve 8R tamamlandı.
-  * Sıradaki net adım 9A: Gemini/provider finalization; mevcut contract'ları bozmadan final provider swap.
+  * 9A Gemini/provider finalization ürün tesliminden hemen önce yapılacak.
+  * Sıradaki net adım: `LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md` adım 7 Gemini adapter smoke test ve final provider swap hazırlığı.
   * 8K ve sonrası milestone sırası revize edilebilir; milestone sayısı uygulama sırasında azaltılıp artırılabilir.
 
 ## 1) Kilit Ürün Kararları
@@ -323,6 +324,13 @@
   * Şimdilik OpenAI kalacak.
   * `LLM_PROVIDER` provider seçim noktası olarak korunacak.
   * Gemini final provider swap Milestone 9A kapsamına alınacak.
+  * `LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md` OpenAI ile geliştirilip Gemini'ye taşınacak 7 aşamalı LLM/Agent planının ana kaynağıdır.
+  * 2026-05-16 itibarıyla adım 1 tamamlandı: `generateLlmText` provider-neutral hale geldi, Gemini OpenAI-compatible adapter eklendi ve `GEMINI_MODEL` env contract'ı tanımlandı.
+  * 2026-05-16 itibarıyla adım 2 tamamlandı: `generateLlmJson<T>()`, shared JSON parser/normalizer ve validation fallback contract'ı kuruldu.
+  * 2026-05-16 itibarıyla adım 3 tamamlandı: Buyer Agent POST akışı LLM destekli message/ranking/reason/risk/strategy orchestration üretir; initial render deterministic kalır.
+  * 2026-05-16 itibarıyla adım 4 tamamlandı: Seller Agent POST akışı LLM destekli activeFocus/product ranking/action ranking/reason/draft orchestration üretir; initial render deterministic kalır ve listing mutation onay/apply contract'ı korunur.
+  * 2026-05-17 itibarıyla adım 5 tamamlandı: Review Intelligence POST akışı LLM destekli cluster/theme/risk/listing fix/seller reply/buyer warning contract'ı üretir; review id/theme whitelist ve deterministic fallback korunur.
+  * Agent kararları LLM destekli olacak; mutation'lar typed validation, kullanıcı onayı ve deterministic apply contract'larından geçmeye devam edecek.
 
 ## 7) Revize Milestone Planı
 

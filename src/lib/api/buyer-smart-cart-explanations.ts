@@ -1,5 +1,9 @@
-import { generateLlmText } from "@/lib/llm";
-import type { LlmTextGenerationResult } from "@/lib/llm";
+import {
+  generateLlmJson,
+  normalizeLlmString,
+  normalizeLlmStringArray,
+} from "@/lib/llm";
+import type { LlmJsonValidationResult, LlmTextGenerationResult } from "@/lib/llm";
 import {
   buyerSmartCartEndpoint,
   defaultBuyerId,
@@ -7,6 +11,10 @@ import {
   type BuyerSmartCartApiData,
   type BuyerSmartCartApiRequest,
 } from "@/lib/api/buyer";
+import {
+  getReviewIntelligenceApiData,
+  type ReviewIntelligenceApiData,
+} from "@/lib/api/review-intelligence";
 
 export const buyerSmartCartExplanationEndpoint = "/api/buyer/smart-cart/explanation";
 
@@ -37,6 +45,7 @@ export interface BuyerSmartCartExplanationApiData {
     alternativeCount: number;
     complementaryCount: number;
     sellerSignalCount: number;
+    reviewIntelligenceProductCount: number;
   };
 }
 
@@ -78,25 +87,21 @@ export async function getBuyerSmartCartExplanationApiData(
     ...request,
     buyerId: request.buyerId || defaultBuyerId,
   });
-  const fallbackBody = createFallbackExplanationBody(smartCart);
-  const fallbackText = JSON.stringify(fallbackBody);
-  const llmResult = typeof options.modelTextOverride === "string"
-    ? createModelTextOverrideResult(options.modelTextOverride)
-    : options.forceFallback
-      ? createForcedFallbackResult(fallbackText)
-      : await generateLlmText({
-          fallbackText,
-          input: createBuyerSmartCartExplanationInput(smartCart),
-          instructions: createBuyerSmartCartExplanationInstructions(),
-          metadata: {
-            buyer_id: smartCart.request.buyerId ?? defaultBuyerId,
-            intent_type: smartCart.summary.intentType,
-            task: "buyer_smart_cart_explanation",
-          },
-        });
-  const parsed = parseModelExplanation(llmResult.text, fallbackBody, smartCart);
-  const status = parsed.usedFallback || llmResult.status === "fallback" ? "fallback" : "generated";
-  const fallbackReason = getFallbackReason(llmResult, parsed.usedFallback);
+  const reviewIntelligenceItems = await getBuyerReviewIntelligenceForSmartCart(smartCart, options);
+  const fallbackBody = createFallbackExplanationBody(smartCart, reviewIntelligenceItems);
+  const llmResult = await generateLlmJson({
+    fallbackValue: fallbackBody,
+    forceFallback: options.forceFallback,
+    input: createBuyerSmartCartExplanationInput(smartCart, reviewIntelligenceItems),
+    instructions: createBuyerSmartCartExplanationInstructions(),
+    metadata: {
+      buyer_id: smartCart.request.buyerId ?? defaultBuyerId,
+      intent_type: smartCart.summary.intentType,
+      task: "buyer_smart_cart_explanation",
+    },
+    modelTextOverride: options.modelTextOverride,
+    validate: (value, fallbackValue) => validateBuyerSmartCartExplanationBody(value, fallbackValue, smartCart),
+  });
 
   return {
     contract: {
@@ -108,12 +113,12 @@ export async function getBuyerSmartCartExplanationApiData(
       source: "llm-explanation",
     },
     explanation: {
-      ...parsed.body,
-      fallbackReason,
+      ...llmResult.value,
+      fallbackReason: llmResult.fallbackReason,
       generatedAt: llmResult.generatedAt,
       model: llmResult.model,
       provider: llmResult.provider,
-      status,
+      status: llmResult.status,
     },
     request: smartCart.request,
     source: {
@@ -123,6 +128,7 @@ export async function getBuyerSmartCartExplanationApiData(
       sellerSignalCount: smartCart.result.sellerSignalCandidates.length,
       smartCartEndpoint: buyerSmartCartEndpoint,
       warningCount: smartCart.result.warnings.length,
+      reviewIntelligenceProductCount: reviewIntelligenceItems.length,
     },
     summary: {
       budgetStatusLabel: smartCart.summary.budgetStatusLabel,
@@ -146,7 +152,10 @@ function createBuyerSmartCartExplanationInstructions(): string {
   ].join("\n");
 }
 
-function createBuyerSmartCartExplanationInput(smartCart: BuyerSmartCartApiData): string {
+function createBuyerSmartCartExplanationInput(
+  smartCart: BuyerSmartCartApiData,
+  reviewIntelligenceItems: ReviewIntelligenceApiData[],
+): string {
   return JSON.stringify(
     {
       budget: {
@@ -197,23 +206,43 @@ function createBuyerSmartCartExplanationInput(smartCart: BuyerSmartCartApiData):
         severity: warning.severity,
         title: warning.title,
       })),
+      reviewIntelligence: reviewIntelligenceItems.map((item) => ({
+        buyerFacingWarning: item.intelligence.buyerFacingWarning,
+        productId: item.product.id,
+        productName: item.product.name,
+        repeatedComplaintThemes: item.intelligence.repeatedComplaintThemes,
+        riskSummary: item.intelligence.riskSummary,
+        reviewClusters: item.intelligence.reviewClusters.map((cluster) => ({
+          reviewIds: cluster.reviewIds,
+          severity: cluster.severity,
+          summary: cluster.summary,
+          theme: cluster.theme,
+        })),
+      })),
     },
     null,
     2,
   );
 }
 
-function createFallbackExplanationBody(smartCart: BuyerSmartCartApiData): ParsedExplanationBody {
+function createFallbackExplanationBody(
+  smartCart: BuyerSmartCartApiData,
+  reviewIntelligenceItems: ReviewIntelligenceApiData[] = [],
+): ParsedExplanationBody {
   const primaryItem = smartCart.result.selectedItems[0];
   const primaryWarning = smartCart.result.warnings[0];
   const primaryAlternative = smartCart.result.alternatives[0] ?? smartCart.result.complementarySuggestions[0];
   const primarySignal = smartCart.result.sellerSignalCandidates[0];
+  const primaryReviewIntelligence = reviewIntelligenceItems[0];
   const itemEvidence = smartCart.result.selectedItems
     .slice(0, 3)
     .map((item) => `${item.cartRole}: ${item.productName}, güven ${item.confidenceScore}/100. ${item.reasons[0]}`)
     .filter(Boolean);
   const warningEvidence = primaryWarning ? [`Uyarı: ${primaryWarning.title}. ${primaryWarning.message}`] : [];
-  const evidenceBullets = [...itemEvidence, ...warningEvidence].slice(0, 4);
+  const reviewEvidence = primaryReviewIntelligence
+    ? [`Review Intelligence: ${primaryReviewIntelligence.intelligence.riskSummary}`]
+    : [];
+  const evidenceBullets = [...itemEvidence, ...warningEvidence, ...reviewEvidence].slice(0, 4);
 
   return {
     buyerDecision: primaryItem
@@ -224,67 +253,91 @@ function createFallbackExplanationBody(smartCart: BuyerSmartCartApiData): Parsed
       : "Bu sepet için ek alternatif önerisi gerekmiyor.",
     evidenceBullets,
     headline: `${smartCart.summary.intentLabel} için sepet kararı`,
-    riskNote: primaryWarning?.message ?? "Bu sepet için kritik satın alma uyarısı yok.",
+    riskNote: primaryReviewIntelligence?.intelligence.buyerFacingWarning ??
+      primaryWarning?.message ??
+      "Bu sepet için kritik satın alma uyarısı yok.",
     sellerSignalBridge: primarySignal?.summary ?? "Bu sepet satıcı tarafına düşük öncelikli talep sinyali olarak döner.",
     summary: `${smartCart.summary.itemCount} ürün ${smartCart.summary.budgetStatusLabel.toLocaleLowerCase("tr-TR")} seçildi; toplam ${smartCart.summary.totalPrice.toLocaleString("tr-TR")} TL ve güven skoru ${smartCart.summary.confidenceScore}/100.`,
   };
 }
 
-function createForcedFallbackResult(fallbackText: string): LlmTextGenerationResult {
-  return {
-    error: {
-      code: "FORCED_FALLBACK",
-      message: "Validation canlı LLM çağrısı yapmadan deterministik fallback'i doğruladı.",
-    },
-    generatedAt: new Date().toISOString(),
-    model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
-    provider: "deterministic",
-    status: "fallback",
-    text: fallbackText,
-  };
+async function getBuyerReviewIntelligenceForSmartCart(
+  smartCart: BuyerSmartCartApiData,
+  options: Pick<BuyerSmartCartExplanationOptions, "forceFallback">,
+): Promise<ReviewIntelligenceApiData[]> {
+  const productIds = getReviewWarningProductIds(smartCart).slice(0, 2);
+  const intelligenceItems = await Promise.all(
+    productIds.map((productId) =>
+      getReviewIntelligenceApiData(
+        { productId },
+        {
+          forceFallback: options.forceFallback,
+        },
+      )
+    ),
+  );
+
+  return intelligenceItems.filter((item): item is ReviewIntelligenceApiData => Boolean(item));
 }
 
-function createModelTextOverrideResult(text: string): LlmTextGenerationResult {
-  return {
-    generatedAt: new Date().toISOString(),
-    model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
-    provider: "openai",
-    status: "generated",
-    text,
-  };
+function getReviewWarningProductIds(smartCart: BuyerSmartCartApiData): string[] {
+  const warningProductIds = smartCart.result.warnings
+    .filter((warning) => Boolean(warning.productId) && isReviewRelatedWarning(warning.title, warning.message))
+    .map((warning) => warning.productId)
+    .filter((productId): productId is string => Boolean(productId));
+  const itemWarningProductIds = smartCart.result.selectedItems.flatMap((item) =>
+    item.warnings
+      .filter((warning) => Boolean(warning.productId) && isReviewRelatedWarning(warning.title, warning.message))
+      .map((warning) => warning.productId)
+      .filter((productId): productId is string => Boolean(productId)),
+  );
+
+  return [...warningProductIds, ...itemWarningProductIds].reduce<string[]>((items, productId) => {
+    if (!items.includes(productId)) {
+      items.push(productId);
+    }
+
+    return items;
+  }, []);
 }
 
-function parseModelExplanation(
-  text: string,
+function isReviewRelatedWarning(title: string, message: string): boolean {
+  const normalized = `${title} ${message}`.toLocaleLowerCase("tr-TR");
+
+  return [
+    "açıklama",
+    "beklenti",
+    "geçmiş şikayet",
+    "iade",
+    "listeleme",
+    "ses seviyesi",
+    "uyumluluk",
+    "yorum",
+  ].some((keyword) => normalized.includes(keyword));
+}
+
+function validateBuyerSmartCartExplanationBody(
+  parsed: Record<string, unknown>,
   fallbackBody: ParsedExplanationBody,
   smartCart: BuyerSmartCartApiData,
-): { body: ParsedExplanationBody; usedFallback: boolean } {
-  const parsed = parseJsonObject(text);
-
-  if (!parsed) {
-    return {
-      body: fallbackBody,
-      usedFallback: true,
-    };
-  }
-
+): LlmJsonValidationResult<ParsedExplanationBody> {
   const body = applyContextGuardrails(
     {
-      buyerDecision: normalizeString(parsed.buyerDecision, fallbackBody.buyerDecision),
-      cartAdjustment: normalizeString(parsed.cartAdjustment, fallbackBody.cartAdjustment),
-      evidenceBullets: normalizeStringArray(parsed.evidenceBullets, fallbackBody.evidenceBullets, 4),
-      headline: normalizeString(parsed.headline, fallbackBody.headline),
-      riskNote: normalizeString(parsed.riskNote, fallbackBody.riskNote),
-      sellerSignalBridge: normalizeString(parsed.sellerSignalBridge, fallbackBody.sellerSignalBridge),
-      summary: normalizeString(parsed.summary, fallbackBody.summary),
+      buyerDecision: normalizeLlmString(parsed.buyerDecision, fallbackBody.buyerDecision),
+      cartAdjustment: normalizeLlmString(parsed.cartAdjustment, fallbackBody.cartAdjustment),
+      evidenceBullets: normalizeLlmStringArray(parsed.evidenceBullets, fallbackBody.evidenceBullets, 4),
+      headline: normalizeLlmString(parsed.headline, fallbackBody.headline),
+      riskNote: normalizeLlmString(parsed.riskNote, fallbackBody.riskNote),
+      sellerSignalBridge: normalizeLlmString(parsed.sellerSignalBridge, fallbackBody.sellerSignalBridge),
+      summary: normalizeLlmString(parsed.summary, fallbackBody.summary),
     },
     fallbackBody,
     smartCart,
   );
 
   return {
-    body,
-    usedFallback: false,
+    ok: true,
+    value: body,
   };
 }
 
@@ -369,54 +422,4 @@ function hasUnsupportedNoBudgetClaim(value: string): boolean {
     "bütçe limiti yok",
     "bütçe sınırı yok",
   ].some((safePhrase) => normalized.includes(safePhrase));
-}
-
-function parseJsonObject(text: string): Record<string, unknown> | undefined {
-  const trimmed = text.trim();
-  const withoutFence = trimmed
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/```$/i, "")
-    .trim();
-  const firstBrace = withoutFence.indexOf("{");
-  const lastBrace = withoutFence.lastIndexOf("}");
-  const candidate = firstBrace >= 0 && lastBrace > firstBrace ? withoutFence.slice(firstBrace, lastBrace + 1) : withoutFence;
-
-  try {
-    const parsed = JSON.parse(candidate) as unknown;
-    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-function normalizeString(value: unknown, fallback: string): string {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
-}
-
-function normalizeStringArray(value: unknown, fallback: string[], limit: number): string[] {
-  if (!Array.isArray(value)) {
-    return fallback;
-  }
-
-  const normalized = value
-    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-    .map((item) => item.trim())
-    .slice(0, limit);
-
-  return normalized.length > 0 ? normalized : fallback;
-}
-
-function getFallbackReason(llmResult: LlmTextGenerationResult, usedFallback: boolean): string | undefined {
-  if (llmResult.error) {
-    return `${llmResult.error.code}: ${llmResult.error.message}`;
-  }
-
-  if (usedFallback) {
-    return "MODEL_JSON_PARSE_FAILED: Model çıktısı beklenen JSON contract'ına uymadı.";
-  }
-
-  return undefined;
 }

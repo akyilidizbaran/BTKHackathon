@@ -103,9 +103,6 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
 
   const activeSegment = data.segments.find((segment) => segment.id === activeFocus) ?? data.segments[0];
   const quickSegments = data.segments.filter((segment) => segment.kind !== "category");
-  const marqueeItems = data.segments
-    .map((segment) => `${segment.label} ${segment.actionCount}`)
-    .concat(["Kategori endpoint", "Ürün kanıtı", "Checklist", "LLM context"]);
 
   useGSAP(
     () => {
@@ -166,32 +163,18 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
 
   return (
     <div ref={rootRef} className="overflow-x-hidden">
-      <section className="grid grid-flow-dense gap-5 xl:grid-cols-12">
+      <section className="grid grid-flow-dense items-start gap-5 xl:grid-cols-12">
         <div
           data-seller-actions-reveal
-          className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] xl:col-span-8 md:p-7"
+          className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] xl:col-span-8 md:p-6"
         >
-          <div className="flex min-h-[360px] flex-col justify-between gap-10">
+          <div className="flex flex-col justify-between gap-6">
             <div>
-              <h2 className="max-w-6xl text-[clamp(2.55rem,5vw,5.5rem)] font-semibold leading-[0.93] tracking-[-0.055em] text-slate-950">
-                Aksiyonları{" "}
-                {selectedActionCard?.primaryProduct ? (
-                  <span
-                    aria-label={selectedActionCard.primaryProduct.image.alt}
-                    className="mx-3 hidden h-12 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-50 bg-[length:500%_400%] bg-no-repeat align-middle sm:inline-block md:h-14 md:w-36"
-                    role="img"
-                    style={{
-                      backgroundImage: `url(${selectedActionCard.primaryProduct.image.src})`,
-                      backgroundPosition: selectedActionCard.primaryProduct.image.position,
-                    }}
-                  />
-                ) : null}
-                kategoriye göre işlet.
+              <h2 className="max-w-5xl text-[clamp(2.05rem,3.5vw,3.45rem)] font-semibold leading-[1] tracking-[-0.05em] text-slate-950">
+                Aksiyonları kategoriye göre işlet.
               </h2>
-              <p className="mt-6 max-w-[72ch] text-sm leading-7 text-slate-600">
-                Seller overview’dan gelen stok, yorum, iade ve satılmayan ürün sinyalleri artık aynı action
-                contract’ında filtrelenir. Kategori URL’leri liste görünümü açar; gerçek action id’leri detay
-                ekranını korur.
+              <p className="mt-4 max-w-[72ch] text-sm leading-6 text-slate-600">
+                Stok, yorum, iade ve satılmayan ürün sinyallerini filtrele; satıcının bugün uygulayacağı işi aç.
               </p>
             </div>
 
@@ -217,59 +200,30 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
 
         <aside
           data-seller-actions-reveal
-          className="overflow-hidden rounded-lg bg-slate-950 text-[#fff] shadow-[0_22px_56px_-36px_rgba(15,23,42,0.95)] xl:col-span-4"
+          className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] xl:col-span-4"
         >
-          <div className="p-5 md:p-7">
+          <div className="p-5 md:p-6">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#fff]">
+                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">
                   {activeSegment?.label ?? "Tümü"}
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
-                  {activeSegment?.helper ?? "Tüm action contract görünümü"}
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {activeSegment?.helper ?? "Tüm aksiyonlar aynı görünümde"}
                 </p>
               </div>
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-white/10 text-orange-200">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-orange-50 text-orange-600">
                 <ListChecks size={21} weight="duotone" />
               </span>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-white/10">
+            <div className="mt-5 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-slate-200">
               <HeroMetric label="Aksiyon" value={String(data.summary.actionCount)} />
               <HeroMetric label="Görünen" value={String(visibleActionCards.length)} />
               <HeroMetric label="Kategori" value={String(data.summary.categoryCount)} />
               <HeroMetric label="Öncelik" value={`${data.summary.topPriorityScore}/100`} />
             </div>
           </div>
-
-          <div className="border-y border-white/10 py-4">
-            <div className="seller-actions-marquee flex min-w-max gap-8 whitespace-nowrap px-5 text-sm font-semibold text-slate-300">
-              {[...marqueeItems, ...marqueeItems].map((item, index) => (
-                <span key={`${item}-${index}`}>{item}</span>
-              ))}
-            </div>
-          </div>
-
-          {selectedActionCard?.primaryProduct ? (
-            <div className="p-5 md:p-7">
-              <div className="overflow-hidden rounded-lg border border-white/10 bg-white/5">
-                <div
-                  data-action-product-media
-                  aria-label={selectedActionCard.primaryProduct.image.alt}
-                  className="aspect-[4/3] bg-[length:500%_400%] bg-no-repeat"
-                  role="img"
-                  style={{
-                    backgroundImage: `url(${selectedActionCard.primaryProduct.image.src})`,
-                    backgroundPosition: selectedActionCard.primaryProduct.image.position,
-                  }}
-                />
-              </div>
-              <p className="mt-4 text-xs font-semibold text-orange-200">{selectedActionCard.action.categoryLabel}</p>
-              <p className="mt-1 text-sm font-semibold leading-5 text-[#fff]">
-                {selectedActionCard.primaryProduct.name}
-              </p>
-            </div>
-          ) : null}
         </aside>
 
         <aside
@@ -278,8 +232,8 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
         >
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Kategori rotaları</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">Her satır ayrı URL ve API focus üretir.</p>
+              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Aksiyon kategorileri</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-500">Kuyruğu iş tipine göre daralt.</p>
             </div>
             <FunnelSimple className="text-orange-500" size={22} weight="duotone" />
           </div>
@@ -304,9 +258,6 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
                   <span className="font-mono text-sm text-slate-500">{segment.actionCount}</span>
                 </div>
                 <p className="mt-2 text-xs leading-5 text-slate-500">{segment.helper}</p>
-                <p className="mt-3 font-mono text-[11px] text-slate-400 group-hover:text-orange-600">
-                  {segment.href}
-                </p>
               </button>
             ))}
           </div>
@@ -323,7 +274,7 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
               />
               <input
                 className="h-11 w-full rounded-full border border-slate-200 bg-white px-11 text-sm text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
-                placeholder="Aksiyon, ürün veya kanıt ara"
+                placeholder="Aksiyon, ürün veya sinyal ara"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
               />
@@ -389,34 +340,6 @@ export function SellerActionsWorkspace({ data, initialFocus }: SellerActionsWork
         <aside data-seller-actions-reveal className="xl:col-span-3">
           {selectedActionCard ? <SelectedActionRail card={selectedActionCard} /> : null}
         </aside>
-
-        <section
-          data-seller-actions-reveal
-          className="grid gap-5 rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] xl:col-span-12 lg:grid-cols-[minmax(0,1fr)_360px] md:p-7"
-        >
-          <div>
-            <h2 className="max-w-4xl text-3xl font-semibold leading-[1.02] tracking-[-0.045em] text-slate-950 md:text-4xl">
-              Category route ve focus API aynı deterministik action kuyruğunu okur.
-            </h2>
-            <p className="mt-4 max-w-[72ch] text-sm leading-7 text-slate-600">
-              `/seller/actions/customer-voice` kategori görünümünü açar; `/seller/actions/restock-...`
-              detay görünümünü korur. API tarafında aynı filtre `focus` query’siyle test edilebilir.
-            </p>
-          </div>
-          <div className="rounded-lg bg-slate-950 p-4 text-[#fff]">
-            <p className="text-xs font-semibold text-orange-200">Aktif API</p>
-            <p className="mt-3 break-all font-mono text-sm leading-6 text-slate-100">
-              {activeSegment?.apiEndpoint ?? data.contract.endpoint}
-            </p>
-            <a
-              href={activeSegment?.apiEndpoint ?? data.contract.endpoint}
-              className="mt-5 inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-slate-950 transition hover:bg-orange-100 active:translate-y-px"
-            >
-              Contract aç
-              <ArrowRight size={15} weight="bold" />
-            </a>
-          </div>
-        </section>
       </section>
     </div>
   );
@@ -536,7 +459,7 @@ function SelectedActionRail({ card }: { card: SellerActionListItem }) {
       <h2 className="mt-1 text-2xl font-semibold tracking-[-0.04em] text-slate-950">
         {card.action.title}
       </h2>
-      <p className="mt-3 text-sm leading-6 text-slate-600">{card.action.expectedOutcome}</p>
+      <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">{card.action.expectedOutcome}</p>
 
       <div className="mt-5 divide-y divide-slate-200 border-y border-slate-200">
         <RailEvidence label="Öncelik" value={`${card.action.priorityScore}/100`} helper={card.action.urgencyLabel} />
@@ -545,13 +468,12 @@ function SelectedActionRail({ card }: { card: SellerActionListItem }) {
       </div>
 
       <div className="mt-5">
-        <h3 className="text-sm font-semibold text-slate-950">Bugünkü checklist</h3>
+        <h3 className="text-sm font-semibold text-slate-950">Kısa iş</h3>
         <div className="mt-3 grid gap-3">
-          {card.action.todayChecklist.slice(0, 3).map((item) => (
+          {card.action.todayChecklist.slice(0, 2).map((item) => (
             <div key={`${card.id}-${item.label}`} className="rounded-lg bg-slate-50 p-3">
               <p className="text-sm font-semibold text-slate-800">{item.label}</p>
-              <p className="mt-1 text-xs leading-5 text-slate-500">{item.detail}</p>
-              <p className="mt-2 text-xs font-semibold text-orange-600">Sahip: {item.owner}</p>
+              <p className="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">{item.detail}</p>
             </div>
           ))}
         </div>
@@ -597,9 +519,9 @@ function ActionEvidenceMetric({ item }: { item: SellerActionListItem["evidence"]
 
 function HeroMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-slate-900 p-3">
-      <p className="text-xs text-slate-400">{label}</p>
-      <p className="mt-1 font-mono text-sm font-semibold text-[#fff]">{value}</p>
+    <div className="bg-slate-50 p-3">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-1 font-mono text-sm font-semibold text-slate-950">{value}</p>
     </div>
   );
 }
@@ -624,7 +546,7 @@ function EmptyActionsState({ onReset, searchQuery }: { onReset: () => void; sear
       <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
         {searchQuery
           ? "Arama ve kategori filtresi birlikte daraldı. Listeyi sıfırlayıp tüm aksiyonlara dönebilirsin."
-          : "Bu kategoriye giren aksiyon bulunamadı. Workflow yeni sinyal üretince route otomatik dolacaktır."}
+          : "Bu kategoriye giren aksiyon bulunamadı. Yeni sinyal oluştuğunda liste otomatik güncellenir."}
       </p>
       <button
         type="button"

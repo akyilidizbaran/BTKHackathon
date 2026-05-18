@@ -18,6 +18,7 @@ import type {
   BuyerSmartCartExample,
 } from "@/lib/api/buyer";
 import type { BuyerSmartCartExplanationApiData } from "@/lib/api/buyer-smart-cart-explanations";
+import { LlmStatusBadge } from "@/components/commerce/llm-status-badge";
 
 gsap.registerPlugin(useGSAP);
 
@@ -414,7 +415,7 @@ function BuyerSmartCartExplanationPanel({
 }) {
   if (state.status === "loading") {
     return (
-      <SidePanel title="OpenAI sepet açıklaması">
+      <SidePanel title="LLM sepet açıklaması">
         <div className="border-t border-white/10 pt-4">
           <div className="commerce-skeleton h-4 w-2/3 rounded-full bg-white/10" />
           <div className="commerce-skeleton mt-3 h-4 w-full rounded-full bg-white/10" />
@@ -427,7 +428,7 @@ function BuyerSmartCartExplanationPanel({
 
   if (state.status === "error") {
     return (
-      <SidePanel title="OpenAI sepet açıklaması">
+      <SidePanel title="LLM sepet açıklaması">
         <div className="border-t border-white/10 pt-4">
           <p className="text-sm leading-6 text-zinc-500">{state.error}</p>
           <button
@@ -443,27 +444,17 @@ function BuyerSmartCartExplanationPanel({
   }
 
   const explanation = state.data.explanation;
-  const isGenerated = explanation.status === "generated";
 
   return (
     <div className="rounded-[1.75rem] border border-emerald-200/15 bg-emerald-300/[0.04] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-6">
       <div className="flex flex-col gap-3 border-b border-white/10 pb-5">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-mono text-xs text-emerald-200/70">OpenAI sepet açıklaması</p>
+            <p className="font-mono text-xs text-emerald-200/70">LLM sepet açıklaması</p>
             <h2 className="mt-3 text-xl font-semibold tracking-[-0.03em] text-white">{explanation.headline}</h2>
           </div>
-          <span
-            className={
-              isGenerated
-                ? "shrink-0 rounded-full border border-emerald-200/20 bg-emerald-300/10 px-3 py-1 font-mono text-xs text-emerald-100"
-                : "shrink-0 rounded-full border border-amber-200/20 bg-amber-300/10 px-3 py-1 font-mono text-xs text-amber-100"
-            }
-          >
-            {explanation.provider} · {explanation.model}
-          </span>
         </div>
-        <p className="text-sm leading-6 text-zinc-500">{isGenerated ? "Canlı model çıktısı" : "Deterministik fallback çıktı"}</p>
+        <LlmStatusBadge density="compact" label="Explanation runtime" meta={explanation} tone="dark" />
       </div>
 
       <p className="mt-5 text-sm leading-7 text-zinc-400">{explanation.summary}</p>
@@ -483,11 +474,6 @@ function BuyerSmartCartExplanationPanel({
         <DecisionNote label="Sepet ayarı" value={explanation.cartAdjustment} />
       </div>
 
-      {explanation.fallbackReason ? (
-        <p className="mt-5 rounded-2xl border border-amber-200/15 bg-amber-300/[0.045] p-3 text-xs leading-5 text-amber-100/80">
-          {explanation.fallbackReason}
-        </p>
-      ) : null}
     </div>
   );
 }

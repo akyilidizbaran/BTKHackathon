@@ -12,9 +12,9 @@ import type {
   SellerActionType,
   SellerGrowthAction,
 } from "@/lib/workflows";
-import { getProductById, getProductBySlug, getProductDetail, getSellerOverview } from "@/lib/data";
+import { getProductById, getProductBySlug, getProductDetail, getReviewsByProductId, getSellerOverview } from "@/lib/data";
 import { scoreProduct } from "@/lib/scoring";
-import type { Product, ProductCategory } from "@/types/commerce";
+import type { Product, ProductCategory, Review, ReviewSentiment, ReviewTheme } from "@/types/commerce";
 
 export const demoSellerId = "seller-commercepilot";
 export const sellerActionsEndpoint = "/api/seller/actions";
@@ -198,9 +198,22 @@ export interface SellerActionDetailApiData {
   actionHref: string;
   affectedProducts: SellerProductApiRow[];
   relatedBuyerSignals: SellerBuyerSignalApiRow[];
+  reviewHighlights: SellerActionReviewHighlight[];
   executionPreview: SellerActionExecutionPreview;
   evidenceSnapshot: SellerActionEvidenceSnapshot[];
   llmReadyContext: SellerGrowthAction["llmReadyContext"];
+}
+
+export interface SellerActionReviewHighlight {
+  id: string;
+  body: string;
+  createdAt: string;
+  needsSellerAttention: boolean;
+  rating: number;
+  sentiment: ReviewSentiment;
+  sentimentLabel: string;
+  themeLabels: string[];
+  title: string;
 }
 
 export interface SellerActionExecutionPreview {
@@ -817,6 +830,7 @@ export function getSellerActionDetailApiData(
     getSellerBuyerSignalsApiData(sellerId)?.signals
       .filter((signal) => isBuyerSignalRelatedToAction(signal, action))
       .slice(0, 4) ?? [];
+  const reviewHighlights = createSellerActionReviewHighlights(action, affectedProducts);
 
   return {
     contract: {
@@ -831,6 +845,7 @@ export function getSellerActionDetailApiData(
     actionHref: `/seller/actions/${action.id}`,
     affectedProducts,
     relatedBuyerSignals,
+    reviewHighlights,
     executionPreview: createSellerActionExecutionPreview(action, affectedProducts, relatedBuyerSignals),
     evidenceSnapshot: createSellerActionEvidenceSnapshot(action, affectedProducts, relatedBuyerSignals),
     llmReadyContext: action.llmReadyContext,
@@ -1889,6 +1904,72 @@ function createSellerActionEvidenceSnapshot(
       tone: relatedBuyerSignals.length > 0 ? "good" : "calm",
     },
   ];
+}
+
+function createSellerActionReviewHighlights(
+  action: SellerGrowthAction,
+  affectedProducts: SellerProductApiRow[],
+): SellerActionReviewHighlight[] {
+  if (action.type !== "review_attention") {
+    return [];
+  }
+
+  return affectedProducts
+    .flatMap((product) => getReviewsByProductId(product.id))
+    .filter((review) => review.needsSellerAttention || review.sentiment === "negative")
+    .sort(sortActionReviews)
+    .slice(0, 3)
+    .map(createSellerActionReviewHighlight);
+}
+
+function sortActionReviews(first: Review, second: Review): number {
+  const firstPriority = (first.sentiment === "negative" ? 2 : 0) + (first.needsSellerAttention ? 1 : 0);
+  const secondPriority = (second.sentiment === "negative" ? 2 : 0) + (second.needsSellerAttention ? 1 : 0);
+
+  if (firstPriority !== secondPriority) {
+    return secondPriority - firstPriority;
+  }
+
+  return first.rating - second.rating;
+}
+
+function createSellerActionReviewHighlight(review: Review): SellerActionReviewHighlight {
+  return {
+    body: review.body,
+    createdAt: review.createdAt,
+    id: review.id,
+    needsSellerAttention: review.needsSellerAttention,
+    rating: review.rating,
+    sentiment: review.sentiment,
+    sentimentLabel: getReviewSentimentLabel(review.sentiment),
+    themeLabels: review.themes.map(getReviewThemeLabel),
+    title: review.title,
+  };
+}
+
+function getReviewSentimentLabel(sentiment: ReviewSentiment): string {
+  const labels: Record<ReviewSentiment, string> = {
+    negative: "Negatif",
+    neutral: "Kararsız",
+    positive: "Pozitif",
+  };
+
+  return labels[sentiment];
+}
+
+function getReviewThemeLabel(theme: ReviewTheme): string {
+  const labels: Partial<Record<ReviewTheme, string>> = {
+    "dayaniklilik": "Dayanıklılık",
+    "fiyat-performans": "Fiyat/performans",
+    "iade-riski": "İade riski",
+    "kargo-hizi": "Kargo hızı",
+    "malzeme-kalitesi": "Malzeme kalitesi",
+    "paketleme": "Paketleme",
+    "ses-seviyesi": "Ses seviyesi",
+    "uyumluluk": "Uyumluluk",
+  };
+
+  return labels[theme] ?? theme.replace(/-/g, " ");
 }
 
 function isBuyerSignalRelatedToAction(signal: SellerBuyerSignalApiRow, action: SellerGrowthAction): boolean {

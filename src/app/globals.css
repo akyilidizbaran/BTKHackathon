@@ -190,3 +190,94 @@ body {
 .commerce-legacy-light [class~="shadow-[inset_0_1px_0_rgba(255,255,255,0.16)]"] {
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 18px 48px -42px rgba(15, 23, 42, 0.42) !important;
 }
+
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-950"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-900"] {
+  background-color: #ffffff !important;
+  border-color: var(--commerce-border) !important;
+  color: #111827 !important;
+}
+
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/35"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/40"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/45"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/50"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/55"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/70"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-white/5"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-white/10"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-white/[0.035]"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-white/[0.04]"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-white/[0.045]"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-white/[0.055]"] {
+  background-color: #f8fafc !important;
+  color: #111827 !important;
+}
+
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-950"] :is(h1, h2, h3, h4, p, span, div, li)[class~="text-[#fff]"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-950"] :is(h1, h2, h3, h4, p, span, div, li)[class~="text-white"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-900"] :is(h1, h2, h3, h4, p, span, div, li)[class~="text-[#fff]"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-900"] :is(h1, h2, h3, h4, p, span, div, li)[class~="text-white"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/35"] :is(h1, h2, h3, h4, p, span, div, li)[class~="text-white"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/45"] :is(h1, h2, h3, h4, p, span, div, li)[class~="text-white"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-zinc-950/55"] :is(h1, h2, h3, h4, p, span, div, li)[class~="text-white"] {
+  color: #111827 !important;
+}
+
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-950"][class~="text-[#fff]"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-950"][class~="text-white"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-900"][class~="text-[#fff]"],
+.commerce-seller-light :is(div, section, article, aside, li)[class~="bg-slate-900"][class~="text-white"] {
+  color: #111827 !important;
+}
+
+.commerce-seller-light [class~="text-slate-300"],
+.commerce-seller-light [class~="text-slate-400"],
+.commerce-seller-light [class~="text-zinc-400"],
+.commerce-seller-light [class~="text-zinc-500"],
+.commerce-seller-light [class~="text-zinc-600"] {
+  color: var(--commerce-text-muted) !important;
+}
+
+.commerce-seller-light [class~="text-emerald-100"],
+.commerce-seller-light [class~="text-emerald-100/85"],
+.commerce-seller-light [class~="text-emerald-200"],
+.commerce-seller-light [class~="text-emerald-200/70"],
+.commerce-seller-light [class~="text-emerald-200/80"],
+.commerce-seller-light [class~="text-emerald-200/85"],
+.commerce-seller-light [class~="text-emerald-200/90"],
+.commerce-seller-light [class~="text-orange-200"] {
+  color: var(--commerce-accent-strong) !important;
+}
+
+.commerce-seller-light [class~="border-white/10"],
+.commerce-seller-light [class~="border-white/[0.10]"],
+.commerce-seller-light [class~="border-white/15"],
+.commerce-seller-light [class~="border-emerald-200/15"] {
+  border-color: var(--commerce-border) !important;
+}
+
+.commerce-seller-light [class~="divide-white/10"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--commerce-border) !important;
+}
+
+.commerce-seller-light :is(a, button)[class~="bg-slate-950"],
+.commerce-seller-light :is(a, button)[class~="bg-slate-900"] {
+  background-color: var(--commerce-accent) !important;
+  border-color: var(--commerce-accent) !important;
+  color: #ffffff !important;
+  box-shadow: 0 18px 36px -28px rgba(249, 115, 22, 0.75) !important;
+}
+
+.commerce-seller-light :is(a, button)[class~="hover:bg-slate-800"]:hover,
+.commerce-seller-light :is(a, button)[class~="hover:bg-slate-900"]:hover {
+  background-color: var(--commerce-accent-strong) !important;
+  color: #ffffff !important;
+}
+
+.commerce-seller-light :is(a, button)[class~="bg-slate-950"] [class~="text-orange-200"],
+.commerce-seller-light :is(a, button)[class~="bg-slate-900"] [class~="text-orange-200"],
+.commerce-seller-light :is(a, button)[class~="bg-slate-950"] [class~="text-[#fff]"],
+.commerce-seller-light :is(a, button)[class~="bg-slate-900"] [class~="text-[#fff]"] {
+  color: #ffffff !important;
+}

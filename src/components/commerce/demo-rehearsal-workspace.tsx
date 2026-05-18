@@ -7,6 +7,8 @@ import {
   CheckCircle,
   ClipboardText,
   Compass,
+  Database,
+  LockKey,
   Play,
   Robot,
   ShieldCheck,
@@ -18,6 +20,8 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import type {
+  DemoAgentTraceProof,
+  DemoLlmProof,
   DemoProofCard,
   DemoQualityCheck,
   DemoRehearsalData,
@@ -47,6 +51,15 @@ const qualityStatusClass = {
   ready: "bg-emerald-50 text-emerald-700",
   watch: "bg-amber-50 text-amber-700",
 } satisfies Record<DemoQualityCheck["status"], string>;
+
+const llmProofStatusClass = {
+  traceable: "bg-slate-100 text-slate-700 ring-slate-200",
+  visible: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+} satisfies Record<DemoLlmProof["status"], string>;
+
+const agentTraceProofStatusClass = {
+  contracted: "bg-orange-50 text-orange-700 ring-orange-200",
+} satisfies Record<DemoAgentTraceProof["status"], string>;
 
 export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
   const rootRef = useRef<HTMLElement>(null);
@@ -306,6 +319,77 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
           </div>
         </section>
 
+        <section className="py-24 md:py-32">
+          <div data-demo-reveal className="mb-12 grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-end">
+            <div>
+              <h2
+                className="max-w-5xl text-[clamp(2.45rem,4.7vw,4.8rem)] font-semibold leading-[0.95]"
+                style={{ fontFamily: "\"Cabinet Grotesk\", var(--font-geist-sans)" }}
+              >
+                LLM trace saklanmaz.
+              </h2>
+            </div>
+            <p className="max-w-[66ch] text-base leading-8 text-slate-600">
+              Provider swap öncesinde jürinin görmesi gereken kanıt aynı: hangi yüzey modelden geldi, hangi model
+              kullanıldı ve fallback varsa neden deterministic hatta döndü.
+            </p>
+          </div>
+
+          <div className="grid grid-flow-dense gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {data.llmProofs.map((proof) => (
+              <article
+                key={proof.id}
+                data-demo-reveal
+                className="group rounded-[2rem] border border-slate-200 bg-white p-5 shadow-[0_24px_70px_-62px_rgba(15,23,42,0.82)] transition duration-700 hover:-translate-y-1 hover:border-orange-200"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ${llmProofStatusClass[proof.status]}`}>
+                      {proof.status === "visible" ? "UI visible" : "API trace"}
+                    </span>
+                    <h3 className="mt-5 text-xl font-semibold tracking-[-0.04em] text-slate-950">{proof.surface}</h3>
+                  </div>
+                  <Robot size={22} weight="duotone" className="shrink-0 text-orange-600 transition group-hover:scale-110" />
+                </div>
+                <p className="mt-4 rounded-2xl bg-slate-50 px-3 py-2 font-mono text-[11px] leading-5 text-slate-600">
+                  {proof.endpoint}
+                </p>
+                <p className="mt-4 text-sm leading-6 text-slate-600">{proof.evidence}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {proof.fields.map((field) => (
+                    <span key={field} className="rounded-full bg-orange-50 px-2.5 py-1 font-mono text-[10px] font-semibold text-orange-700">
+                      {field}
+                    </span>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <section className="py-24 md:py-32">
+          <div data-demo-reveal className="mb-12 grid gap-8 lg:grid-cols-[0.88fr_1.12fr] lg:items-end">
+            <div>
+              <h2
+                className="max-w-5xl text-[clamp(2.45rem,4.7vw,4.8rem)] font-semibold leading-[0.95] tracking-[-0.06em]"
+                style={{ fontFamily: "\"Cabinet Grotesk\", var(--font-geist-sans)" }}
+              >
+                Agent trace artık jüriye okunur.
+              </h2>
+            </div>
+            <p className="max-w-[66ch] text-base leading-8 text-slate-600">
+              LangChain zorunlu olmadan da agentic yapı görünür: context, workflow, LLM, guardrail, approval ve tool
+              boundary aynı contract üzerinden sunulur.
+            </p>
+          </div>
+
+          <div className="grid grid-flow-dense gap-4 lg:grid-cols-3">
+            {data.agentTraceProofs.map((proof, index) => (
+              <AgentTraceProofCard key={proof.id} index={index} proof={proof} />
+            ))}
+          </div>
+        </section>
+
         <section id="qa" className="py-24 md:py-32">
           <div className="overflow-hidden rounded-[2.5rem] bg-slate-950 text-white shadow-[0_34px_110px_-76px_rgba(15,23,42,1)]">
             <div className="grid gap-0 lg:grid-cols-[0.78fr_1.22fr]">
@@ -400,6 +484,82 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
         </div>
       </div>
     </main>
+  );
+}
+
+function AgentTraceProofCard({ index, proof }: { index: number; proof: DemoAgentTraceProof }) {
+  return (
+    <article
+      data-demo-reveal
+      className={`group overflow-hidden rounded-[2rem] border p-6 shadow-[0_28px_86px_-70px_rgba(15,23,42,0.95)] transition duration-700 hover:-translate-y-1 ${
+        index === 1
+          ? "border-slate-800 bg-slate-950 text-white"
+          : "border-slate-200 bg-white text-slate-950 hover:border-orange-200"
+      }`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ${agentTraceProofStatusClass[proof.status]}`}>
+            Contracted trace
+          </span>
+          <h3 className="mt-5 text-2xl font-semibold">{proof.surface}</h3>
+        </div>
+        <span
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${
+            index === 1 ? "bg-white/10 text-orange-200" : "bg-orange-50 text-orange-700"
+          }`}
+        >
+          {index === 2 ? <Robot size={22} weight="duotone" /> : <Database size={22} weight="duotone" />}
+        </span>
+      </div>
+
+      <p className={`mt-4 rounded-2xl px-3 py-2 font-mono text-[11px] leading-5 ${index === 1 ? "bg-white/8 text-slate-400" : "bg-slate-50 text-slate-600"}`}>
+        {proof.endpoint}
+      </p>
+      <p className={`mt-4 text-sm leading-7 ${index === 1 ? "text-white/70" : "text-slate-600"}`}>{proof.evidence}</p>
+
+      <div className="mt-5 grid grid-flow-dense grid-cols-2 gap-2">
+        {proof.requiredLayers.map((layer) => (
+          <span
+            key={layer}
+            className={`rounded-2xl px-3 py-2 text-xs font-semibold ${
+              index === 1 ? "bg-white/8 text-slate-200" : "bg-orange-50 text-orange-800"
+            }`}
+          >
+            {layer}
+          </span>
+        ))}
+      </div>
+
+      <div className={`mt-5 rounded-2xl border p-4 ${index === 1 ? "border-white/10 bg-white/[0.04]" : "border-slate-200 bg-slate-50"}`}>
+        <div className="flex items-center gap-2">
+          <LockKey size={17} weight="duotone" className={index === 1 ? "text-orange-200" : "text-orange-700"} />
+          <p className="text-sm font-semibold">Tool id kanıtı</p>
+        </div>
+        <div className="mt-3 space-y-2">
+          {proof.expectedToolIds.map((toolId) => (
+            <p
+              key={toolId}
+              className={`break-words rounded-xl px-3 py-2 font-mono text-[11px] ${
+                index === 1 ? "bg-slate-900 text-slate-400" : "bg-white text-slate-600"
+              }`}
+            >
+              {toolId}
+            </p>
+          ))}
+        </div>
+      </div>
+
+      <Link
+        href={proof.route}
+        className={`mt-5 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition active:translate-y-px ${
+          index === 1 ? "bg-white text-slate-950 hover:bg-orange-50" : "bg-slate-950 text-white hover:bg-orange-500"
+        }`}
+      >
+        Trace yüzeyini aç
+        <ArrowRight size={16} weight="bold" />
+      </Link>
+    </article>
   );
 }
 

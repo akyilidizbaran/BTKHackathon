@@ -1,10 +1,18 @@
-import { generateLlmText } from "@/lib/llm";
-import type { LlmTextGenerationResult } from "@/lib/llm";
+import {
+  generateLlmJson,
+  normalizeLlmString,
+  normalizeLlmStringArray,
+} from "@/lib/llm";
+import type { LlmJsonValidationResult, LlmTextGenerationResult } from "@/lib/llm";
 import {
   demoSellerId,
   getSellerActionDetailApiData,
   type SellerActionDetailApiData,
 } from "@/lib/api/seller";
+import {
+  getReviewIntelligenceApiData,
+  type ReviewIntelligenceApiData,
+} from "@/lib/api/review-intelligence";
 
 export function sellerActionExplanationEndpoint(actionId: string): string {
   return `/api/seller/actions/${actionId}/explanation`;
@@ -36,6 +44,8 @@ export interface SellerActionExplanationApiData {
     affectedProductCount: number;
     evidenceCount: number;
     relatedBuyerSignalCount: number;
+    reviewIntelligenceProductId?: string;
+    reviewIntelligenceStatus?: LlmTextGenerationResult["status"];
   };
 }
 
@@ -76,23 +86,23 @@ export async function getSellerActionExplanationApiData(
     return undefined;
   }
 
-  const fallbackBody = createFallbackExplanationBody(detail);
-  const fallbackText = JSON.stringify(fallbackBody);
-  const llmResult = options.forceFallback
-    ? createForcedFallbackResult(fallbackText)
-    : await generateLlmText({
-        fallbackText,
-        input: createSellerActionExplanationInput(detail),
-        instructions: createSellerActionExplanationInstructions(),
-        metadata: {
-          action_id: detail.action.id,
-          seller_id: detail.seller.id,
-          task: "seller_action_explanation",
-        },
-      });
-  const parsed = parseModelExplanation(llmResult.text, fallbackBody);
-  const status = parsed.usedFallback || llmResult.status === "fallback" ? "fallback" : "generated";
-  const fallbackReason = getFallbackReason(llmResult, parsed.usedFallback);
+  const reviewIntelligence = await getActionReviewIntelligence(detail, {
+    forceFallback: options.forceFallback,
+    sellerId,
+  });
+  const fallbackBody = createFallbackExplanationBody(detail, reviewIntelligence);
+  const llmResult = await generateLlmJson({
+    fallbackValue: fallbackBody,
+    forceFallback: options.forceFallback,
+    input: createSellerActionExplanationInput(detail, reviewIntelligence),
+    instructions: createSellerActionExplanationInstructions(),
+    metadata: {
+      action_id: detail.action.id,
+      seller_id: detail.seller.id,
+      task: "seller_action_explanation",
+    },
+    validate: validateSellerActionExplanationBody,
+  });
 
   return {
     contract: {
@@ -113,18 +123,20 @@ export async function getSellerActionExplanationApiData(
       type: detail.action.type,
     },
     explanation: {
-      ...parsed.body,
-      fallbackReason,
+      ...llmResult.value,
+      fallbackReason: llmResult.fallbackReason,
       generatedAt: llmResult.generatedAt,
       model: llmResult.model,
       provider: llmResult.provider,
-      status,
+      status: llmResult.status,
     },
     source: {
       actionEndpoint: detail.contract.endpoint,
       affectedProductCount: detail.affectedProducts.length,
       evidenceCount: detail.evidenceSnapshot.length,
       relatedBuyerSignalCount: detail.relatedBuyerSignals.length,
+      reviewIntelligenceProductId: reviewIntelligence?.product.id,
+      reviewIntelligenceStatus: reviewIntelligence?.intelligence.status,
     },
   };
 }
@@ -140,7 +152,10 @@ function createSellerActionExplanationInstructions(): string {
   ].join("\n");
 }
 
-function createSellerActionExplanationInput(detail: SellerActionDetailApiData): string {
+function createSellerActionExplanationInput(
+  detail: SellerActionDetailApiData,
+  reviewIntelligence: ReviewIntelligenceApiData | undefined,
+): string {
   return JSON.stringify(
     {
       action: {
@@ -177,19 +192,48 @@ function createSellerActionExplanationInput(detail: SellerActionDetailApiData): 
         title: step.title,
       })),
       llmReadyFacts: detail.llmReadyContext.facts,
+      reviewIntelligence: reviewIntelligence
+        ? {
+            buyerFacingWarning: reviewIntelligence.intelligence.buyerFacingWarning,
+            clusters: reviewIntelligence.intelligence.reviewClusters,
+            listingFixSuggestions: reviewIntelligence.intelligence.listingFixSuggestions,
+            repeatedComplaintThemes: reviewIntelligence.intelligence.repeatedComplaintThemes,
+            riskSummary: reviewIntelligence.intelligence.riskSummary,
+            sellerReplyDrafts: reviewIntelligence.intelligence.sellerReplyDrafts,
+          }
+        : null,
     },
     null,
     2,
   );
 }
 
-function createFallbackExplanationBody(detail: SellerActionDetailApiData): ParsedExplanationBody {
+function createFallbackExplanationBody(
+  detail: SellerActionDetailApiData,
+  reviewIntelligence: ReviewIntelligenceApiData | undefined,
+): ParsedExplanationBody {
   const primaryProduct = detail.affectedProducts[0]?.name ?? "ilgili ürün";
   const evidenceBullets = detail.evidenceSnapshot
     .slice(0, 4)
     .map((item) => `${item.label}: ${item.value}. ${item.helper}`)
     .filter(Boolean);
   const firstDraft = detail.executionPreview.generatedDrafts[0]?.body;
+
+  if (detail.action.type === "review_attention" && reviewIntelligence) {
+    const intelligence = reviewIntelligence.intelligence;
+    const clusterBullets = intelligence.reviewClusters
+      .slice(0, 3)
+      .map((cluster) => `${cluster.theme}: ${cluster.summary}`)
+      .filter(Boolean);
+
+    return {
+      evidenceBullets: [...clusterBullets, ...evidenceBullets].slice(0, 4),
+      headline: `${primaryProduct} yorum itirazları kümelendi`,
+      nextBestAction: intelligence.listingFixSuggestions[0] ?? detail.action.recommendedNextStep,
+      sellerMessageDraft: intelligence.sellerReplyDrafts[0]?.body ?? firstDraft ?? detail.action.expectedOutcome,
+      summary: intelligence.riskSummary,
+    };
+  }
 
   return {
     evidenceBullets,
@@ -202,91 +246,39 @@ function createFallbackExplanationBody(detail: SellerActionDetailApiData): Parse
   };
 }
 
-function createForcedFallbackResult(fallbackText: string): LlmTextGenerationResult {
-  return {
-    error: {
-      code: "FORCED_FALLBACK",
-      message: "Validation canlı LLM çağrısı yapmadan deterministik fallback'i doğruladı.",
-    },
-    generatedAt: new Date().toISOString(),
-    model: process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini",
-    provider: "deterministic",
-    status: "fallback",
-    text: fallbackText,
-  };
-}
+async function getActionReviewIntelligence(
+  detail: SellerActionDetailApiData,
+  options: { forceFallback?: boolean; sellerId: string },
+): Promise<ReviewIntelligenceApiData | undefined> {
+  const primaryProductId = detail.affectedProducts[0]?.id;
 
-function parseModelExplanation(
-  text: string,
-  fallbackBody: ParsedExplanationBody,
-): { body: ParsedExplanationBody; usedFallback: boolean } {
-  const parsed = parseJsonObject(text);
-
-  if (!parsed) {
-    return {
-      body: fallbackBody,
-      usedFallback: true,
-    };
-  }
-
-  return {
-    body: {
-      evidenceBullets: normalizeStringArray(parsed.evidenceBullets, fallbackBody.evidenceBullets, 4),
-      headline: normalizeString(parsed.headline, fallbackBody.headline),
-      nextBestAction: normalizeString(parsed.nextBestAction, fallbackBody.nextBestAction),
-      sellerMessageDraft: normalizeString(parsed.sellerMessageDraft, fallbackBody.sellerMessageDraft),
-      summary: normalizeString(parsed.summary, fallbackBody.summary),
-    },
-    usedFallback: false,
-  };
-}
-
-function parseJsonObject(text: string): Record<string, unknown> | undefined {
-  const trimmed = text.trim();
-  const withoutFence = trimmed
-    .replace(/^```json\s*/i, "")
-    .replace(/^```\s*/i, "")
-    .replace(/```$/i, "")
-    .trim();
-  const firstBrace = withoutFence.indexOf("{");
-  const lastBrace = withoutFence.lastIndexOf("}");
-  const candidate = firstBrace >= 0 && lastBrace > firstBrace ? withoutFence.slice(firstBrace, lastBrace + 1) : withoutFence;
-
-  try {
-    const parsed = JSON.parse(candidate) as unknown;
-    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)
-      ? (parsed as Record<string, unknown>)
-      : undefined;
-  } catch {
+  if (detail.action.type !== "review_attention" || !primaryProductId) {
     return undefined;
   }
+
+  return getReviewIntelligenceApiData(
+    {
+      productId: primaryProductId,
+      sellerId: options.sellerId,
+    },
+    {
+      forceFallback: options.forceFallback,
+    },
+  );
 }
 
-function normalizeString(value: unknown, fallback: string): string {
-  return typeof value === "string" && value.trim().length > 0 ? value.trim() : fallback;
-}
-
-function normalizeStringArray(value: unknown, fallback: string[], limit: number): string[] {
-  if (!Array.isArray(value)) {
-    return fallback;
-  }
-
-  const normalized = value
-    .filter((item): item is string => typeof item === "string" && item.trim().length > 0)
-    .map((item) => item.trim())
-    .slice(0, limit);
-
-  return normalized.length > 0 ? normalized : fallback;
-}
-
-function getFallbackReason(llmResult: LlmTextGenerationResult, usedFallback: boolean): string | undefined {
-  if (llmResult.error) {
-    return `${llmResult.error.code}: ${llmResult.error.message}`;
-  }
-
-  if (usedFallback) {
-    return "MODEL_JSON_PARSE_FAILED: Model çıktısı beklenen JSON contract'ına uymadı.";
-  }
-
-  return undefined;
+function validateSellerActionExplanationBody(
+  parsed: Record<string, unknown>,
+  fallbackBody: ParsedExplanationBody,
+): LlmJsonValidationResult<ParsedExplanationBody> {
+  return {
+    ok: true,
+    value: {
+      evidenceBullets: normalizeLlmStringArray(parsed.evidenceBullets, fallbackBody.evidenceBullets, 4),
+      headline: normalizeLlmString(parsed.headline, fallbackBody.headline),
+      nextBestAction: normalizeLlmString(parsed.nextBestAction, fallbackBody.nextBestAction),
+      sellerMessageDraft: normalizeLlmString(parsed.sellerMessageDraft, fallbackBody.sellerMessageDraft),
+      summary: normalizeLlmString(parsed.summary, fallbackBody.summary),
+    },
+  };
 }

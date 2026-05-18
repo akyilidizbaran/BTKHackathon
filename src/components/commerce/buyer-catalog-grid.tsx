@@ -8,30 +8,12 @@ import {
   Star,
   Truck,
 } from "@phosphor-icons/react";
-import gsap from "gsap";
-import { useGSAP } from "@gsap/react";
 import { addBuyerCartItem } from "@/lib/cart/buyer-cart";
 import type { BuyerCatalogProductCard } from "@/lib/api/buyer-catalog";
 
-gsap.registerPlugin(useGSAP);
-
 export function BuyerCatalogGrid({ products }: { products: BuyerCatalogProductCard[] }) {
-  const rootRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<Record<string, number>>({});
   const [addedProductId, setAddedProductId] = useState<string | undefined>();
-
-  useGSAP(
-    () => {
-      gsap.from("[data-product-card]", {
-        y: 18,
-        opacity: 0,
-        duration: 0.55,
-        stagger: 0.035,
-        ease: "power3.out",
-      });
-    },
-    { scope: rootRef, dependencies: [products.length] },
-  );
 
   useEffect(() => {
     const timers = timerRef.current;
@@ -67,87 +49,88 @@ export function BuyerCatalogGrid({ products }: { products: BuyerCatalogProductCa
   }
 
   return (
-    <div ref={rootRef} className="grid grid-flow-dense gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-      {products.map((product) => (
-        <article
-          key={product.id}
-          data-product-card
-          className="group flex min-h-[430px] flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_16px_40px_-36px_rgba(15,23,42,0.55)] transition duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_22px_58px_-42px_rgba(15,23,42,0.7)]"
-        >
-          <div className="relative overflow-hidden bg-slate-50">
-            <Link
-              href={product.href}
-              aria-label={`${product.name} ürün detayını aç`}
-              className="block aspect-[4/3] overflow-hidden"
-            >
-              <div
-                className="h-full w-full bg-[length:500%_400%] bg-no-repeat transition duration-700 ease-out group-hover:scale-105"
-                style={{
-                  backgroundImage: `url(${product.image.src})`,
-                  backgroundPosition: product.image.position,
-                }}
-              />
-            </Link>
-            <span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClass(product.badgeTone)}`}>
-              {product.campaignLabel}
-            </span>
-            <button
-              type="button"
-              aria-label={`${product.name} favorilere ekle`}
-              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-sm transition hover:border-orange-200 hover:text-orange-700 active:scale-[0.98]"
-            >
-              <Heart size={18} weight="duotone" />
-            </button>
-          </div>
-
-          <div className="flex flex-1 flex-col p-4">
-            <Link href={product.href} className="block">
-              <p className="text-xs font-semibold text-orange-600">{product.brand}</p>
-              <h3 className="mt-2 line-clamp-2 min-h-12 text-sm font-semibold leading-6 text-slate-950">
-                {product.name}
-              </h3>
-              <p className="mt-2 text-xs text-slate-500">
-                {product.categoryLabel} · {product.subcategory}
-              </p>
-            </Link>
-
-            <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
-              <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
-                <Star size={14} weight="fill" className="text-amber-500" />
-                {product.ratingAverage.toFixed(1)}
+    <section className="relative overflow-hidden">
+      <div className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-4 [scrollbar-width:thin]">
+        {products.map((product) => (
+          <article
+            key={product.id}
+            className="group flex min-h-[430px] w-[min(78vw,300px)] shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_16px_40px_-36px_rgba(15,23,42,0.55)] transition duration-300 hover:-translate-y-1 hover:border-orange-200 hover:shadow-[0_22px_58px_-42px_rgba(15,23,42,0.7)]"
+          >
+            <div className="relative overflow-hidden bg-slate-50">
+              <Link
+                href={product.href}
+                aria-label={`${product.name} ürün detayını aç`}
+                className="block aspect-[4/3] overflow-hidden"
+              >
+                <div
+                  className="h-full w-full bg-[length:500%_400%] bg-no-repeat transition duration-700 ease-out group-hover:scale-105"
+                  style={{
+                    backgroundImage: `url(${product.image.src})`,
+                    backgroundPosition: product.image.position,
+                  }}
+                />
+              </Link>
+              <span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-xs font-semibold ${getBadgeClass(product.badgeTone)}`}>
+                {product.campaignLabel}
               </span>
-              <span>{product.reviewCount.toLocaleString("tr-TR")} yorum</span>
-            </div>
-
-            <div className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-              <Truck size={14} weight="duotone" />
-              {product.deliveryLabel}
-            </div>
-
-            <div className="mt-auto pt-4">
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  {product.compareAtPrice ? (
-                    <p className="text-xs text-slate-400 line-through">{formatTry(product.compareAtPrice)}</p>
-                  ) : null}
-                  <p className="text-xl font-semibold tracking-[-0.05em] text-slate-950">{formatTry(product.price)}</p>
-                </div>
-                <p className="text-xs font-medium text-slate-500">{product.cartAdds30d.toLocaleString("tr-TR")} sepette</p>
-              </div>
               <button
                 type="button"
-                aria-label={`${product.name} sepete ekle`}
-                className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-4 text-sm font-semibold text-[#fff] transition hover:bg-orange-600 active:scale-[0.98]"
-                onClick={() => handleAddToCart(product.id)}
+                aria-label={`${product.name} favorilere ekle`}
+                className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full border border-slate-200 bg-white/95 text-slate-600 shadow-sm transition hover:border-orange-200 hover:text-orange-700 active:scale-[0.98]"
               >
-                <ShoppingCartSimple size={18} weight="bold" />
-                {addedProductId === product.id ? "Sepete Eklendi" : "Sepete Ekle"}
+                <Heart size={18} weight="duotone" />
               </button>
             </div>
-          </div>
-        </article>
-      ))}
-    </div>
+
+            <div className="flex flex-1 flex-col p-4">
+              <Link href={product.href} className="block">
+                <p className="text-xs font-semibold text-orange-600">{product.brand}</p>
+                <h3 className="mt-2 line-clamp-2 min-h-12 text-sm font-semibold leading-6 text-slate-950">
+                  {product.name}
+                </h3>
+                <p className="mt-2 text-xs text-slate-500">
+                  {product.categoryLabel} · {product.subcategory}
+                </p>
+              </Link>
+
+              <div className="mt-3 flex items-center gap-2 text-xs text-slate-500">
+                <span className="inline-flex items-center gap-1 font-semibold text-slate-700">
+                  <Star size={14} weight="fill" className="text-amber-500" />
+                  {product.ratingAverage.toFixed(1)}
+                </span>
+                <span>{product.reviewCount.toLocaleString("tr-TR")} yorum</span>
+              </div>
+
+              <div className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <Truck size={14} weight="duotone" />
+                {product.deliveryLabel}
+              </div>
+
+              <div className="mt-auto pt-4">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    {product.compareAtPrice ? (
+                      <p className="text-xs text-slate-400 line-through">{formatTry(product.compareAtPrice)}</p>
+                    ) : null}
+                    <p className="text-xl font-semibold text-slate-950">{formatTry(product.price)}</p>
+                  </div>
+                  <p className="text-xs font-medium text-slate-500">{product.cartAdds30d.toLocaleString("tr-TR")} sepette</p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`${product.name} sepete ekle`}
+                  className="mt-4 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-4 text-sm font-semibold text-[#fff] transition hover:bg-orange-600 active:scale-[0.98]"
+                  onClick={() => handleAddToCart(product.id)}
+                >
+                  <ShoppingCartSimple size={18} weight="bold" />
+                  {addedProductId === product.id ? "Sepete Eklendi" : "Sepete Ekle"}
+                </button>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 

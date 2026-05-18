@@ -3,11 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from "react";
 import {
-  ArrowCounterClockwise,
   ArrowRight,
-  CheckCircle,
-  ClockCounterClockwise,
-  Database,
   LockKey,
   Package,
   PaperPlaneTilt,
@@ -23,7 +19,6 @@ import type { ApiEnvelope } from "@/lib/api/responses";
 import {
   sellerAgentEndpoint,
   type SellerAgentApiData,
-  type SellerAgentDraftPreview,
   type SellerAgentExample,
   type SellerAgentProductFinding,
 } from "@/lib/api/seller-agent";
@@ -35,11 +30,14 @@ import {
   applySellerListingMutation,
   readSellerListingMutationStore,
   rollbackSellerListingMutation,
-  type SellerListingMutationApplyClientResult,
   type SellerListingMutationAuditEntry,
-  type SellerListingMutationRollbackResult,
 } from "@/lib/agents/seller-listing-apply-client";
-import { AgentRuntimePanel } from "@/components/commerce/agent-runtime-panel";
+import { AgentExecutionTracePanel } from "@/components/commerce/agent-execution-trace-panel";
+import {
+  ListingMutationApprovalPanel,
+  ListingSnapshot,
+  type SellerAgentApplyState,
+} from "@/components/commerce/seller-agent-listing-panels";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
@@ -49,12 +47,7 @@ interface SellerAgentWorkspaceProps {
 }
 
 type RequestState = "idle" | "loading" | "error";
-type ApplyState =
-  | { status: "applied"; result: SellerListingMutationApplyClientResult }
-  | { status: "error"; message: string }
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "rolled-back"; result: SellerListingMutationRollbackResult };
+type ApplyState = SellerAgentApplyState;
 
 export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorkspaceProps) {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -66,17 +59,16 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
   const [auditEntries, setAuditEntries] = useState<SellerListingMutationAuditEntry[]>([]);
 
   const isLoading = requestState === "loading";
-  const primaryFinding = data.productFindings[0];
-  const marqueeItems = useMemo(
+  const railChips = useMemo(
     () => [
       data.summary.focusLabel,
       `${data.summary.productCount} ürün`,
       `${data.summary.actionCount} aksiyon`,
       `Sahip: ${data.summary.recommendedOwner}`,
-      "Onay olmadan mutation yok",
-      data.source.actionsEndpoint,
+      "Onay olmadan işlem yok",
+      "Satıcı kontrolü açık",
     ],
-    [data.source.actionsEndpoint, data.summary],
+    [data.summary],
   );
 
   useEffect(() => {
@@ -246,7 +238,7 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
       const envelope = (await response.json()) as ApiEnvelope<SellerListingMutationApplyApiData>;
 
       if (!response.ok || !envelope.success) {
-        throw new Error(envelope.error?.message ?? "Listing mutation uygulanamadı.");
+        throw new Error(envelope.error?.message ?? "Listeleme değişikliği uygulanamadı.");
       }
 
       const result = applySellerListingMutation(envelope.data, { surface: "route" });
@@ -257,7 +249,7 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
       });
     } catch (error) {
       setApplyState({
-        message: error instanceof Error ? error.message : "Listing mutation uygulanamadı.",
+        message: error instanceof Error ? error.message : "Listeleme değişikliği uygulanamadı.",
         status: "error",
       });
     }
@@ -283,33 +275,21 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
 
   return (
     <div ref={rootRef} className="overflow-x-hidden">
-      <section className="grid grid-flow-dense gap-5 xl:grid-cols-12">
+      <section className="grid grid-flow-dense items-start gap-5 xl:grid-cols-12">
         <div
           data-seller-agent-reveal
-          className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] xl:col-span-8 md:p-7"
+          className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] xl:col-span-8 md:p-6"
         >
-          <div className="min-h-[360px]">
-            <h2 className="max-w-6xl text-[clamp(2.65rem,5vw,5.45rem)] font-semibold leading-[0.94] tracking-[-0.055em] text-slate-950">
-              Satıcı agent{" "}
-              {primaryFinding ? (
-                <span
-                  aria-label={primaryFinding.product.image.alt}
-                  className="mx-2 hidden h-12 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-50 bg-[length:500%_400%] bg-no-repeat align-middle sm:inline-block md:h-14 md:w-36"
-                  role="img"
-                  style={{
-                    backgroundImage: `url(${primaryFinding.product.image.src})`,
-                    backgroundPosition: primaryFinding.product.image.position,
-                  }}
-                />
-              ) : null}
-              ürünleri kanıtla okur.
+          <div>
+            <h2 className="max-w-5xl text-[clamp(2.2rem,4vw,4.15rem)] font-semibold leading-[0.98] tracking-[-0.055em] text-slate-950">
+              Satıcı agent ürünleri sinyalle okur.
             </h2>
-            <p className="mt-5 max-w-[72ch] text-sm leading-7 text-slate-600">
-              Komutu yaz, Agent ürünleri health score, stok, satış hızı, yorum ve bağlı seller action kanıtıyla sıralasın.
+            <p className="mt-4 max-w-[72ch] text-sm leading-6 text-slate-600">
+              Komutu yaz, Agent ürünleri sağlık skoru, stok, satış hızı, yorum ve bağlı aksiyon sinyaliyle sıralasın.
               Bu adım yalnızca analiz ve öneri üretir; listeleme değişikliği için ayrıca onay gerekir.
             </p>
 
-            <form className="mt-8 space-y-4" onSubmit={(event) => void submitPrompt(event)}>
+            <form className="mt-6 space-y-4" onSubmit={(event) => void submitPrompt(event)}>
               <label className="grid gap-2" htmlFor="seller-agent-prompt">
                 <span className="text-sm font-semibold text-slate-800">Satıcı komutu</span>
                 <textarea
@@ -317,7 +297,7 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
                   maxLength={360}
                   value={prompt}
                   onChange={(event) => setPrompt(event.target.value)}
-                  className="min-h-32 resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-base leading-7 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
+                  className="min-h-28 resize-none rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-base leading-7 text-slate-950 outline-none transition placeholder:text-slate-400 focus:border-orange-300 focus:bg-white focus:ring-4 focus:ring-orange-100"
                   placeholder="Örn. Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla."
                 />
               </label>
@@ -326,7 +306,7 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-slate-950 px-6 text-sm font-semibold text-[#fff] transition hover:bg-slate-800 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-slate-950 px-6 text-sm font-semibold text-[#fff] transition hover:bg-slate-800 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {isLoading ? (
                     <span className="commerce-skeleton h-4 w-4 rounded-full bg-white/40" />
@@ -336,7 +316,7 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
                   {isLoading ? "Analiz ediliyor" : "Agent'a Sor"}
                 </button>
                 <p className="text-xs leading-5 text-slate-500">
-                  POST {sellerAgentEndpoint} · deterministic workflow · runtime mutation yok
+                  Analiz öneri üretir; değişiklik için ayrıca onay gerekir.
                 </p>
               </div>
 
@@ -357,7 +337,7 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
           <div className="p-5 md:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#fff]">Agent sınırı</h2>
+                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#fff]">Agent yetkisi</h2>
                 <p className="mt-2 text-sm leading-6 text-slate-400">{data.message.safetyNote}</p>
               </div>
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-white/10 text-orange-200">
@@ -371,12 +351,30 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
               <HeroMetric label="Aksiyon" value={String(data.summary.actionCount)} />
               <HeroMetric label="Sahip" value={data.summary.recommendedOwner} />
             </div>
+
+            <div className="mt-5 grid gap-2">
+              <AgentPermissionRow
+                helper="Listeleme ve fiyat değişiklikleri önce taslak olarak görünür."
+                icon={<LockKey size={17} weight="duotone" />}
+                label="Onay gerekir"
+              />
+              <AgentPermissionRow
+                helper="Uygulanan taslak işlem geçmişine yazılır ve geri alınabilir."
+                icon={<ShieldCheck size={17} weight="duotone" />}
+                label="Satıcı kontrolü açık"
+              />
+            </div>
           </div>
 
-          <div className="border-y border-white/10 py-4">
-            <div className="seller-agent-marquee flex min-w-max gap-8 whitespace-nowrap px-5 text-sm font-semibold text-slate-300">
-              {[...marqueeItems, ...marqueeItems].map((item, index) => (
-                <span key={`${item}-${index}`}>{item}</span>
+          <div className="border-y border-white/10 px-5 py-4 md:px-7">
+            <div className="flex flex-wrap gap-2">
+              {railChips.map((item) => (
+                <span
+                  key={item}
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
+                >
+                  {item}
+                </span>
               ))}
             </div>
           </div>
@@ -401,9 +399,14 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
               </Link>
             </div>
 
-            <div className="mt-4">
-              <AgentRuntimePanel runtime={data.runtime} variant="dark" />
-            </div>
+            <AgentExecutionTracePanel
+              className="mt-4"
+              density="compact"
+              description="Agent hangi sinyali okuduğunu, nerede onay beklediğini ve hangi aracı hazırladığını gösterir."
+              title="İşlem izi"
+              trace={data.agentTrace}
+              variant="dark"
+            />
           </div>
         </aside>
 
@@ -436,7 +439,7 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
         <div data-seller-agent-reveal className="min-w-0 xl:col-span-6">
           <div className="mb-4 flex flex-col justify-between gap-3 md:flex-row md:items-end">
             <div>
-              <h2 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950">Ürün kanıt sırası</h2>
+              <h2 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950">Ürün sinyal sırası</h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 {data.summary.focusLabel} için health, stok, satış ve yorum sinyalleri birlikte okunur.
               </p>
@@ -460,7 +463,7 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
             </div>
           ) : (
             <EmptyPanel
-              title="Ürün kanıtı bulunamadı"
+              title="Ürün sinyali bulunamadı"
               description="Komutu daha net bir risk alanıyla yaz veya ürünler sayfasından odak filtresi seç."
             />
           )}
@@ -478,11 +481,11 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
       >
         <div>
           <h2 className="max-w-4xl text-3xl font-semibold leading-[1.02] tracking-[-0.045em] text-slate-950 md:text-4xl">
-            Öneri artık uygulanabilir: onay, audit ve geri alma aynı yerde.
+            Öneri artık uygulanabilir: onay, kayıt ve geri alma aynı yerde.
           </h2>
           <p className="mt-4 max-w-[72ch] text-sm leading-7 text-slate-600">
-            8P seller listing mutation başlık, açıklama, fiyat ve kampanya alanlarını before/after gösterir. Satıcı
-            onay verirse mock listing state yazılır, audit log görünür ve aynı kayıttan geri alınabilir.
+            Başlık, açıklama, fiyat ve kampanya alanları değişmeden önce-sonra görünür. Satıcı onay verirse
+            listeleme taslağı kaydedilir ve aynı kayıttan geri alınabilir.
           </p>
 
           {data.draftPreview ? (
@@ -507,191 +510,13 @@ export function SellerAgentWorkspace({ examples, initialData }: SellerAgentWorks
   );
 }
 
-function ListingSnapshot({
-  label,
-  tone,
-  values,
-}: {
-  label: string;
-  tone: "dark" | "light";
-  values: SellerAgentDraftPreview["beforeListing"];
-}) {
-  const isDark = tone === "dark";
-
-  return (
-    <div className={isDark ? "rounded-lg bg-slate-950 p-4 text-[#fff]" : "rounded-lg bg-slate-50 p-4 text-slate-950"}>
-      <p className={isDark ? "text-xs font-semibold text-orange-200" : "text-xs font-semibold text-slate-500"}>{label}</p>
-      <p className="mt-3 text-lg font-semibold leading-tight tracking-[-0.03em]">{values.title}</p>
-      <p className={isDark ? "mt-3 text-sm leading-6 text-slate-300" : "mt-3 text-sm leading-6 text-slate-600"}>
-        {values.description}
-      </p>
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
-        <ListingField label="Fiyat" value={formatTry(values.price)} dark={isDark} />
-        <ListingField label="Kampanya" value={values.campaignLabel} dark={isDark} />
-      </div>
-    </div>
-  );
-}
-
-function ListingField({ dark, label, value }: { dark: boolean; label: string; value: string }) {
-  return (
-    <div className={dark ? "rounded-lg border border-white/15 bg-slate-900 p-3" : "rounded-lg bg-white p-3"}>
-      <p className={dark ? "text-xs text-slate-400" : "text-xs text-slate-500"}>{label}</p>
-      <p className={dark ? "mt-1 text-sm font-semibold text-[#fff]" : "mt-1 text-sm font-semibold text-slate-950"}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function ListingMutationApprovalPanel({
-  applyState,
-  auditEntries,
-  draftPreview,
-  onApply,
-  onRollback,
-}: {
-  applyState: ApplyState;
-  auditEntries: SellerListingMutationAuditEntry[];
-  draftPreview: SellerAgentDraftPreview;
-  onApply: () => void;
-  onRollback: (auditId: string) => void;
-}) {
-  const isApplying = applyState.status === "loading";
-  const latestAudit = auditEntries[0];
-
-  return (
-    <div className="rounded-lg bg-slate-950 p-4 text-[#fff]">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2 text-orange-200">
-            <LockKey size={18} weight="duotone" />
-            <p className="text-sm font-semibold">{draftPreview.title}</p>
-          </div>
-          <p className="mt-3 text-xs leading-5 text-slate-400">{draftPreview.approvalCopy}</p>
-        </div>
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-white/10 text-orange-200">
-          <Database size={19} weight="duotone" />
-        </span>
-      </div>
-
-      <div className="mt-4 grid gap-2">
-        {draftPreview.delta.map((item) => (
-          <div key={item.field} className="rounded-lg border border-white/10 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-semibold text-orange-200">{item.label}</p>
-              <p className="text-xs text-slate-500">{draftPreview.toolId}</p>
-            </div>
-            <p className="mt-2 line-clamp-1 text-xs text-slate-500">{item.before}</p>
-            <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6 text-slate-100">{item.after}</p>
-          </div>
-        ))}
-      </div>
-
-      <button
-        type="button"
-        disabled={isApplying}
-        onClick={onApply}
-        className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-orange-500 px-4 text-sm font-semibold text-[#fff] transition hover:bg-orange-400 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isApplying ? (
-          <span className="commerce-skeleton h-4 w-4 rounded-full bg-white/40" />
-        ) : (
-          <CheckCircle size={17} weight="bold" />
-        )}
-        {isApplying ? "Uygulanıyor" : "Taslağı uygula"}
-      </button>
-
-      <ApplyStateNotice applyState={applyState} />
-
-      <div className="mt-5 border-t border-white/10 pt-4">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-slate-300">
-            <ClockCounterClockwise size={18} weight="duotone" />
-            <p className="text-sm font-semibold">Audit log</p>
-          </div>
-          <p className="text-xs text-slate-500">{draftPreview.stateTarget.storageKey}</p>
-        </div>
-
-        {auditEntries.length > 0 ? (
-          <div className="mt-3 space-y-2">
-            {auditEntries.slice(0, 3).map((entry) => (
-              <div key={entry.id} className="rounded-lg bg-white/5 p-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#fff]">{entry.productName}</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {formatAuditDate(entry.createdAt)} · {entry.status === "applied" ? "uygulandı" : "geri alındı"}
-                    </p>
-                  </div>
-                  {entry.status === "applied" && entry.rollbackAvailable ? (
-                    <button
-                      type="button"
-                      onClick={() => onRollback(entry.id)}
-                      className="inline-flex min-h-8 shrink-0 items-center justify-center gap-1 rounded-full bg-white px-3 text-xs font-semibold text-slate-950 transition hover:bg-orange-100 active:translate-y-px"
-                    >
-                      <ArrowCounterClockwise size={13} weight="bold" />
-                      Geri al
-                    </button>
-                  ) : (
-                    <span className="rounded-full bg-white/10 px-2 py-1 text-xs font-semibold text-slate-400">kapalı</span>
-                  )}
-                </div>
-                <p className="mt-2 truncate font-mono text-[11px] text-slate-500">{entry.id}</p>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="mt-3 rounded-lg bg-white/5 p-3 text-xs leading-5 text-slate-400">
-            Henüz uygulanmış listing mutation yok. İlk onay burada audit kaydı oluşturacak.
-          </p>
-        )}
-
-        {latestAudit ? (
-          <p className="mt-3 text-xs leading-5 text-slate-500">
-            Son event: {latestAudit.eventName} · {latestAudit.surface}
-          </p>
-        ) : null}
-      </div>
-    </div>
-  );
-}
-
-function ApplyStateNotice({ applyState }: { applyState: ApplyState }) {
-  if (applyState.status === "applied") {
-    return (
-      <div className="mt-3 rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-3 text-sm leading-6 text-emerald-100">
-        {applyState.result.message} {applyState.result.fieldCount} alan audit log&apos;a yazıldı.
-      </div>
-    );
-  }
-
-  if (applyState.status === "rolled-back") {
-    return (
-      <div className="mt-3 rounded-lg border border-sky-400/30 bg-sky-400/10 p-3 text-sm leading-6 text-sky-100">
-        {applyState.result.message}
-      </div>
-    );
-  }
-
-  if (applyState.status === "error") {
-    return (
-      <div className="mt-3 rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-sm leading-6 text-red-100">
-        {applyState.message}
-      </div>
-    );
-  }
-
-  return null;
-}
-
 function ConversationPanel({ data, isLoading }: { data: SellerAgentApiData; isLoading: boolean }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)]">
       <div className="flex items-center justify-between gap-3 border-b border-slate-200 pb-4">
         <div>
           <h2 className="text-xl font-semibold tracking-[-0.03em] text-slate-950">Agent cevabı</h2>
-          <p className="mt-1 text-sm text-slate-500">Deterministik kanıtla konuşur.</p>
+          <p className="mt-1 text-sm text-slate-500">Ürün sinyaliyle konuşur.</p>
         </div>
         <span className="grid h-10 w-10 place-items-center rounded-lg bg-slate-950 text-[#fff]">
           <Robot size={20} weight="duotone" />
@@ -700,7 +525,7 @@ function ConversationPanel({ data, isLoading }: { data: SellerAgentApiData; isLo
 
       <div className="mt-5 space-y-4">
         <ChatBubble tone="agent">
-          Satıcı verisini ürün, risk ve aksiyon contract’larından okuyorum. Komutu yaz, onay olmadan değişiklik yapmam.
+          Satıcı verisini ürün, risk ve aksiyon listelerinden okuyorum. Komutu yaz, onay olmadan değişiklik yapmam.
         </ChatBubble>
         <ChatBubble tone="user">{data.request.prompt}</ChatBubble>
         {isLoading ? (
@@ -715,6 +540,28 @@ function ConversationPanel({ data, isLoading }: { data: SellerAgentApiData; isLo
           </ChatBubble>
         )}
       </div>
+    </div>
+  );
+}
+
+function AgentPermissionRow({
+  helper,
+  icon,
+  label,
+}: {
+  helper: string;
+  icon: ReactNode;
+  label: string;
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-3">
+      <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white/10 text-orange-200">
+        {icon}
+      </span>
+      <span>
+        <span className="block text-sm font-semibold text-[#fff]">{label}</span>
+        <span className="mt-1 block text-xs leading-5 text-slate-400">{helper}</span>
+      </span>
     </div>
   );
 }
@@ -798,7 +645,7 @@ function ProductFindingCard({ finding }: { finding: SellerAgentProductFinding })
 function EvidenceSummaryPanel({ data }: { data: SellerAgentApiData }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)]">
-      <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Kanıt özeti</h2>
+      <h2 className="text-2xl font-semibold tracking-[-0.04em] text-slate-950">Sinyal özeti</h2>
       <div className="mt-5 grid gap-2">
         {data.evidenceSummary.map((item) => (
           <EvidenceMetric key={`${item.label}-${item.value}`} item={item} />
@@ -906,27 +753,4 @@ function EmptyPanel({ description, title }: { description: string; title: string
       <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">{description}</p>
     </div>
   );
-}
-
-function formatTry(value: number): string {
-  return new Intl.NumberFormat("tr-TR", {
-    currency: "TRY",
-    maximumFractionDigits: 0,
-    style: "currency",
-  }).format(value);
-}
-
-function formatAuditDate(value: string): string {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return value;
-  }
-
-  return new Intl.DateTimeFormat("tr-TR", {
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    month: "short",
-  }).format(date);
 }

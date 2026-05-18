@@ -62,15 +62,15 @@ export function SellerActionExplanationPanel({ actionId }: { actionId: string })
     return (
       <PanelShell>
         <PanelHeader
-          eyebrow="OpenAI açıklaması"
-          helper="gpt-4o-mini ile runtime açıklama üretiliyor."
-          title="Model açıklaması"
+          eyebrow="Kısa özet"
+          helper="Yorumlardan çıkan aksiyon hazırlanıyor."
+          title="Özet hazırlanıyor"
         />
         <div className="mt-6 space-y-3">
-          <div className="h-4 w-2/3 animate-pulse rounded-full bg-white/10" />
-          <div className="h-4 w-full animate-pulse rounded-full bg-white/10" />
-          <div className="h-4 w-4/5 animate-pulse rounded-full bg-white/10" />
-          <div className="mt-5 h-24 animate-pulse rounded-2xl bg-white/[0.055]" />
+          <div className="h-4 w-2/3 animate-pulse rounded-full bg-slate-100" />
+          <div className="h-4 w-full animate-pulse rounded-full bg-slate-100" />
+          <div className="h-4 w-4/5 animate-pulse rounded-full bg-slate-100" />
+          <div className="mt-5 h-24 animate-pulse rounded-lg bg-slate-100" />
         </div>
       </PanelShell>
     );
@@ -80,13 +80,13 @@ export function SellerActionExplanationPanel({ actionId }: { actionId: string })
     return (
       <PanelShell>
         <PanelHeader
-          eyebrow="OpenAI açıklaması"
-          helper="Endpoint hata döndürdü; deterministic seller action ekranı etkilenmez."
-          title="Model açıklaması alınamadı"
+          eyebrow="Kısa özet"
+          helper="Bu panel yüklenemedi; aksiyon detayı kullanılmaya devam eder."
+          title="Özet alınamadı"
         />
-        <p className="mt-5 text-sm leading-6 text-zinc-500">{state.error}</p>
+        <p className="mt-5 text-sm leading-6 text-slate-500">{state.error}</p>
         <button
-          className="mt-5 rounded-full border border-white/10 px-4 py-2 text-xs font-medium text-white transition hover:border-emerald-200/40 hover:text-emerald-100"
+          className="mt-5 rounded-full border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700"
           type="button"
           onClick={() => setRetryKey((key) => key + 1)}
         >
@@ -97,63 +97,36 @@ export function SellerActionExplanationPanel({ actionId }: { actionId: string })
   }
 
   const { explanation } = state.data;
-  const isGenerated = explanation.status === "generated";
 
   return (
     <PanelShell>
-      <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-5 md:flex-row md:items-end">
+      <div className="flex flex-col justify-between gap-4 border-b border-slate-200 pb-5 md:flex-row md:items-end">
         <PanelHeader
-          eyebrow="OpenAI açıklaması"
-          helper={isGenerated ? "Canlı model çıktısı" : "Deterministik fallback çıktı"}
-          title={explanation.headline}
+          eyebrow="Kısa özet"
+          helper="Satıcının göreceği kadar kısa tutulur."
+          title="Bu aksiyon ne yapacak?"
         />
-        <span
-          className={
-            isGenerated
-              ? "rounded-full border border-emerald-200/20 bg-emerald-300/10 px-3 py-1 font-mono text-xs text-emerald-100"
-              : "rounded-full border border-amber-200/20 bg-amber-300/10 px-3 py-1 font-mono text-xs text-amber-100"
-          }
-        >
-          {explanation.provider} · {explanation.model}
-        </span>
       </div>
 
-      <p className="mt-5 text-sm leading-7 text-zinc-400">{explanation.summary}</p>
+      <p className="mt-5 line-clamp-3 text-sm leading-7 text-slate-600">{explanation.summary}</p>
 
-      <div className="mt-6 rounded-2xl border border-white/10 bg-zinc-950/45 p-4">
-        <p className="text-sm font-medium text-white">Kanıt özeti</p>
-        <div className="mt-3 divide-y divide-white/10">
-          {explanation.evidenceBullets.map((item) => (
-            <p key={item} className="py-3 text-sm leading-6 text-zinc-500">
-              {item}
-            </p>
-          ))}
+      <div className="mt-5 grid gap-4">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold text-slate-500">Sıradaki iş</p>
+          <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-950">{explanation.nextBestAction}</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold text-slate-500">Mesaj taslağı</p>
+          <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-950">{explanation.sellerMessageDraft}</p>
         </div>
       </div>
-
-      <div className="mt-5 grid gap-4 lg:grid-cols-2">
-        <div>
-          <p className="text-xs text-zinc-600">Sıradaki iş</p>
-          <p className="mt-2 text-sm leading-6 text-white">{explanation.nextBestAction}</p>
-        </div>
-        <div>
-          <p className="text-xs text-zinc-600">Mesaj taslağı</p>
-          <p className="mt-2 text-sm leading-6 text-white">{explanation.sellerMessageDraft}</p>
-        </div>
-      </div>
-
-      {explanation.fallbackReason ? (
-        <p className="mt-5 rounded-2xl border border-amber-200/15 bg-amber-300/[0.045] p-3 text-xs leading-5 text-amber-100/80">
-          {explanation.fallbackReason}
-        </p>
-      ) : null}
     </PanelShell>
   );
 }
 
 function PanelShell({ children }: { children: ReactNode }) {
   return (
-    <div className="rounded-[1.75rem] border border-emerald-200/15 bg-emerald-300/[0.035] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl md:p-7">
+    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-7">
       {children}
     </div>
   );
@@ -170,9 +143,9 @@ function PanelHeader({
 }) {
   return (
     <div>
-      <p className="font-mono text-xs text-emerald-200/70">{eyebrow}</p>
-      <h3 className="mt-3 text-2xl font-semibold text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-zinc-500">{helper}</p>
+      <p className="font-mono text-xs font-semibold text-orange-600">{eyebrow}</p>
+      <h3 className="mt-3 text-2xl font-semibold text-slate-950">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-slate-500">{helper}</p>
     </div>
   );
 }

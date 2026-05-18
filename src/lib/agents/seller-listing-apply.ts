@@ -175,7 +175,7 @@ export function createSellerListingMutationPreview(input: {
       sourceRuntimeId: input.sourceRuntimeId,
       surface: "route",
     },
-    approvalCopy: "Bu taslak yalnızca satıcı onayından sonra mock listing state'e yazılır.",
+    approvalCopy: "Bu taslak yalnızca satıcı onayından sonra işlem geçmişine yazılır.",
     beforeListing,
     delta,
     endpoint: sellerAgentApplyEndpoint,

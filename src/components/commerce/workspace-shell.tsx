@@ -164,7 +164,9 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
                   href={item.href}
                   className={`inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full px-4 text-sm font-medium transition active:translate-y-px ${
                     isActive
-                      ? "bg-slate-950 text-white shadow-[0_14px_28px_-22px_rgba(15,23,42,0.9)]"
+                      ? role === "seller"
+                        ? "bg-orange-500 text-white shadow-[0_14px_28px_-22px_rgba(249,115,22,0.9)]"
+                        : "bg-slate-950 text-white shadow-[0_14px_28px_-22px_rgba(15,23,42,0.9)]"
                       : "bg-white text-slate-600 ring-1 ring-slate-200 hover:text-orange-700 hover:ring-orange-200"
                   }`}
                 >
@@ -201,7 +203,12 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
             </span>
           </header>
 
-          <div data-shell-reveal className="commerce-legacy-light">{children}</div>
+          <div
+            data-shell-reveal
+            className={`commerce-legacy-light ${role === "seller" ? "commerce-seller-light" : ""}`}
+          >
+            {children}
+          </div>
         </section>
       </div>
 

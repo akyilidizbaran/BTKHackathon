@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Milestone 8R tamamlandı: end-to-end demo rehearsal yüzeyi, typed runbook contract'ı ve QA checklist `/demo` altında çalışıyor.
+  * Gerçek DB öncesi UI kalite denetiminde seller aksiyon listesi ve aksiyon detayları ürünleşmiş, kısa satıcı iş akışı diline indirildi.
 * Son değişiklik neydi?
-  * `src/lib/demo/rehearsal.ts`, `DemoRehearsalWorkspace` ve `/demo` route'u eklendi; ana gateway'den demo provasına geçiş var, runbook validation script'e bağlandı.
+  * `/seller/actions?focus=slow-movers` üst özet kartındaki boşluk kaynağı kaldırıldı; aksiyon detayları light card düzenine, kısa iş/sinyal/yorum görünümüne ve compact explanation paneline taşındı.
 * Bir sonraki net adım ne?
-  * Milestone 9A: Gemini/provider finalization; mevcut buyer/seller agent contract'larını bozmadan final provider swap.
+  * Sonraki objektif açık iş: gerçek DB/auth öncesi kalan mock/state sınırlarını netleştirmek ve gerekiyorsa P2 olarak buyer/seller detay ekranlarında metin yoğunluğunu manuel prune etmek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -39,14 +39,17 @@
 * Seller overview tek uzun sayfa olmayacak; iade, negatif yorum, satılmayan ürün ve stok uyarıları kısa kartlardan ilgili endpoint'lere gidecek.
 * Seller agent listing mutation'ı hemen uygulamayacak; önce/sonra preview gösterecek, satıcı onaylarsa mock state'e uygulayıp audit log'a yazacak.
 * Agent pet proactive konuşabilir ama susturma/gizleme modları ve izin katmanları olmadan kullanıcı adına mutation yapmamalı.
-* Floating Agent tüm buyer/seller sayfalarında görünebilir; ayrı bir müşteri temsilcisi widget'ı değil, `/buyer/agent` ve `/seller/agent` ekranlarıyla aynı runtime/history kullanan kompakt Agent UI'dır.
+* Floating Agent tüm buyer/seller sayfalarında görünebilir; ayrı bir müşteri temsilcisi widget'ı değil, `/buyer/agent` ve `/seller/agent` ekranlarıyla aynı runtime/apply contract'larını kullanan kompakt Agent UI'dır.
+* Floating Agent sohbet geçmişi yeni panel açılışlarına taşınmayacak ve API kararına persistent history gönderilmeyecek; her açılış temiz oturumdur.
 * Floating Agent mini paneli Agent sayfasına taşıma zorunluluğu olmadan ürün önerisi, sepet apply, seller analiz ve seller mutation preview gibi işleri kendi içinde yapabilir.
 * Floating Agent context-aware çalışmalı; bulunduğu route, ürün, sepet veya seller alanı bağlamını bilmelidir.
+* Buyer ürün detayında ürün, profil tercihleri ve önceki yorum/şikayet temaları çakışıyorsa Floating Agent proactive warning göstermelidir.
 * Floating Agent proactive uyarıları ilk fazda ses kullanmaz; badge/ünlem/kafa kaldırma gibi sessiz görsel mikro etkileşim kullanır.
 * Floating Agent için `Gizle`, `Sessize al`, `Bu sayfada uyarma` kontrolleri zorunludur.
 * Floating Agent ilk fazda web/desktop odaklıdır; mobil davranış bu adımda kapsam dışıdır.
 * İlk floating avatar Codex pet benzeri teknik/sevimli avatar olabilir ve sonra değiştirilebilir.
 * UI içinde Gemini çalışıyormuş gibi sahte davranılmayacak; OpenAI geçici provider olarak kalacak, Gemini final provider swap sonraya bırakılacak.
+* LLM/Agent hedef mimarisi provider bağımsızdır: deterministic commerce data + scoring -> LLM intent/ranking/explanation/draft -> typed validation + guardrails -> user approval -> deterministic apply function.
 
 ## 3) Mimari Özet
 
@@ -63,21 +66,24 @@
   * `src/lib/scoring/*`: açıklanabilir deterministic scoring layer.
   * `src/lib/workflows/*`: scoring çıktılarını use-case odaklı aksiyon ve insight çıktılarına çeviren workflow katmanı.
   * `src/lib/api/*`: UI ve route handler'ların ortak kullandığı API contract/data builder katmanı.
-  * `src/lib/llm/*`: provider kontrollü OpenAI Responses API text generation wrapper'ı ve deterministic fallback davranışı.
-  * `src/lib/api/seller-action-explanations.ts`: seller action detail context'ini runtime LLM açıklama contract'ına çevirir.
-  * `src/lib/api/buyer-smart-cart-explanations.ts`: buyer smart cart context'ini runtime LLM sepet açıklama contract'ına çevirir.
+  * `src/lib/llm/*`: provider bağımsız LLM text + structured JSON wrapper'ı; OpenAI Responses API, Gemini OpenAI-compatible Chat Completions, deterministic fallback, model/env seçimi, JSON extraction, normalizer helper'ları ve ortak fallback contract'ı burada yönetilir.
+  * `src/lib/api/review-intelligence.ts`: ürün yorumlarını provider bağımsız LLM review intelligence contract'ına çevirir; source review id ve allowed theme whitelist'iyle `reviewClusters`, `repeatedComplaintThemes`, `riskSummary`, `listingFixSuggestions`, `sellerReplyDrafts`, `buyerFacingWarning` üretir.
+  * `src/app/api/review-intelligence/route.ts`: review intelligence `POST` endpoint'ini `success/data/error` envelope ile döndürür.
+  * `src/lib/api/seller-action-explanations.ts`: seller action detail context'ini runtime LLM açıklama contract'ına çevirir; `review_attention` aksiyonlarında review intelligence cluster/risk/reply çıktılarını açıklama fallback/input katmanına taşır.
+  * `src/lib/api/buyer-smart-cart-explanations.ts`: buyer smart cart context'ini runtime LLM sepet açıklama contract'ına çevirir; review kaynaklı warning bulunan ürünlerde review intelligence buyer-facing warning ve risk summary çıktısını model input'una ve fallback riskNote'a taşır.
   * `src/lib/api/buyer-catalog.ts`: buyer marketplace kategori, sıralama, görsel metadata ve ürün kartı contract'ını üretir.
   * `src/app/api/buyer/catalog/route.ts`: buyer katalog contract'ını `success/data/error` envelope ile döndürür.
-  * `src/lib/api/buyer-agent.ts`: buyer Agent prompt contract'ını smart-cart workflow ve katalog ürün kartlarıyla birleştirir; apply contract'ı `append`/`replace` stratejilerini doğrular.
+  * `src/lib/api/buyer-agent.ts`: buyer Agent prompt contract'ını smart-cart workflow ve katalog ürün kartlarıyla birleştirir; POST akışında provider bağımsız `generateLlmJson` ile message/ranking/reason/risk/strategy orchestration üretir, katalog dışı productId'leri reddeder, apply contract'ı `append`/`replace` stratejilerini doğrular.
   * `src/lib/agents/buyer-cart-apply.ts`: buyer Agent cart apply validation, preview, shared mutation contract, route/floating surface metadata ve API data builder için tek kaynak.
   * `src/lib/agents/buyer-cart-apply-client.ts`: route Agent ve floating Agent tarafından kullanılan client-side cart mutation helper'ı; `localStorage` yazımı ve cart update event'i burada merkezileşir.
-  * `src/lib/api/seller-agent.ts`: seller Agent prompt contract'ını seller products/actions contract'larıyla birleştirir; prompt'u risk focus'una ayırır, ürün kanıtı, action önerisi, next step ve onay gerektiren shared listing apply draft preview döndürür.
+  * `src/lib/api/seller-agent.ts`: seller Agent prompt contract'ını seller products/actions contract'larıyla birleştirir; POST akışında provider bağımsız `generateLlmJson` ile activeFocus, ürün/action sıralaması, reason mapping, next step detail ve listing draft orchestration üretir; katalog dışı product/action id'lerini reddeder, draft'ı shared `SellerListingMutationPreview` ve apply mutation contract'ına normalize eder.
   * `src/lib/agents/seller-listing-apply.ts`: seller Agent listing apply validation, before/after preview, shared mutation contract, route/floating surface metadata, audit preview ve API data builder için tek kaynak.
   * `src/lib/agents/seller-listing-apply-client.ts`: route Agent ve floating Agent tarafından kullanılan client-side listing mutation helper'ı; `localStorage` listing override, audit log ve rollback event'i burada merkezileşir.
-  * `src/lib/agents/runtime.ts`: buyer/seller Agent prompt template registry, typed tool registry, request contract, runtime snapshot, guardrail ve 8R handoff metadata için ortak kaynak.
+  * `src/lib/agents/runtime.ts`: buyer/seller Agent prompt template registry, typed tool registry, request contract, runtime snapshot, guardrail, 8R handoff metadata ve application-level `AgentExecutionTrace` contract'ı için ortak kaynak.
   * `src/lib/agents/floating-agent.ts`: floating Agent route context, proactive mesaj, runtime snapshot, capability ve control contract'ları için tek kaynak.
   * `src/lib/agents/floating-agent-client.ts`: floating Agent `localStorage` history/control state okuma-yazma, route snooze ve sync event helper'ları.
-  * `src/lib/demo/rehearsal.ts`: 8R demo runbook, proof card, QA checklist ve CTA route contract'ları için tek kaynak.
+  * `src/lib/demo/rehearsal.ts`: 8R demo runbook, proof card, LLM proof listesi, Agent trace proof listesi, QA checklist ve CTA route contract'ları için tek kaynak.
+  * `LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md`: OpenAI ile başlayıp Gemini'ye taşınacak provider bağımsız LLM/Agent katmanı için 7 aşamalı uygulama planı.
   * `src/lib/api/seller-profile.ts`: seller profile, Agent permission mode, capability matrix, notification channels, risk thresholds, quiet hours, proactive controls, audit trail ve PATCH validation contract'ını üretir.
   * `src/lib/api/seller.ts`: seller overview/actions/products/product health/buyer signal contract builder'larını üretir; 8K itibarıyla actions contract'ı kategori/focus segmentleri, action card ürün kanıtları, category route metadata ve seller product sprite image metadata taşır.
   * `src/app/api/buyer/agent/route.ts`: agent prompt'unu alır, katalogdaki mevcut ürünlerden görselli öneri ve onay mesajı döndürür.
@@ -93,10 +99,12 @@
   * `src/lib/cart/buyer-cart.ts`: buyer sepetini `localStorage` üzerinde okur/yazar; ekleme, adet güncelleme, silme ve clear helper'larını sağlar.
   * `src/components/commerce/buyer-product-purchase-panel.tsx`: ürün detayındaki adet, `Şimdi Al`, `Sepete Ekle` ve favori aksiyon yüzeyi.
   * `src/components/commerce/buyer-cart-workspace.tsx`: sepet satırları, adet/sil/temizle, toplam hesaplama, empty state ve checkout mock yüzeyi.
-  * `src/components/commerce/buyer-agent-workspace.tsx`: `/buyer/agent` için prompt composer, chat cevabı, görselli ürün önerileri, onay paneli ve cart apply akışını render eder.
-  * `src/components/commerce/seller-agent-workspace.tsx`: `/seller/agent` için prompt composer, ürün kanıt sırası, before/after listing preview, onaylı apply, audit log ve rollback akışını render eder.
+  * `src/components/commerce/buyer-agent-workspace.tsx`: `/buyer/agent` için prompt/API/cart apply orchestration'ını yönetir; sohbet, öneri kartı, onay paneli, FAQ, skeleton ve empty-state UI `buyer-agent-panels.tsx` içindedir.
+  * `src/components/commerce/seller-agent-workspace.tsx`: `/seller/agent` için prompt/API/audit orchestration'ını, ürün kanıt sırası ve trace yüzeyini yönetir; before/after listing snapshot, onay, audit log ve rollback UI `seller-agent-listing-panels.tsx` içindedir.
   * `src/components/commerce/agent-runtime-panel.tsx`: buyer/seller Agent ekranlarında ortak runtime prompt/tool plan, guardrail ve registry linkini gösterir.
-  * `src/components/commerce/floating-agent-panel.tsx`: tüm buyer/seller sayfalarında sağ alt Codex pet avatarı, context-aware mini panel, shared history, buyer cart apply, seller listing apply/rollback ve mute/snooze/gizle kontrollerini render eder.
+  * `src/components/commerce/agent-execution-trace-panel.tsx`: `AgentExecutionTrace` contract'ını teknik proof/demo yüzeylerinde coverage grid, execution steps ve approval/tool boundary olarak gösterir; Buyer/Floating kullanıcı yüzeyleri teknik trace göstermez.
+  * `src/components/commerce/floating-agent-panel.tsx`: tüm buyer/seller sayfalarında sağ alt Codex pet avatarı, context-aware mini panel, shared history, buyer cart apply, seller listing apply/rollback ve mute/snooze/gizle kontrollerini yönetir; buyer/seller result ve apply notice UI `floating-agent-result-panel.tsx` içindedir.
+  * `src/components/commerce/llm-status-badge.tsx`: Agent ve explanation yüzeylerinde `provider`, `model`, `status`, `generatedAt` ve `fallbackReason` metadata'sını ortak provider bağımsız görsel dille gösterir.
   * `src/components/commerce/demo-rehearsal-workspace.tsx`: `/demo` için art-directed 8R demo command center; buyer/seller/floating Agent runbook, proof stack, QA checklist ve CTA yüzeyini render eder.
   * `src/components/commerce/buyer-profile-workspace.tsx`: `/buyer/profile` için profil notu, tercih checkbox'ları, bütçe/renk kontrolü, yorum geçmişi, öğrenilen sinyal paneli ve kaydetme akışını render eder.
   * `src/components/commerce/seller-profile-workspace.tsx`: `/seller/profile` için mağaza bilgisi, Agent permission mode, capability toggles, notification channels, risk thresholds, quiet hours, proactive controls, audit trail ve kaydetme akışını render eder.
@@ -123,7 +131,8 @@
   * Lint komutu: `npm run lint`
   * Build komutu: `npm run build`
 * Branch/commit yaklaşımı:
-  * Her milestone ayrı commitlenecek ve private GitHub reposuna pushlanacak.
+  * Her tamamlanan değişiklik veya küçük iş paketi ayrı commitlenecek; kullanıcı özellikle istemedikçe değişiklikler commit bekletilmeyecek.
+  * Büyük milestone sonunda mevcut çalışma alanı tek toparlayıcı commit olarak alınabilir.
 * İsimlendirme/klasör düzeni:
   * Agent mantığı doğrudan UI içine yazılmayacak; önce workflow katmanı kurulacak.
   * Deterministik iş akışları için `lib/workflows/` düşünülüyor.
@@ -140,12 +149,14 @@
   * `npm run lint`
   * `npm run typecheck`
   * `npm run validate:workflows`
+  * `npm run test:components`
   * `npm run check`
   * `npm run build`
 * Ortam değişkenleri (sadece İSİMLER):
   * LLM_PROVIDER
   * OPENAI_MODEL
   * OPENAI_API_KEY
+  * GEMINI_MODEL
   * GEMINI_API_KEY
 * Lokal geliştirme notları:
   * İlk LLM geliştirme OpenAI ile yapılabilir; final hackathon hedefi Gemini'ye geçiştir.
@@ -237,6 +248,23 @@
 * 2026-05-16 — Karar: Seller listing apply validation/API contract, audit yazımı ve rollback route component içinde kalmayacak; shared Agent apply modüllerine taşınacak. | Gerekçe: 8Q floating Agent aynı before/after contract'ını, aynı `localStorage` audit store'unu ve aynı rollback helper'ını kullanmalı. | Etki: `src/lib/agents/seller-listing-apply.ts`, `src/lib/agents/seller-listing-apply-client.ts`, `SellerAgentDraftPreview` shared apply metadata, `/api/seller/agent/apply`, seller runtime apply tool'u ve `SellerAgentWorkspace` güncellendi. | Alternatifler: `/seller/agent` içinde doğrudan audit localStorage yazmak veya mutation'ı yalnızca görsel preview olarak bırakmak.
 * 2026-05-16 — Karar: Floating Agent mini panel route Agent'lardan ayrı widget runtime'ı oluşturmayacak; aynı `AgentRuntimeSnapshot`, buyer/seller API route'ları ve shared apply helper'larını kullanacak. | Gerekçe: Her sayfada görünen Agent ile `/buyer/agent` ve `/seller/agent` arasında yetki, audit ve ürün seçimi ayrışmamalı. | Etki: `FloatingAgentPanel`, `createFloatingAgentContext`, `commercepilot.floatingAgent.v1` history/control store'u, buyer cart apply ve seller listing apply/rollback mini panelde çalışır; runtime template versiyonları `8Q.1`, handoff `8R` oldu. | Alternatifler: Floating paneli yalnızca link veren pasif ikon yapmak veya ayrı localStorage/audit yazımı oluşturmak.
 * 2026-05-16 — Karar: 8R demo hardening ayrı bir `/demo` rehearsal route'u ve typed runbook contract'ı olarak tutulacak. | Gerekçe: Jüri demosunda buyer, seller, floating Agent ve QA kanıtları tek yerden başlatılmalı; sunum akışı uygulama içinde izlenebilir olmalı. | Etki: `src/lib/demo/rehearsal.ts`, `src/components/commerce/demo-rehearsal-workspace.tsx`, `/demo`, gateway demo link'i ve validation kontrolleri eklendi. | Alternatifler: Demo script'i sadece dokümanda tutmak veya mevcut root gateway'i daha fazla sıkıştırmak.
+* 2026-05-16 — Karar: Gemini/provider finalization 9A olarak teslim öncesine bırakılacak; önce provider bağımsız LLM/Agent katmanı OpenAI ile kurulacak. | Gerekçe: Agent'ı tam LLM destekli hale getirmek için provider swap'tan önce typed JSON, validation, guardrail ve tool/apply sınırları sağlamlaşmalı. | Etki: `LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md` eklendi; sıradaki uygulama provider-neutral LLM adapter, structured JSON helper, buyer/seller Agent LLM orchestration, review intelligence, UI provider status ve Gemini adapter sırasıyla yapılacak. | Alternatifler: Doğrudan Gemini'ye geçmek veya agent kararlarını deterministik bırakmak.
+* 2026-05-16 — Karar: LLM provider adapter katmanı `generateLlmText` arkasında tek giriş noktası olarak kalacak; provider-specific endpoint farkları `src/lib/llm/openai.ts` ve `src/lib/llm/gemini.ts` içine izole edilecek. | Gerekçe: OpenAI Responses API ile Gemini OpenAI-compatible Chat Completions response shape'leri farklı; agent/explanation katmanları bu farkı bilmemeli. | Etki: `src/lib/llm/common.ts`, `src/lib/llm/gemini.ts`, `GEMINI_MODEL`, `LlmProvider = openai | gemini | deterministic` ve validation provider smoke testleri eklendi. | Alternatifler: Agent katmanında provider bazlı branch yazmak veya Gemini swap'ı teslim öncesine kadar kodlamamak.
+* 2026-05-16 — Karar: LLM JSON parsing/validation route-specific modüllerde tekrar edilmeyecek; shared `generateLlmJson<T>()` ve `src/lib/llm/json.ts` helper'ları kullanılacak. | Gerekçe: Buyer Agent, Seller Agent ve Review Intelligence LLM orchestration adımlarında aynı parse/fallback/validation davranışı gerekir. | Etki: `GenerateJsonInput`, `LlmJsonGenerationResult`, `LlmJsonValidationResult`, `parseLlmJsonObject`, `normalizeLlmString`, `normalizeLlmStringArray` eklendi; buyer/seller explanation parser tekrarları kaldırıldı. | Alternatifler: Her API contract içinde ayrı parser/normalizer tutmaya devam etmek.
+* 2026-05-16 — Karar: Buyer Agent canlı POST akışı LLM destekli olacak, fakat initial page/default GET build-time LLM çağrısı yapmayacak. | Gerekçe: Static build sırasında dış API çağrısı kırılgan; demo sırasında canlı POST ise Agent değerini göstermeli. | Etki: `getBuyerAgentApiData` async LLM orchestration'a taşındı, `getDefaultBuyerAgentApiData` deterministic preview olarak kaldı, `/api/buyer/agent` POST `await` eder, validation `forceFallback` ve model override ile ağsız test eder. | Alternatifler: Tüm buyer agent akışını sync deterministic bırakmak veya sayfa build'inde LLM çağırmak.
+* 2026-05-16 — Karar: Seller Agent canlı POST akışı LLM destekli focus/action/draft orchestration'a taşınacak, fakat initial page/default GET build-time LLM çağrısı yapmayacak. | Gerekçe: Satıcı agent değerini focus seçimi, ürün/action önceliklendirme ve onaylı listing draft üretiminde göstermeli; build ve demo fallback kırılgan olmamalı. | Etki: `getSellerAgentApiData` async LLM orchestration'a taşındı, `getDefaultSellerAgentApiData` deterministic preview olarak kaldı, `/api/seller/agent` POST `await` eder, LLM draft çıktısı `SellerListingMutationPreview.applyRequest.mutation` ile uyumlu normalize edilir. | Alternatifler: Seller Agent'i deterministik bırakmak veya LLM draft'ını apply contract'ından ayrı yalnızca metin olarak göstermek.
+* 2026-05-17 — Karar: Review Intelligence bağımsız typed LLM contract olarak kurulacak ve seller/buyer explanation katmanlarını besleyecek. | Gerekçe: Review LLM çıktıları hem negatif yorum seller action'ını hem de buyer uyarı metnini zenginleştirmeli, fakat ürün datasını veya mutation state'ini doğrudan değiştirmemeli. | Etki: `src/lib/api/review-intelligence.ts`, `POST /api/review-intelligence`, review id/theme whitelist guard'ı, seller action explanation review enrichment ve buyer smart-cart explanation review enrichment eklendi. | Alternatifler: Review özetlerini yalnızca seller action explanation prompt'una gömmek veya buyer warning'leri deterministik bırakmak.
+* 2026-05-17 — Karar: LLM provider/status görünürlüğü UI'da ortak `LlmStatusBadge` ile standardize edilecek. | Gerekçe: OpenAI'den Gemini'ye geçiş öncesinde kullanıcı/jüri hangi provider/model/status/fallback hattının çalıştığını her kritik yüzeyde görebilmeli. | Etki: Buyer Agent, Seller Agent, Floating Agent, buyer smart-cart explanation, seller action explanation ve `/demo` LLM proof yüzeyleri provider bağımsız trace gösterir; validation demo proof contract'ını doğrular. | Alternatifler: Her panelde ayrı rozet yazmak veya bu bilgiyi yalnızca API response içinde bırakmak.
+* 2026-05-17 — Karar: Tool-calling/Agent trace görünürlüğü provider-native tool calling iddiası yerine application-level `AgentExecutionTrace` contract'ı olarak kurulacak. | Gerekçe: CommercePilot LangChain kullanmadan typed runtime, tool registry, guardrail, approval, apply ve audit sınırları kurduğu için jüriye gösterilecek doğru kanıt uygulama seviyesindeki agent execution trace'tir. | Etki: `src/lib/agents/runtime.ts` trace tipleri/helper'ı eklendi; buyer/seller Agent API'leri top-level `agentTrace` döner, floating context plan trace taşır, `/demo` agent trace proof contract'ı validation'a bağlandı. | Alternatifler: LangChain tool trace eklemek veya trace bilgisini sadece UI metni olarak yazmak.
+* 2026-05-17 — Karar: Agent trace UI görünürlüğü tek ortak `AgentExecutionTracePanel` bileşeniyle standardize edilecek; ancak Buyer/Floating kullanıcı akışında teknik trace doğrudan gösterilmeyecek. | Gerekçe: Teknik proof için ortak görünürlük gerekir, fakat buyer kullanıcı deneyimi smoke-test ekranı gibi görünmemeli. | Etki: `src/components/commerce/agent-execution-trace-panel.tsx` eklendi; teknik proof/demo yüzeyleri trace gösterir, Buyer/Floating kullanıcı yüzeyleri SSS/chatbot diline sadeleşti; validation bu ayrımı kontrol ediyor. | Alternatifler: Her ekranda ayrı trace kartları yazmak veya tüm trace bilgisini son kullanıcı ekranında tutmak.
+* 2026-05-17 — Karar: Buyer kullanıcı akışı teknik kanıt ekranı gibi davranmayacak; trace/runtime/provider smoke kanıtları code/test/demo tarafında kalacak, kullanıcı ana yüzeyleri ürün kullanımı ve kısa yardım diline indirgenecek. | Gerekçe: Amaç yalnızca jüri sunumu değil uygulanabilir bir uygulama; buyer tarafında fazla teknik açıklama güven ve hız yerine karmaşa yaratıyor. | Etki: `BuyerCatalogGrid` yatay slider oldu, `BuyerAgentWorkspace` teknik panellerden arındı ve SSS aldı, `BuyerProfileWorkspace` yorumları 5'li sayfaladı, `FloatingAgentPanel` chatbot yüzeyine sadeleşti, validation bu ürünleşme kuralını kontrol ediyor. | Alternatifler: Tüm trace/proof bilgisini buyer UI'da göstermeye devam etmek.
+* 2026-05-17 — Karar: Floating Agent mesajları doğrudan buyer/seller agent endpoint'lerine gönderilmeyecek; önce provider bağımsız LLM intent router karar verecek. | Gerekçe: Sağ alt chatbot yalnızca agentic komut çalıştırırsa normal kullanıcı sorularında rastgele veya uygunsuz aksiyon üretebilir; ürünleşmiş davranış için chat/clarify/action ayrımı gerekir. | Etki: `src/lib/api/floating-agent.ts`, `POST /api/agent/floating`, `FloatingAgentPanel` entegrasyonu ve validation contract'ları eklendi; chat soruları action kartı üretmez, action istekleri buyer/seller Agent data üretir. | Alternatifler: Frontend keyword heuristiğiyle ayrım yapmak veya tüm mesajları route Agent endpoint'lerine göndermeye devam etmek.
+* 2026-05-17 — Karar: Component extraction ve test altyapısı yeni özellik eklemekten önce teknik öncelik olacak. | Gerekçe: 500-1000 satırlık workspace componentleri davranış kırılmasını zor fark ettiriyor; audit sırasında Floating Agent multi-turn prompt birleşme/route edge case'i ancak browser smoke ile yakalandı. | Etki: `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` eklendi; sıradaki teknik iş Floating/Buyer Agent/Seller Agent alt componentlerini ayırmak ve component/user-event testleri eklemek. | Alternatifler: UI özellik eklemeye devam etmek veya yalnızca `validate-workflows.js` ile yetinmek.
+* 2026-05-17 — Karar: Agent workspace component extraction ilk geçişinde orchestration ana dosyada, UI panelleri ayrı dosyalarda kalacak. | Gerekçe: Prompt/API/apply state'i ile görsel panel bileşenlerini ayırmak test edilebilirliği artırır ama route davranışını gereksiz taşımayla riske atmaz. | Etki: `floating-agent-result-panel.tsx`, `buyer-agent-panels.tsx`, `seller-agent-listing-panels.tsx` eklendi; `scripts/validate-workflows.js` export/kullanım contract'ını kontrol eder. | Alternatifler: Tüm workspace'i tek seferde parçalara ayırmak veya yalnızca dosya küçültmeden test eklemek.
+* 2026-05-17 — Karar: Component test stack'i Vitest + jsdom + React Testing Library + User Event olacak ve `npm run check` içinde çalışacak. | Gerekçe: Extracted client componentlerin render, callback, disabled/loading/apply/rollback state ve FAQ/detail gibi kullanıcı etkileşimleri browser smoke beklemeden yakalanmalı. | Etki: `vitest.config.ts`, `vitest.setup.ts`, `npm run test:components` ve 13 component testi eklendi; `check` artık component testlerini de çalıştırıyor. | Alternatifler: Sadece Puppeteer smoke ile devam etmek veya Jest kurmak.
+* 2026-05-17 — Karar: Floating Agent her panel açılışında temiz oturumla başlayacak ve API'ye önceki sohbet history'si göndermeyecek. | Gerekçe: Önceki komutlar yeni prompt'u kirleterek katalog dışı/yanlış öneri üretebiliyordu. | Etki: `FloatingAgentPanel` local `sessionTurns` kullanır, persistent history yazmaz, `POST /api/agent/floating` çağrısına `history: []` gönderir; unsupported buyer catalog prompt'ları chat boundary döner ve modelden gelen stale `actionPrompt` current prompt ile override edilir. | Alternatifler: Sayfa bazlı persistent history tutmak veya sadece model guard'ına güvenmek.
+* 2026-05-17 — Karar: Buyer/Floating Agent hallucination guardrail'i deterministik katalog ve rol sınırıyla güçlendirilecek. | Gerekçe: Manuel testlerde LLM/router bazen katalog dışı ürünleri veya yanlış roldeki komutları eski agentic akışa taşıyabiliyordu. | Etki: `buyer-catalog-guardrails.ts` eklendi; `/api/buyer/agent` unsupported catalog prompt'larını 422 ile reddeder; Floating Agent buyer/seller role-mismatch prompt'larını chat boundary'ye çeker; buyer Agent LLM narrative alanları katalog dışı terimlere karşı sanitize edilir; kelimeyle yazılmış bütçeler (`iki bin tl`) workflow'da parse edilir. | Alternatifler: Sadece prompt engineering veya unsupported keyword listesini floating içinde tutmak.
+* 2026-05-17 — Karar: Buyer ürün detayında profil + geçmiş yorum/şikayet + ürün yorum sinyali tersliği sağ alt Agent warning'ine bağlanacak. | Gerekçe: Agent pet'in değeri yalnızca komut beklemek değil, kullanıcı profiline ters düşen ürünlerde zamanında uyarı vermek. | Etki: `buyer-profile-product-alerts.ts` eklendi; ürün detay route'unda kargo/iade/kalite/ses/materyal/renk riskleri profile göre hesaplanır ve `FloatingAgentContext.proactiveTone=warning` ile UI'a taşınır. | Alternatifler: Uyarıyı sadece ürün detay kartında statik metin olarak göstermek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -276,6 +304,22 @@
 * 2026-05-16 — Milestone: Milestone 8P Seller Mock Mutations + Audit tamamlandı. | Sonuç: Seller Agent draft preview başlık/açıklama/fiyat/kampanya before-after contract'ı taşıyor; `/api/seller/agent/apply` shared listing mutation ve audit preview döndürüyor; route UI aynı `applySellerListingMutation`/`rollbackSellerListingMutation` helper'ları ile localStorage listing override, audit log ve rollback akışını çalıştırıyor; validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8Q Floating Agent Mini Panel tamamlandı. | Sonuç: `WorkspaceShell` tüm buyer/seller sayfalarında Codex pet avatarlı floating panel render eder; panel route context'e göre prompt/proactive mesaj seçer, ortak runtime/history taşır, buyer cart apply ve seller listing apply/rollback shared helper'larını kullanır, `Gizle`/`Sessize al`/`Bu sayfada uyarma` kontrollerini localStorage'da korur; hydration-safe state, deterministic seller compact currency, validation, `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
 * 2026-05-16 — Milestone: Milestone 8R End-to-End Demo Hardening tamamlandı. | Sonuç: `/demo` demo rehearsal command center eklendi; buyer/seller/floating Agent runbook, proof stack, QA checklist, gateway demo link'i ve workflow validation contract'ı çalışır; `npm run check`, `npm run build`, HTTP ve Puppeteer desktop/mobil QA geçti.
+* 2026-05-16 — Milestone: Provider bağımsız LLM/Agent planı tamamlandı. | Sonuç: `LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md` içinde 7 aşamalı OpenAI -> Gemini taşınabilir mimari, guardrail, test ve risk planı yazıldı.
+* 2026-05-16 — Milestone: Provider-neutral LLM adapter adımı tamamlandı. | Sonuç: OpenAI mevcut davranışı korundu; Gemini OpenAI-compatible adapter, deterministic provider mode, unsupported provider fallback, `GEMINI_MODEL` env contract'ı ve workflow validation provider testleri eklendi; `npm run typecheck`, `npm run validate:workflows`, `npm run check`, `npm run build` geçti.
+* 2026-05-16 — Milestone: Structured LLM JSON helper adımı tamamlandı. | Sonuç: `generateLlmJson<T>()`, fenced/partial JSON parser, string/string-array normalizer helper'ları ve validation fallback contract'ı eklendi; seller action explanation ve buyer smart-cart explanation shared helper'a taşındı; `npm run typecheck` ve `npm run validate:workflows` geçti.
+* 2026-05-16 — Milestone: Buyer Agent LLM orchestration adımı tamamlandı. | Sonuç: `/api/buyer/agent` POST LLM destekli message/ranking/reason/risk/strategy contract'ı üretir; katalog dışı productId guard, no-budget text guard, deterministic fallback ve shared cart apply sınırı korunur; `npm run typecheck` ve `npm run validate:workflows` geçti.
+* 2026-05-16 — Milestone: Seller Agent LLM orchestration adımı tamamlandı. | Sonuç: `/api/seller/agent` POST LLM destekli activeFocus/product ranking/action ranking/reason/draft contract'ı üretir; katalog dışı productId/actionId guard, deterministic fallback ve shared seller listing apply/onay sınırı korunur; `npm run check`, `npm run build` ve `git diff --check` geçti.
+* 2026-05-17 — Milestone: Review Intelligence LLM orchestration adımı tamamlandı. | Sonuç: `POST /api/review-intelligence` LLM destekli review cluster/theme/risk/listing fix/seller reply/buyer warning contract'ı üretir; review id/theme whitelist, deterministic fallback, seller action explanation enrichment ve buyer smart-cart explanation enrichment doğrulandı; `npm run check`, `npm run build` ve `git diff --check` geçti.
+* 2026-05-17 — Milestone: UI provider/status visibility adımı tamamlandı. | Sonuç: Ortak `LlmStatusBadge` eklendi; buyer/seller Agent, floating panel, smart-cart explanation, seller action explanation ve `/demo` LLM proof listesi provider/model/status/fallbackReason bilgisini görünür veya trace edilebilir hale getirdi; `npm run typecheck`, `npm run validate:workflows`, `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
+* 2026-05-17 — Milestone: Agent Trace Visibility aşama 1 contract katmanı tamamlandı. | Sonuç: Ortak `AgentExecutionTrace` contract'ı eklendi; buyer/seller Agent API'leri ve floating Agent context'i context/workflow/LLM/guardrail/approval/tool katmanlarını taşıyor; `/demo` agent trace proof listesi ve validation kontrolleri eklendi; `npm run typecheck` ve `npm run validate:workflows` geçti.
+* 2026-05-17 — Milestone: Agent Trace Visibility aşama 2 UI görünürlüğü tamamlandı. | Sonuç: `AgentExecutionTracePanel` teknik proof/demo yüzeyleri için eklendi; `/demo` agent trace proof kartları eklendi; son kullanıcı Buyer/Floating yüzeylerinde teknik trace gösterilmemesi validation ile korunuyor; `npm run typecheck`, `npm run validate:workflows`, `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
+* 2026-05-17 — Milestone: Buyer UI ürünleşme temizliği tamamlandı. | Sonuç: `/buyer/products` ürün listesi yatay slider'a döndü ve fade animasyonu kaldırıldı; `/buyer/agent` teknik trace/runtime/provider panellerinden arındı ve kısa SSS aldı; `/buyer/profile` yorumları 5'li sayfaladı; floating Agent sade chatbot yüzeyine çekildi; `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
+* 2026-05-17 — Milestone: Floating Agent LLM intent router tamamlandı. | Sonuç: `/api/agent/floating` provider bağımsız JSON decision contract'ı üretir; `chat`/`clarify` soruları doğrudan sohbet cevabı döner, `buyer-agent` ve `seller-agent` kararları ilgili Agent API contract'ını çalıştırır; onay/otomasyon sorularında guardrail cevabı sabitlenir; `npm run check`, `npm run build`, `git diff --check`, HTTP smoke ve Puppeteer smoke geçti.
+* 2026-05-17 — Milestone: Teknik audit ve Floating Agent edge-case hardening tamamlandı. | Sonuç: Component extraction önceliği, mock/local-only envanter ve test altyapısı boşlukları `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` içine taşındı; Floating Agent default prompt artık placeholder, textarea gönderim sonrası temizleniyor, chat geçmişinden sonra explicit action istekleri buyer/seller agent mode'a override ediliyor; `npm run check`, `npm run build`, `git diff --check`, route/API smoke ve Puppeteer smoke geçti.
+* 2026-05-17 — Milestone: Agent workspace component extraction ilk geçişi tamamlandı. | Sonuç: Floating result/apply paneli, Buyer Agent sohbet/öneri/onay/FAQ panelleri ve Seller Agent listing snapshot/onay/audit panelleri ayrı component dosyalarına taşındı; validation extraction contract'ı eklendi; `npm run typecheck`, `npm run validate:workflows`, `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
+* 2026-05-17 — Milestone: Extracted Agent component testleri tamamlandı. | Sonuç: Vitest/RTL stack kuruldu; Buyer Agent panelleri, Floating result paneli ve Seller listing approval panelleri için 3 test dosyasında 13 render/user-event testi eklendi; `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
+* 2026-05-17 — Milestone: Floating Agent fresh-session ve katalog dışı guard tamamlandı. | Sonuç: Panel her açılışta sıfır sohbetle başlar; unsupported buyer product prompt'ları öneri/apply üretmez; stale model `actionPrompt` current prompt ile override edilir; `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
+* 2026-05-17 — Milestone: Agent hallucination guardrail ve profil uyarısı tamamlandı. | Sonuç: Buyer/Floating unsupported catalog, role mismatch, stale narrative ve kelimeyle bütçe parse testleri validation'a eklendi; ürün detayında profil/yorum uyumsuzluğu sağ alt warning'e taşındı; `npm run check` ve `npm run build` geçti.
 
 ## 8) Yapılanlar
 
@@ -324,6 +368,22 @@
 * [x] Milestone 8P seller listing apply, audit log ve rollback helper uygulandı.
 * [x] Milestone 8Q floating Agent mini panel, shared history/runtime, context-aware uyarı ve mute/snooze kontrolleri uygulandı.
 * [x] Milestone 8R demo rehearsal route, typed runbook ve QA checklist uygulandı.
+* [x] Provider bağımsız LLM/Agent için 7 aşamalı plan `LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md` dosyasına taşındı.
+* [x] Provider bağımsız LLM/Agent planı adım 1 uygulandı: `openai`, `gemini` ve deterministic fallback adapter'ları aynı `generateLlmText` contract'ına bağlandı.
+* [x] Provider bağımsız LLM/Agent planı adım 2 uygulandı: shared structured JSON generation, parser ve validation guardrail helper'ları kuruldu.
+* [x] Provider bağımsız LLM/Agent planı adım 3 uygulandı: Buyer Agent deterministic smart-cart adayları üstünde LLM destekli intent/ranking/gerekçe katmanına taşındı.
+* [x] Provider bağımsız LLM/Agent planı adım 4 uygulandı: Seller Agent deterministic product/action adayları üstünde LLM destekli focus/action/draft orchestration katmanına taşındı.
+* [x] Provider bağımsız LLM/Agent planı adım 5 uygulandı: Review Intelligence mevcut yorum verisi üstünde LLM destekli cluster/risk/listing fix/seller reply/buyer warning contract'ına taşındı.
+* [x] Provider bağımsız LLM/Agent planı adım 6 uygulandı: Agent ve explanation UI'larında provider/model/status/fallback bilgisi görünür hale getirildi.
+* [x] Agent Trace Visibility aşama 1 uygulandı: buyer/seller/floating agent contract'ları application-level execution trace taşır hale getirildi.
+* [x] Agent Trace Visibility aşama 2 uygulandı: teknik proof/demo yüzeyleri trace taşır, Buyer/Floating kullanıcı yüzeyleri teknik trace göstermeyecek şekilde sadeleştirildi.
+* [x] Floating Agent LLM intent router uygulandı: normal chat soruları aksiyon üretmez, agentic görevler buyer/seller Agent akışına route edilir.
+* [x] Teknik audit çıkarıldı: component extraction önceliği, mock/local-only yüzeyler ve test altyapısı boşlukları belgelendi.
+* [x] Agent workspace component extraction ilk geçişi tamamlandı: Floating result paneli, Buyer Agent panelleri ve Seller Agent listing approval panelleri ayrıldı.
+* [x] Extracted Agent component testleri eklendi: Vitest/RTL ile Buyer Agent, Floating result ve Seller listing approval panelleri render/user-event kapsamına alındı.
+* [x] Floating Agent fresh-session ve katalog dışı ürün guard'ı eklendi: panel açılışları temiz başlar, persistent history API'ye gitmez, katalog dışı buyer istekleri aksiyon üretmez.
+* [x] Agent hallucination guardrail'i genişletildi: unsupported catalog, role mismatch, stale LLM narrative sanitization ve `iki bin tl` gibi yazıyla bütçe parse'ı doğrulandı.
+* [x] Buyer ürün detayında profil + yorum tersliği proactive Floating Agent warning'ine bağlandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -357,7 +417,7 @@
 * [x] Milestone 7 review sonrası Gemini provider swap için route/prompt contract'ının korunup korunmayacağını netleştir.
 * [x] Buyer product/cart preview derinleştirmesinin demo değerini OpenAI/Gemini açıklama katmanıyla karşılaştır.
 * [x] Milestone 8A review sonrası end-to-end demo script/presentation readiness kapsamını netleştir.
-* [ ] Gemini provider swap için mevcut seller/buyer/agent contract'larını koruyacak adapter tasarımını netleştir.
+* [x] Gemini provider swap için mevcut seller/buyer/agent contract'larını koruyacak adapter tasarımını netleştir.
 * [x] Milestone 8C light marketplace design system ve shell'i uygula.
 * [x] Milestone 8D IA ve navigasyon reset uygula: buyer header-only, seller sade header, sidebar menü tekrarı yok.
 * [x] Milestone 8E buyer catalog data ve ürün grid kapsamını `Kadın Giyim/Erkek Giyim/Elektronik/Ev & Yaşam/Kozmetik/Spor/Aksesuar` kategori setiyle uygula.
@@ -374,8 +434,24 @@
 * [x] Milestone 8P için seller before/after preview, onay, audit log ve rollback davranışını netleştir.
 * [x] Milestone 8Q floating Agent mini panelini kur: tüm buyer/seller sayfalarında Codex pet ikonu, ortak agent history/runtime, context-aware uyarı, gizle/sessize al/bu sayfada uyarma kontrolleri.
 * [x] Milestone 8R end-to-end demo hardening yap: buyer/seller kritik akışlarını demo script'e bağla, görsel polish ve smoke QA tekrarını tamamla.
-* [ ] Milestone 9A Gemini/provider finalization yap: OpenAI fallback korunarak Gemini adapter ve contract uyumu doğrula.
-* [ ] Tüm Agent/LLM/model tahmin fikirleri bittikten sonra faz faz implementasyona geç.
+* [x] Provider bağımsız LLM/Agent planı adım 1'i uygula: `openai`, `gemini` ve deterministic fallback adapter'larını aynı `generateLlmText` contract'ına bağla.
+* [x] Provider bağımsız LLM/Agent planı adım 2'yi uygula: shared structured JSON generation, parser ve validation guardrail helper'larını kur.
+* [x] Provider bağımsız LLM/Agent planı adım 3'ü uygula: Buyer Agent'i deterministic smart-cart adayları üstünde LLM destekli intent/ranking/gerekçe katmanına taşı.
+* [x] Provider bağımsız LLM/Agent planı adım 4'ü uygula: Seller Agent'i LLM destekli focus/action/draft orchestration katmanına taşı.
+* [x] Provider bağımsız LLM/Agent planı adım 5'i uygula: Review Intelligence'i LLM cluster/risk/draft katmanıyla zenginleştir.
+* [x] Provider bağımsız LLM/Agent planı adım 6'yı uygula: Agent ve explanation UI'larında provider/model/status/fallback bilgisini görünür yap.
+* [x] Agent Trace Visibility aşama 2'yi uygula: `agentTrace` contract'ını Agent, floating panel ve `/demo` UI'da görünür hale getir.
+* [x] Buyer UI ürünleşme temizliği uygula: ürün slider, sade Buyer Agent, 5'li profil yorum sayfalama ve chatbot-style Floating Agent.
+* [x] Component extraction ilk geçişini uygula: Floating result/apply, Buyer Agent panelleri ve Seller listing approval UI'larını ayrı dosyalara taşı.
+* [x] Extracted componentler için Vitest/React Testing Library user-event testleri ekle.
+* [ ] Daha geniş UI test coverage ekle: buyer/seller profile formları, seller product/action filtreleri ve floating prompt submit akışı.
+* [x] UI audit P0: Floating Agent proactive kartı içerik üzerine binmeyecek şekilde auto-collapse/route-aware offset davranışına çek; yoğun seller right-rail ekranlarında varsayılan olarak sadece ikon göster.
+* [x] UI audit P0: Seller products/actions/agent/profile sağ rail marquee taşmalarını ve kırpılan chip satırlarını kaldır; rail'i kompakt chip/tabs + sabit yükseklikli içerik alanına dönüştür.
+* [ ] UI audit P1: Seller operasyon sayfalarında dev hero ve boş first-fold alanını küçült; ürün/aksiyon listesini ilk ekrana daha erken getir.
+* [ ] UI audit P1: Seller Agent kullanıcı ekranında `Kaynak Deterministic`, `Model gpt-4o-mini`, `mock` gibi teknik rozetleri normal kullanıcı görünümünden kaldır veya kapalı teknik detay içine taşı.
+* [ ] UI audit P2: `/demo` sunum route'unda Türkçe/İngilizce karışımını ve başlık içi görsel kullanımını teslim öncesi polish et.
+* [ ] Agent Trace Visibility aşama 3'ü uygula: final teslim/sunum için gerekiyorsa responsive browser proof ve ekran görüntüsü kanıtını tamamla.
+* [ ] Milestone 9A Gemini/provider finalization yap: teslim öncesi OpenAI fallback korunarak Gemini adapter ve contract uyumu doğrula.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
 
@@ -412,8 +488,8 @@
   * `/api/seller/actions?focus=negative-reviews|return-risk|slow-movers|stock-risk|inventory|customer-voice` filtrelenmiş action contract döndürür.
   * `/seller/actions/[id]` route'u parametre focus/category slug ise `SellerActionsWorkspace`, gerçek action id ise mevcut action detail ekranını render eder.
 * 8L seller agent:
-  * `/api/seller/agent` GET default seller agent contract, POST ise `{ prompt, sellerId? }` ile deterministic prompt analysis döndürür.
-  * Seller Agent doğrudan mutation yapmaz; draft preview shared apply metadata taşır ve gerçek localStorage yazımı 8P apply helper'ı ile satıcı onayı sonrası yapılır.
+  * `/api/seller/agent` GET default deterministic seller agent contract döndürür; POST ise `{ prompt, sellerId? }` ile LLM destekli focus/action/draft orchestration çalıştırır ve provider yoksa deterministik fallback'e iner.
+  * Seller Agent doğrudan mutation yapmaz; LLM draft preview shared apply metadata ve `applyRequest.mutation` ile normalize edilir, gerçek localStorage yazımı 8P apply helper'ı ile satıcı onayı sonrası yapılır.
 * 8M seller profile:
   * `/api/seller/profile` GET default seller profile contract, PATCH ise mağaza bilgisi, permission mode, capability ids, notification channels, alert rules, quiet hours ve proactive controls alanlarını doğrular.
   * `auto-apply` capability kilitlidir ve PATCH sırasında filtrelenir; seller mutation hâlâ açık satıcı onayı ve 8P audit/apply helper'ı olmadan uygulanmaz.
@@ -428,8 +504,10 @@
   * `/api/seller/agent/apply` tarayıcı listing state'ini doğrudan değiştirmez; `sharedMutation.clientAction.helper` route/floating UI'a hangi client helper'ı çalıştıracağını söyler.
   * Gerçek listing override, audit log ve rollback yazımı `src/lib/agents/seller-listing-apply-client.ts` içindeki `applySellerListingMutation` ve `rollbackSellerListingMutation` ile yapılır; yeni floating panel kendi audit/localStorage mantığını yazmamalı.
 * 8Q floating Agent:
-  * Floating Agent state key'i `commercepilot.floatingAgent.v1`; history ve control state shape'i `{ version, control: { muted, disabledRoutes }, history }` olarak kalmalı.
+  * Floating Agent state key'i `commercepilot.floatingAgent.v1`; persistent store artık yalnızca control state için kaynak kabul edilmeli. Legacy `history` alanı okunabilir ama yeni panel açılışında UI'a veya API request'ine taşınmamalı.
   * `createFloatingAgentContext` route label, default prompt, proactive message ve capability listesi için tek kaynaktır; yeni route context'leri burada eklenmeli.
+  * Buyer ürün detayında profil/yorum tersliği için `src/lib/agents/buyer-profile-product-alerts.ts` kullanılmalı; yeni preference veya review theme eklenirse alert kuralları ve validation birlikte güncellenmeli.
+  * Katalog dışı buyer ürün koruması `src/lib/agents/buyer-catalog-guardrails.ts` içindedir; yeni katalog kategorisi eklendiğinde unsupported detector listesi de kontrol edilmeli.
   * Panel SSR/hydration sırasında `localStorage` okumamalı; başlangıç store'u default olmalı, gerçek state mount sonrası `readFloatingAgentStore()` ile senkronlanmalı.
   * Buyer apply için `applyBuyerAgentCartMutation`, seller apply/rollback için `applySellerListingMutation` ve `rollbackSellerListingMutation` kullanılmalı; panel kendi cart/listing/audit yazımını icat etmemeli.
   * Buyer ve seller runtime template versiyonları `8Q.1`, handoff `8R`; `/api/agent/runtime` ve validation bu geçişi doğrular.
@@ -439,6 +517,15 @@
   * Demo runbook ve QA checklist `src/lib/demo/rehearsal.ts` içinden gelir; yeni demo adımı eklenirse `scripts/validate-workflows.js` içindeki `validateDemoRehearsalContracts` güncellenmeli.
   * `/demo` görsel yüzeyi client component ve GSAP kullanır; browser-only davranışlar server component'e taşınmamalı.
   * Gateway'deki `/demo` link'i jüri/sunum girişidir; buyer/seller role kartlarının yerine geçmez.
+* 2026-05-17 UI endpoint audit:
+  * Puppeteer masaüstü taraması 16 route üzerinde yapıldı; koyu seller panel kalmadı ve yatay document overflow yok.
+  * Kalan P0 riskler: Floating Agent proactive kartlarının buyer/seller içerik ve sağ rail üstüne binmesi; seller products/actions/agent/profile sağ rail marquee/chip taşmaları.
+  * Kalan P1 riskler: seller products çok uzun sayfa (`~11.9` desktop screen), seller agent/profile uzun sayfa, seller action/detail hero'larının first fold'u fazla tüketmesi.
+  * Mobil sinyal taramasında özellikle seller products/profile/agent çok uzun akış veriyor; mobil ilk faz kapsam dışı olsa da teslim öncesi en azından içerik sırası ve floating widget davranışı kontrol edilmeli.
+* 2026-05-17 UI audit P0 cleanup:
+  * Floating Agent artık yoğun buyer/seller ekranlarında büyük proactive kart göstermiyor; seller yüzeylerinde sadece ikon kalır, buyer ürün/profil tersliği gibi gerçek uyarılarda küçük offset `Profil uyarısı` pill'i kullanılır.
+  * Seller products/actions/agent/profile sağ rail'lerinde `seller-*-marquee` kullanıcı yüzeyinden kaldırıldı; offscreen animasyon yerine wrap eden kompakt chip satırları var.
+  * Doğrulama: `npm run check`, `npm run build`, `git diff --check` geçti. Puppeteer ile `/buyer/products`, `/buyer/products/ergoflex-calisma-sandalyesi`, `/seller/products`, `/seller/actions?focus=slow-movers`, `/seller/agent`, `/seller/profile` rotalarında document horizontal overflow, seller marquee class ve büyük proactive card kalmadığı doğrulandı.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 
@@ -453,6 +540,7 @@
 * Seller action detail `src/lib/api/seller.ts` içindeki `getSellerActionDetailApiData` ile action id üzerinden çalışır; `SellerGrowthAction` id/type/checklist alanları değişirse dynamic route, validation ve `/seller/actions/[id]` birlikte güncellenmeli.
 * Seller action explanation `src/lib/api/seller-action-explanations.ts` ile çalışır; validation canlı OpenAI çağırmaz, `forceFallback: true` ile contract'ı doğrular.
 * Buyer smart cart explanation `src/lib/api/buyer-smart-cart-explanations.ts` ile çalışır; validation canlı OpenAI çağırmaz, `forceFallback: true` ile contract'ı doğrular.
+* Review Intelligence `src/lib/api/review-intelligence.ts` ve `POST /api/review-intelligence` üzerinden çalışır; review id/theme whitelist, seller action explanation enrichment ve buyer smart-cart explanation enrichment değişirse validation birlikte güncellenmeli.
 * Buyer katalog UI/API `src/lib/api/buyer-catalog.ts` üzerinden çalışır; kategori seti, sıralama, ürün href'i veya görsel contract'ı değişirse `scripts/validate-workflows.js` içindeki buyer catalog kontrolleri birlikte güncellenmeli.
 * Buyer sepet UI `src/components/commerce/buyer-cart-workspace.tsx` ve `src/lib/cart/buyer-cart.ts` üzerinden çalışır; 8G Agent apply akışı append/replace stratejisini bu helper'lara bağlar.
 * Buyer Agent UI/API `src/lib/api/buyer-agent.ts`, `/api/buyer/agent`, `/api/buyer/agent/apply` ve `src/components/commerce/buyer-agent-workspace.tsx` üzerinden çalışır; agent contract'ı değişirse `scripts/validate-workflows.js` içindeki buyer agent kontrolleri birlikte güncellenmeli.
@@ -460,6 +548,7 @@
 * Seller Agent listing mutation contract `src/lib/agents/seller-listing-apply.ts` üzerinden çalışır; before/after alanları, `sharedMutation`, audit id, storage key, event veya surface listesi değişirse route handler, client helper, runtime registry ve validation birlikte güncellenmeli.
 * Seller Agent audit store `src/lib/agents/seller-listing-apply-client.ts` içindedir; floating Agent seller mutation uygularsa aynı `applySellerListingMutation` ve `rollbackSellerListingMutation` helper'larını kullanmalı.
 * Shared Agent runtime `src/lib/agents/runtime.ts` üzerinden çalışır; prompt id, tool id, approval boundary veya handoff değişirse buyer/seller agent API'leri, `AgentRuntimePanel` ve `scripts/validate-workflows.js` birlikte güncellenmeli.
+* Agent trace contract `src/lib/agents/runtime.ts` içindeki `AgentExecutionTrace` ile çalışır; her buyer/seller/floating trace context/workflow/LLM/guardrail/approval/tool katmanlarını taşımalı. Yeni trace adımı veya tool id eklenirse `scripts/validate-workflows.js`, `src/components/commerce/agent-execution-trace-panel.tsx` ve `/demo` `agentTraceProofs` birlikte güncellenmeli.
 * Buyer Profile UI/API `src/lib/api/buyer-profile.ts`, `/api/buyer/profile`, `src/lib/profile/buyer-profile-storage.ts` ve `src/components/commerce/buyer-profile-workspace.tsx` üzerinden çalışır; profil tercih id'leri, yorum görsel contract'ı veya learned signal shape'i değişirse `scripts/validate-workflows.js` içindeki buyer profile kontrolleri birlikte güncellenmeli.
 * Seller overview kartları `src/lib/api/seller.ts` içindeki `alertCards` ve `priorityQueue` üzerinden gelir; risk kartı id'leri, href/apiEndpoint veya evidence shape'i değişirse `scripts/validate-workflows.js` içindeki overview kontrolleri birlikte güncellenmeli.
 * Seller products UI/API `src/lib/api/seller.ts`, `/api/seller/products` ve `src/components/commerce/seller-products-workspace.tsx` üzerinden çalışır; product `focusTags`, `riskSignals`, `linkedAction`, segment id'leri veya product image contract'ı değişirse `scripts/validate-workflows.js` içindeki seller products kontrolleri birlikte güncellenmeli.
@@ -1223,6 +1312,101 @@
 * Güncellenen roadmap dosyası:
   * `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md`.
 
+### 2026-05-17 LLM Provider/Status UI
+
+* Karar:
+  * Agent veya explanation yüzeyine yeni LLM çıktısı eklenirse `src/components/commerce/llm-status-badge.tsx` kullanılmalı; provider/model/status/fallbackReason için her panel kendi ayrı string formatını üretmemeli.
+* Demo notu:
+  * `/demo` LLM proof listesi `src/lib/demo/rehearsal.ts` içinde tutulur; yeni LLM endpoint veya yüzey eklenirse `llmProofs` ve `validateDemoRehearsalContracts` birlikte güncellenmeli.
+
+### 2026-05-17 Agent Trace Visibility
+
+* Aşama 1 tamamlandı:
+  * `AgentExecutionTrace` contract'ı buyer/seller Agent API'lerinde top-level `agentTrace`, floating context'te plan trace ve `/demo` içinde `agentTraceProofs` olarak taşınıyor.
+* Aşama 2 tamamlandı:
+  * `src/components/commerce/agent-execution-trace-panel.tsx` trace/proof render bileşeni olarak durur; kullanıcı buyer akışında teknik trace gösterilmez.
+  * Seller Agent ve `/demo` teknik kanıt yüzeyleri trace/proof görünürlüğünü taşır; Buyer/Floating kullanıcı yüzeyleri SSS/chatbot diline sadeleşti.
+  * `/demo` içinde `agentTraceProofs` kartları trace layer coverage ve expected tool id kanıtını görünür yapıyor.
+  * Teknik doğrulama olarak `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
+* Sıradaki aşama:
+  * Aşama 3'te final teslim/sunum için gerekiyorsa responsive browser proof ve ekran görüntüsü kanıtı alınacak.
+
+### 2026-05-17 Floating Agent Fresh Session Guard
+
+* Karar:
+  * Sağ alt Floating Agent paneli her açılışta sıfırdan başlar; önceki sohbetler route değişiminde veya tekrar açılışta prompt kararını etkilemez.
+* Teknik not:
+  * `FloatingAgentPanel` sadece açık panel oturumu için local `sessionTurns` tutar ve `/api/agent/floating` çağrısına `history: []` gönderir.
+  * Buyer tarafında katalog dışı belirgin ürün tipleri için `buyer-agent` önerisi üretilmez; chat boundary cevabı döner.
+  * Model eski `actionPrompt` döndürse bile explicit buyer/seller action prompt'larında current prompt uygulanır.
+* Doğrulama:
+  * `npm run check`, `npm run build`, `git diff --check` ve Puppeteer smoke geçti.
+
+### 2026-05-17 Agent Hallucination Guard + Profile Warning
+
+* Guardrail kapsamı:
+  * Unsupported catalog ürünleri `/api/buyer/agent` tarafında validation error, Floating Agent tarafında chat boundary döner.
+  * Buyer rolünde seller-only komut, seller rolünde buyer-only komut agentic mode'a düşmez.
+  * Buyer Agent LLM message/reason/risk alanları katalog dışı terim içerirse fallback narrative kullanılır.
+  * `iki bin tl` gibi yazıyla bütçe ifadeleri smart-cart workflow'da numerik bütçeye çevrilir.
+* Proactive warning:
+  * Buyer ürün detayında ürün yorum/risk temaları profil tercihleri ve önceki şikayet temalarıyla çakışırsa `FloatingAgentContext.proactiveTone` `warning` olur.
+  * Örnek: `ergoflex-calisma-sandalyesi`, Aylin'in hızlı kargo hassasiyetiyle çakıştığı için sağ alt Agent uyarı mesajı üretir.
+* Doğrulama:
+  * `npm run validate:workflows`, `npm run lint`, `npm run check` ve `npm run build` geçti.
+
+### 2026-05-17 Seller Light UI Cleanup
+
+* Karar:
+  * Seller kullanıcı endpoint'leri dark dashboard/teknik proof diliyle görünmeyecek; turuncu/beyaz CommercePilot ürün dili seller shell içinde zorlanacak.
+* Kapsam:
+  * `WorkspaceShell` seller aktif nav'ı turuncuya alındı ve seller content için `commerce-seller-light` scoped bridge eklendi.
+  * Seller profile/products/actions/agent/product detail/action detail yüzeylerinde `endpoint/API/contract/mutation/audit/fallback reason` gibi demo-teknik kopyalar kullanıcı diline çevrildi.
+  * Seller ana başlıklarında metnin arasına giren inline ürün görselleri kaldırıldı; görseller yalnızca kart/rail/medya alanlarında kalmalı.
+  * Seller Agent'ta runtime panel kaldırıldı; compact trace kullanıcı dilinde kalır ve tool id/endpoint detaylarını compact modda göstermiyor.
+  * Floating Agent seller proactive mesajları ve apply/rollback kullanıcı mesajları teknik terimlerden arındırıldı.
+* Doğrulama:
+  * `npm run check`, `npm run build`, `git diff --check` geçti.
+  * Puppeteer smoke ile `/seller`, `/seller/products`, `/seller/products/ergoflex-calisma-sandalyesi`, `/seller/actions`, `/seller/actions/restock-ergoflex-calisma-sandalyesi`, `/seller/agent`, `/seller/profile` seller content alanlarında koyu panel kalmadığı doğrulandı.
+
+### 2026-05-17 UI Audit P1 Seller Polish
+
+* Kapsam:
+  * Seller products/actions/agent/profile ilk ekran hero alanlarında aşırı dikey boşluk azaltıldı; grid stretch kaynaklı hero kart uzaması `items-start` ile engellendi.
+  * `/seller/actions?focus=slow-movers` başlığında metnin içine giren ürün görseli tamamen kaldırıldı; görsel sadece sağ rail ürün kartında kalır.
+  * Seller Agent kullanıcı yüzeyindeki provider/model/fallback/mock rozetleri ve metinleri kaldırıldı; trace içinde `llm` katmanı kullanıcıya `Öneri` olarak görünür.
+  * Listeleme taslağı paneli model statüsü yerine satıcı onayı, işlem geçmişi ve geri alma davranışını anlatır.
+* Doğrulama:
+  * `npm run check`, `npm run build`, `git diff --check` geçti.
+  * Puppeteer screenshot smoke: `/seller/actions?focus=slow-movers`, `/seller/agent`, `/seller/profile`, `/seller/products`.
+  * Puppeteer text probe `/seller/agent` içinde `Model `, `Kaynak`, `Deterministic`, `gpt-4o`, `mock`, `provider`, `fallback` görünmedi.
+
+### 2026-05-18 Seller Review Action Detail Prune
+
+* Karar:
+  * Review attention action detail ekranı jüri/proof açıklaması gibi davranmayacak; satıcı önce gerçek problem yorumlarını görmeli.
+* Kapsam:
+  * `SellerActionDetailApiData` review action'lar için `reviewHighlights` taşır; negatif veya attention gerektiren yorumlar title/body/rating/theme ile görünür.
+  * `/seller/actions/review_attention-connectplus-usb-c-hub` ekranında `Checklist`, `Karar dayanakları` ve `Alıcıdan gelen bağlam` blokları kaldırıldı.
+  * Agent explanation paneli provider/status/evidence listesi yerine kısa özet, sıradaki iş ve mesaj taslağına indirildi.
+* Doğrulama:
+  * `npm run check`, `npm run build`, `git diff --check` geçti.
+  * Puppeteer screenshot ile review action detail ekranında gerçek yorumların ilk ana içerik bölümünde göründüğü doğrulandı.
+
+### 2026-05-18 Seller Actions Compact UX
+
+* Karar:
+  * Seller aksiyon listesi ve tüm action detail ekranları teknik/proof anlatımı yerine kısa, satıcı işi odaklı UI göstermeli.
+* Kapsam:
+  * `/seller/actions?focus=slow-movers` üst sağ özet kartından büyük ürün görseli, uzun chip şeridi ve seçili aksiyon açıklaması kaldırıldı; liste artık hero sonrası gereksiz dikey boşluk bırakmadan başlar.
+  * `SellerActionsWorkspace` altındaki tekrar eden açıklama bandı kaldırıldı; seçili aksiyon bilgisi sağ rail içinde ürün görseli, kısa sonuç ve iki adımlık `Kısa iş` alanında kalır.
+  * Tüm `/seller/actions/[id]` detay ekranları light card düzenine taşındı; generic action'larda iki kısa iş adımı, üç sinyal ve tek hazır metin gösterilir.
+  * Review action detail ekranında gerçek yorumlar korunur; top right ürün kartı grid stretch ile boş uzamaz.
+  * `SellerActionExplanationPanel` provider/evidence/proof dili yerine kısa özet, sıradaki iş ve mesaj taslağı gösteren light compact panele dönüştü.
+* Doğrulama:
+  * `npm run check`, `npm run build`, `git diff --check` geçti.
+  * Puppeteer screenshot smoke: `/seller/actions?focus=slow-movers`, `/seller/actions/create_bundle-tidy-kablo-duzenleyici`, `/seller/actions/review_attention-connectplus-usb-c-hub`.
+
 ### Güncelleme Kaydı
 
-* Son güncelleme: 2026-05-16
+* Son güncelleme: 2026-05-18

@@ -9,7 +9,7 @@ export default function SellerOverviewPage() {
     return (
       <EmptyPanel
         title="Satıcı verisi bulunamadı"
-        description="Mock seller ve workflow referansları kontrol edilmeli."
+        description="Satıcı özeti şu anda hazırlanamadı. Biraz sonra tekrar dene."
       />
     );
   }

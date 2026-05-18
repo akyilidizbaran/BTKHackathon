@@ -24,5 +24,5 @@ export async function POST(request: Request): Promise<Response> {
     return apiError(validation.code, validation.message, validation.status);
   }
 
-  return apiOk(getSellerAgentApiData(validation.value));
+  return apiOk(await getSellerAgentApiData(validation.value));
 }

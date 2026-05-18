@@ -1,7 +1,12 @@
+import {
+  createLlmFallbackResult,
+  defaultMaxOutputTokens,
+  defaultOpenAiModel,
+  defaultTemperature,
+} from "@/lib/llm/common";
 import type { GenerateTextInput, LlmTextGenerationResult } from "@/lib/llm/types";
 
 const openAiResponsesEndpoint = "https://api.openai.com/v1/responses";
-const defaultOpenAiModel = "gpt-4o-mini";
 
 interface OpenAiResponseBody {
   output_text?: string;
@@ -43,11 +48,11 @@ export async function generateOpenAiText(input: GenerateTextInput): Promise<LlmT
       body: JSON.stringify({
         input: input.input,
         instructions: input.instructions,
-        max_output_tokens: 700,
+        max_output_tokens: input.maxOutputTokens ?? defaultMaxOutputTokens,
         metadata: input.metadata,
         model,
         store: false,
-        temperature: 0.2,
+        temperature: input.temperature ?? defaultTemperature,
       }),
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -109,12 +114,10 @@ function createFallbackResult(
   error: NonNullable<LlmTextGenerationResult["error"]>,
   provider: LlmTextGenerationResult["provider"] = "openai",
 ): LlmTextGenerationResult {
-  return {
+  return createLlmFallbackResult({
     error,
-    generatedAt: new Date().toISOString(),
     model,
     provider,
-    status: "fallback",
     text,
-  };
+  });
 }

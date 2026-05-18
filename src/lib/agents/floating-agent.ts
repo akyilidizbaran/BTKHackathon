@@ -1,8 +1,15 @@
 import {
+  createAgentExecutionTrace,
   createAgentRuntimeSnapshot,
+  type AgentExecutionTrace,
   type AgentRole,
   type AgentRuntimeSnapshot,
 } from "@/lib/agents/runtime";
+import {
+  getBuyerProductProfileAlert,
+  type BuyerProductProfileAlert,
+} from "@/lib/agents/buyer-profile-product-alerts";
+import type { BuyerProfileEditableState } from "@/lib/api/buyer-profile";
 
 export const floatingAgentStorageKey = "commercepilot.floatingAgent.v1";
 export const floatingAgentUpdatedEvent = "commercepilot:floating-agent-updated";
@@ -38,11 +45,14 @@ export interface FloatingAgentContext {
   defaultPrompt: string;
   panelTitle: string;
   pathname: string;
+  profileAlert?: BuyerProductProfileAlert;
   proactiveMessage: string;
+  proactiveTone: "default" | "warning";
   role: AgentRole;
   routeAgentHref: "/buyer/agent" | "/seller/agent";
   routeLabel: string;
   runtime: AgentRuntimeSnapshot;
+  agentTrace: AgentExecutionTrace;
   sharedMutationNotes: string[];
 }
 
@@ -62,10 +72,18 @@ export interface FloatingAgentControl {
 }
 
 export function createFloatingAgentContext(input: {
+  buyerProfileOverride?: BuyerProfileEditableState;
   pathname: string;
   role: AgentRole;
 }): FloatingAgentContext {
-  const route = resolveFloatingAgentRoute(input.role, input.pathname);
+  const profileAlert = input.role === "buyer"
+    ? getBuyerProductProfileAlert({
+        buyerId: "buyer-aylin",
+        editableOverride: input.buyerProfileOverride,
+        pathname: input.pathname,
+      })
+    : undefined;
+  const route = resolveFloatingAgentRoute(input.role, input.pathname, profileAlert);
   const runtime = createAgentRuntimeSnapshot({
     actorId: route.actorId,
     prompt: route.defaultPrompt,
@@ -81,11 +99,14 @@ export function createFloatingAgentContext(input: {
     defaultPrompt: route.defaultPrompt,
     panelTitle: route.panelTitle,
     pathname: input.pathname,
+    profileAlert,
     proactiveMessage: route.proactiveMessage,
+    proactiveTone: profileAlert ? "warning" : "default",
     role: input.role,
     routeAgentHref: input.role === "buyer" ? "/buyer/agent" : "/seller/agent",
     routeLabel: route.routeLabel,
     runtime,
+    agentTrace: createFloatingAgentTrace(input.role, runtime),
     sharedMutationNotes: input.role === "buyer"
       ? [
           "Buyer cart apply shared endpoint ve client helper ile çalışır.",
@@ -96,6 +117,75 @@ export function createFloatingAgentContext(input: {
           "Floating Agent sadece kullanıcı onayı sonrası listing override yazar.",
         ],
   };
+}
+
+function createFloatingAgentTrace(role: AgentRole, runtime: AgentRuntimeSnapshot): AgentExecutionTrace {
+  const isBuyer = role === "buyer";
+  const endpoint = isBuyer ? "/api/buyer/agent" : "/api/seller/agent";
+  const toolId = isBuyer ? "buyer.agent.cart.apply.preview" : "seller.agent.listing.apply";
+
+  return createAgentExecutionTrace({
+    generatedAt: "floating-runtime-context",
+    runtime,
+    summary: "Floating Agent route context'i aynı runtime, guardrail ve onaylı apply tool sınırlarıyla çalıştırır.",
+    items: [
+      {
+        detail: `${runtime.request.routeContext} route context'i ve ${runtime.request.actorId} actor bilgisi çözüldü.`,
+        id: "floating-route-context",
+        label: "Route context okundu",
+        layer: "context",
+        status: "completed",
+      },
+      {
+        detail: isBuyer
+          ? "Buyer smart-cart workflow route Agent ile aynı ürün seçim contract'ını kullanır."
+          : "Seller product/action workflow route Agent ile aynı listing draft contract'ını kullanır.",
+        endpoint,
+        id: "floating-shared-workflow",
+        label: "Shared workflow hazır",
+        layer: "workflow",
+        status: "ready",
+      },
+      {
+        detail: "Kullanıcı komutu gönderildiğinde route Agent endpoint'i provider bağımsız LLM orchestration çalıştırır.",
+        endpoint,
+        id: "floating-llm-pending",
+        label: "LLM orchestration bekliyor",
+        layer: "llm",
+        status: "pending",
+      },
+      {
+        detail: isBuyer
+          ? "Katalog dışı ürün ve onaysız cart mutation guardrail'i korunur."
+          : "Katalog dışı ürün/action ve onaysız listing mutation guardrail'i korunur.",
+        id: "floating-guardrail-ready",
+        label: "Guardrail hazır",
+        layer: "guardrail",
+        status: "ready",
+      },
+      {
+        detail: "Mini panel apply aksiyonunu açık kullanıcı onayı olmadan çalıştırmaz.",
+        id: "floating-approval-boundary",
+        label: "Onay sınırı aktif",
+        layer: "approval",
+        requiresApproval: true,
+        status: "pending",
+        toolId,
+      },
+      {
+        detail: isBuyer
+          ? "Buyer cart apply helper route ve floating yüzeyde aynı contract'ı uygular."
+          : "Seller listing apply helper audit log ve rollback contract'ını uygular.",
+        endpoint: isBuyer ? "/api/buyer/agent/apply" : "/api/seller/agent/apply",
+        id: "floating-apply-tool-ready",
+        label: "Apply tool hazır",
+        layer: "tool",
+        requiresApproval: true,
+        status: "ready",
+        toolId,
+      },
+    ],
+  });
 }
 
 export function createDefaultFloatingAgentStore(): FloatingAgentStore {
@@ -119,7 +209,11 @@ export function normalizeFloatingAgentPathname(pathname: string): string {
   return normalized;
 }
 
-function resolveFloatingAgentRoute(role: AgentRole, pathname: string) {
+function resolveFloatingAgentRoute(
+  role: AgentRole,
+  pathname: string,
+  profileAlert?: BuyerProductProfileAlert,
+) {
   const normalizedPathname = normalizeFloatingAgentPathname(pathname);
 
   if (role === "buyer") {
@@ -148,12 +242,22 @@ function resolveFloatingAgentRoute(role: AgentRole, pathname: string) {
         actorId: "buyer-aylin",
         defaultPrompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
         panelTitle: "Buyer agent",
-        proactiveMessage: "Route Agent ile aynı cart apply yolunu kullanıyorum.",
+        proactiveMessage: "Sepet önerilerini onay bekleterek hazırlayabilirim.",
         routeLabel: "Buyer agent",
       };
     }
 
     if (normalizedPathname.startsWith("/buyer/products/")) {
+      if (profileAlert) {
+        return {
+          actorId: "buyer-aylin",
+          defaultPrompt: profileAlert.prompt,
+          panelTitle: profileAlert.title,
+          proactiveMessage: profileAlert.message,
+          routeLabel: "Buyer profil uyarısı",
+        };
+      }
+
       return {
         actorId: "buyer-aylin",
         defaultPrompt: "Bu ürüne uyumlu tamamlayıcıları öner ve sepete eklemeye hazırla.",
@@ -187,7 +291,7 @@ function resolveFloatingAgentRoute(role: AgentRole, pathname: string) {
       actorId: "seller-commercepilot",
       defaultPrompt: "Negatif yorum gelen ürünleri grupla ve ilk aksiyonu seç.",
       panelTitle: "Aksiyon agent",
-      proactiveMessage: "Aksiyon kuyruğunu ürün kanıtıyla özetleyebilirim.",
+      proactiveMessage: "Aksiyon kuyruğunu ürün sinyalleriyle özetleyebilirim.",
       routeLabel: "Seller aksiyonlar",
     };
   }
@@ -195,9 +299,9 @@ function resolveFloatingAgentRoute(role: AgentRole, pathname: string) {
   if (normalizedPathname.startsWith("/seller/profile")) {
     return {
       actorId: "seller-commercepilot",
-      defaultPrompt: "Agent yetkilerimi onaylı apply sınırına göre özetle.",
+      defaultPrompt: "Agent yetkilerimi onay sınırına göre özetle.",
       panelTitle: "Yetki agent",
-      proactiveMessage: "Onay ve audit sınırlarını bu sayfadan okuyabilirim.",
+      proactiveMessage: "Onay ve işlem sınırlarını bu sayfadan okuyabilirim.",
       routeLabel: "Seller profil",
     };
   }
@@ -207,7 +311,7 @@ function resolveFloatingAgentRoute(role: AgentRole, pathname: string) {
       actorId: "seller-commercepilot",
       defaultPrompt: "Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla.",
       panelTitle: "Seller agent",
-      proactiveMessage: "Route Agent ile aynı listing apply ve audit yolunu kullanıyorum.",
+      proactiveMessage: "Listeleme önerilerini onay bekleterek hazırlayabilirim.",
       routeLabel: "Seller agent",
     };
   }

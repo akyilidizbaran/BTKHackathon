@@ -15,8 +15,8 @@ export default async function SellerProductsPage({
   if (!data) {
     return (
       <EmptyPanel
-        title="Ürün contract'ı üretilemedi"
-        description="Demo satıcı ürünleri okunamadı. Mock product ve seller id referansları kontrol edilmeli."
+        title="Ürünler hazırlanamadı"
+        description="Satıcı ürünleri şu anda okunamadı. Biraz sonra tekrar dene."
       />
     );
   }

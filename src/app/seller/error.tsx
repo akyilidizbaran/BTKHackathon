@@ -15,10 +15,10 @@ export default function SellerError({
 
   return (
     <div className="rounded-[1.75rem] border border-white/10 bg-white/[0.04] p-7 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
-      <p className="text-sm text-emerald-200/80">Seller contract</p>
+      <p className="text-sm text-emerald-200/80">Satıcı ekranı</p>
       <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">Seller ekranı yüklenemedi.</h2>
       <p className="mt-4 max-w-[60ch] text-sm leading-7 text-zinc-500">
-        Beklenmeyen bir render hatası oluştu. Contract builder ve route handler çıktıları kontrol edilmeli.
+        Beklenmeyen bir hata oluştu. Sayfayı tekrar yükleyerek devam edebilirsin.
       </p>
       <button
         type="button"

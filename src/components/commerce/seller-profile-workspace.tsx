@@ -84,14 +84,14 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
     [editable.notificationChannelIds],
   );
   const activeMode = data.permissionModes.find((mode) => mode.id === editable.permissionMode) ?? data.permissionModes[1];
-  const marqueeItems = useMemo(
+  const railChips = useMemo(
     () => [
       data.summary.permissionLabel,
       `${data.summary.selectedCapabilityCount} yetki`,
       `${data.summary.enabledNotificationCount} kanal`,
-      data.summary.autoApplyAllowed ? "Auto apply açık" : "Auto apply kapalı",
+      data.summary.autoApplyAllowed ? "Otomatik uygulama açık" : "Otomatik uygulama kapalı",
       data.summary.quietHoursLabel,
-      "Onay olmadan mutation yok",
+      "Onay olmadan işlem yok",
     ],
     [data.summary],
   );
@@ -296,30 +296,20 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
 
   return (
     <div ref={rootRef} className="overflow-x-hidden">
-      <form className="space-y-10" onSubmit={(event) => void saveProfile(event)}>
-        <section className="grid grid-flow-dense gap-5 xl:grid-cols-12">
+      <form className="space-y-8" onSubmit={(event) => void saveProfile(event)}>
+        <section className="grid grid-flow-dense items-start gap-5 xl:grid-cols-12">
           <div
             data-seller-profile-reveal
-            className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] xl:col-span-8 md:p-7"
+            className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] xl:col-span-8 md:p-6"
           >
-            <div className="grid gap-7 lg:grid-cols-[minmax(0,1fr)_280px]">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
               <div>
-                <h2 className="max-w-5xl text-[clamp(2.6rem,5vw,5.3rem)] font-semibold leading-[0.95] tracking-[-0.06em] text-slate-950">
-                  Mağaza ayarı{" "}
-                  <span
-                    aria-label="Mağaza ürün rafı"
-                    className="mx-2 hidden h-11 w-28 overflow-hidden rounded-full border border-slate-200 bg-slate-50 bg-[length:500%_400%] bg-no-repeat align-middle sm:inline-block md:h-14 md:w-36"
-                    role="img"
-                    style={{
-                      backgroundImage: "url(/catalog/buyer-product-sprite.png)",
-                      backgroundPosition: "75% 66%",
-                    }}
-                  />
-                  agent yetkisini belirler.
+                <h2 className="max-w-5xl text-[clamp(2.1rem,3.8vw,4rem)] font-semibold leading-[1] tracking-[-0.055em] text-slate-950">
+                  Mağaza ayarı agent yetkisini belirler.
                 </h2>
-                <p className="mt-5 max-w-[68ch] text-sm leading-7 text-slate-600">
-                  Mağaza bilgisi, Agent izin modu, bildirim eşiği ve sessiz çalışma sınırları aynı contract üzerinden tutulur.
-                  Route Agent ve ilerideki floating Agent bu izni okur.
+                <p className="mt-4 max-w-[68ch] text-sm leading-6 text-slate-600">
+                  Mağaza bilgisi, Agent izin modu, bildirim eşiği ve sessiz çalışma sınırları tek profilden yönetilir.
+                  Agent yalnızca bu izinlerin açık olduğu alanlarda öneri üretir.
                 </p>
               </div>
 
@@ -337,7 +327,7 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
               </div>
             </div>
 
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
               <TextField
                 helper="Satıcı paneli ve Agent cevaplarında görünen mağaza adı."
                 id="seller-store-name"
@@ -385,7 +375,7 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
             <div className="p-5 md:p-7">
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#fff]">Agent sınırı</h2>
+                  <h2 className="text-2xl font-semibold tracking-[-0.04em] text-[#fff]">Agent yetkisi</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-400">{activeMode.summary}</p>
                 </div>
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-lg bg-white/10 text-orange-200">
@@ -401,10 +391,15 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
               </div>
             </div>
 
-            <div className="border-y border-white/10 py-4">
-              <div className="seller-profile-marquee flex min-w-max gap-8 whitespace-nowrap px-5 text-sm font-semibold text-slate-300">
-                {[...marqueeItems, ...marqueeItems].map((item, index) => (
-                  <span key={`${item}-${index}`}>{item}</span>
+            <div className="border-y border-white/10 px-5 py-4 md:px-7">
+              <div className="flex flex-wrap gap-2">
+                {railChips.map((item) => (
+                  <span
+                    key={item}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-600"
+                  >
+                    {item}
+                  </span>
                 ))}
               </div>
             </div>
@@ -443,7 +438,7 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
           <div data-seller-profile-reveal className="xl:col-span-5">
             <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-6">
               <h2 className="text-3xl font-semibold leading-tight tracking-[-0.05em] text-slate-950">
-                Yetki modu açık, sınırları net.
+                Yetki modu net.
               </h2>
               <p className="mt-3 text-sm leading-6 text-slate-600">
                 Bu seçim Agent&apos;ın hangi aralıkta konuşacağını, taslak üreteceğini ve ne zaman onay bekleyeceğini belirler.
@@ -487,9 +482,9 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
             <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-[0_18px_54px_-48px_rgba(15,23,42,0.65)] md:p-6">
               <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
                 <div>
-                  <h2 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950">Capability matrisi</h2>
+                  <h2 className="text-3xl font-semibold tracking-[-0.05em] text-slate-950">Agent görevleri</h2>
                   <p className="mt-2 text-sm leading-6 text-slate-500">
-                    Kilitli alanlar 8P onaylı mutation akışına kadar uygulama yapmaz.
+                    Kilitli görevler onay verilmeden değişiklik yapmaz.
                   </p>
                 </div>
                 <Link
@@ -663,14 +658,14 @@ export function SellerProfileWorkspace({ initialData }: SellerProfileWorkspacePr
               <div>
                 <h2 className="text-4xl font-semibold tracking-[-0.06em] text-slate-950">Her değişiklik iz bırakır.</h2>
                 <p className="mt-3 text-sm leading-6 text-slate-500">
-                  Profil ve izin değişiklikleri audit akışında görünür; Agent mutation öncesi onay sınırı korunur.
+                  Profil ve izin değişiklikleri kayıt altında tutulur; Agent işlem öncesi onay sınırını korur.
                 </p>
               </div>
               <Link
                 href="/seller/actions"
                 className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:border-orange-200 hover:text-orange-700 active:translate-y-px"
               >
-                Audit kuyruğu
+                Aksiyon kuyruğu
                 <ArrowRight size={15} weight="bold" />
               </Link>
             </div>

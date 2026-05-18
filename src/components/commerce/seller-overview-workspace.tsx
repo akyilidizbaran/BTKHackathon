@@ -101,8 +101,8 @@ export function SellerOverviewWorkspace({ overview, products }: SellerOverviewWo
                   Bugün hangi ürüne müdahale etmeli?
                 </h2>
                 <p className="mt-4 max-w-[66ch] text-sm leading-6 text-slate-600">
-                  Seller ana sayfası artık dört net risk endpoint&apos;ine ayrılıyor. Her kart ürün, kanıt ve yapılacak iş
-                  sırasını aynı contract üzerinden gösterir.
+                  Satıcı ana sayfası stok, yorum, iade ve satış sinyallerini tek öncelik akışında toplar. Her kart
+                  yapılacak işi ve etkilenen ürünü kısa şekilde gösterir.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Link
@@ -325,7 +325,7 @@ function AlertCard({ card }: { card: SellerOverviewAlertCard }) {
       </span>
 
       <span className="mt-5 inline-flex min-h-10 items-center justify-between gap-3 rounded-full bg-slate-950 px-4 text-sm font-semibold text-[#fff] transition group-hover:bg-orange-500">
-        Route&apos;u aç
+        Detayı aç
         <ArrowRight size={15} weight="bold" />
       </span>
     </Link>

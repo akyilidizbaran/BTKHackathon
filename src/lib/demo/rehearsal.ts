@@ -1,15 +1,21 @@
+import type { AgentTraceLayer } from "@/lib/agents/runtime";
+
 export const demoRehearsalRoute = "/demo";
 
 export type DemoRehearsalLaneId = "buyer" | "floating" | "seller";
+export type DemoAgentTraceProofStatus = "contracted";
+export type DemoLlmProofStatus = "traceable" | "visible";
 export type DemoQualityStatus = "ready" | "watch" | "manual";
 
 export interface DemoRehearsalData {
+  agentTraceProofs: DemoAgentTraceProof[];
   ctas: {
     buyer: string;
     qa: string;
     seller: string;
   };
   headline: string;
+  llmProofs: DemoLlmProof[];
   marquee: string[];
   milestone: "8R";
   nextMilestone: "9A";
@@ -24,6 +30,27 @@ export interface DemoProofCard {
   label: string;
   result: string;
   tone: "dark" | "light" | "orange";
+}
+
+export interface DemoAgentTraceProof {
+  endpoint: string;
+  evidence: string;
+  expectedToolIds: string[];
+  id: string;
+  requiredLayers: AgentTraceLayer[];
+  route: string;
+  status: DemoAgentTraceProofStatus;
+  surface: string;
+}
+
+export interface DemoLlmProof {
+  endpoint: string;
+  evidence: string;
+  fields: string[];
+  id: string;
+  route: string;
+  status: DemoLlmProofStatus;
+  surface: string;
 }
 
 export interface DemoQualityCheck {
@@ -52,12 +79,91 @@ export interface DemoRunbookStep {
 
 export function getDemoRehearsalData(): DemoRehearsalData {
   return {
+    agentTraceProofs: [
+      {
+        endpoint: "POST /api/buyer/agent",
+        evidence: "Buyer Agent response top-level `agentTrace` içinde context, workflow, LLM, guardrail, approval ve cart apply tool boundary taşır.",
+        expectedToolIds: ["buyer.agent.cart.apply.preview"],
+        id: "buyer-agent-execution-trace",
+        requiredLayers: ["context", "workflow", "llm", "guardrail", "approval", "tool"],
+        route: "/buyer/agent",
+        status: "contracted",
+        surface: "Buyer Agent",
+      },
+      {
+        endpoint: "POST /api/seller/agent",
+        evidence: "Seller Agent response top-level `agentTrace` içinde seller context, risk workflow, LLM draft, guardrail, approval ve listing apply/audit tool boundary taşır.",
+        expectedToolIds: ["seller.agent.listing.apply"],
+        id: "seller-agent-execution-trace",
+        requiredLayers: ["context", "workflow", "llm", "guardrail", "approval", "tool"],
+        route: "/seller/agent",
+        status: "contracted",
+        surface: "Seller Agent",
+      },
+      {
+        endpoint: "Floating Agent context",
+        evidence: "Floating Agent context route Agent endpoint'leriyle aynı runtime, guardrail ve onaylı apply tool contract'ını plan trace olarak taşır.",
+        expectedToolIds: ["buyer.agent.cart.apply.preview", "seller.agent.listing.apply"],
+        id: "floating-agent-execution-trace",
+        requiredLayers: ["context", "workflow", "llm", "guardrail", "approval", "tool"],
+        route: "/buyer/cart",
+        status: "contracted",
+        surface: "Floating Agent",
+      },
+    ],
     ctas: {
       buyer: "/buyer/products",
       qa: "/demo#qa",
       seller: "/seller",
     },
     headline: "Demo akışı tek nefeste.",
+    llmProofs: [
+      {
+        endpoint: "POST /api/buyer/agent",
+        evidence: "Buyer Agent cevabı ve floating buyer sonucu `LlmStatusBadge` ile runtime kaynağını gösterir.",
+        fields: ["orchestration.status", "orchestration.provider", "orchestration.model", "orchestration.fallbackReason"],
+        id: "buyer-agent-llm",
+        route: "/buyer/agent",
+        status: "visible",
+        surface: "Buyer Agent",
+      },
+      {
+        endpoint: "POST /api/seller/agent",
+        evidence: "Seller Agent analiz, ürün sırası ve listing draft yüzeyi aynı orchestration trace'ini taşır.",
+        fields: ["orchestration.status", "orchestration.provider", "orchestration.model", "orchestration.fallbackReason"],
+        id: "seller-agent-llm",
+        route: "/seller/agent",
+        status: "visible",
+        surface: "Seller Agent",
+      },
+      {
+        endpoint: "POST /api/buyer/smart-cart/explanation",
+        evidence: "Smart-cart explanation paneli provider bağımsız status satırıyla generated/fallback ayrımını verir.",
+        fields: ["explanation.status", "explanation.provider", "explanation.model", "explanation.fallbackReason"],
+        id: "buyer-explanation-llm",
+        route: "/buyer/cart",
+        status: "visible",
+        surface: "Buyer explanation",
+      },
+      {
+        endpoint: "GET /api/seller/actions/[id]/explanation",
+        evidence: "Seller action explanation paneli model açıklamasını fallback reason ile birlikte izlenebilir yapar.",
+        fields: ["explanation.status", "explanation.provider", "explanation.model", "explanation.fallbackReason"],
+        id: "seller-explanation-llm",
+        route: "/seller/actions",
+        status: "visible",
+        surface: "Seller explanation",
+      },
+      {
+        endpoint: "POST /api/review-intelligence",
+        evidence: "Review intelligence endpoint'i UI açıklamalarını besler; model/fallback izi API contract'ında kalır.",
+        fields: ["intelligence.status", "intelligence.provider", "intelligence.model", "intelligence.fallbackReason"],
+        id: "review-intelligence-llm",
+        route: "/api/review-intelligence",
+        status: "traceable",
+        surface: "Review Intelligence",
+      },
+    ],
     marquee: [
       "Buyer products",
       "Buyer cart apply",
@@ -65,6 +171,7 @@ export function getDemoRehearsalData(): DemoRehearsalData {
       "Seller products",
       "Seller audit rollback",
       "Runtime 8Q.1",
+      "LLM trace visible",
       "Handoff 8R",
     ],
     milestone: "8R",
@@ -102,6 +209,13 @@ export function getDemoRehearsalData(): DemoRehearsalData {
         evidence: "Next production build tüm app route'larını üretmeli.",
         id: "qa-build",
         label: "Production build",
+        status: "ready",
+      },
+      {
+        command: "POST /api/buyer/agent + POST /api/seller/agent",
+        evidence: "Agent UI, floating panel ve explanation panellerinde provider/model/status/fallbackReason görünür veya API trace edilebilir.",
+        id: "qa-llm-trace",
+        label: "LLM trace UI",
         status: "ready",
       },
       {

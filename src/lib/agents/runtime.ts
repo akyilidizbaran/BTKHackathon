@@ -77,6 +77,31 @@ export interface AgentToolPlanItem {
   mutationKind: AgentToolDefinition["mutationKind"];
 }
 
+export type AgentTraceLayer = "approval" | "context" | "guardrail" | "llm" | "tool" | "workflow";
+export type AgentTraceStatus = "completed" | "guarded" | "pending" | "ready";
+
+export interface AgentTraceItem {
+  detail: string;
+  endpoint?: string;
+  id: string;
+  label: string;
+  layer: AgentTraceLayer;
+  order: number;
+  requiresApproval?: boolean;
+  status: AgentTraceStatus;
+  toolId?: AgentToolId;
+}
+
+export interface AgentExecutionTrace {
+  coverage: Record<AgentTraceLayer, boolean>;
+  generatedAt: string;
+  id: string;
+  items: AgentTraceItem[];
+  role: AgentRole;
+  summary: string;
+  surface: AgentSurface;
+}
+
 export interface AgentRuntimeSnapshot {
   runtimeId: string;
   role: AgentRole;
@@ -354,6 +379,28 @@ export function createAgentRuntimeSnapshot(input: {
   };
 }
 
+export function createAgentExecutionTrace(input: {
+  generatedAt: string;
+  items: Array<Omit<AgentTraceItem, "order">>;
+  runtime: AgentRuntimeSnapshot;
+  summary: string;
+}): AgentExecutionTrace {
+  const items = input.items.map((item, index) => ({
+    ...item,
+    order: index + 1,
+  }));
+
+  return {
+    coverage: createTraceCoverage(items),
+    generatedAt: input.generatedAt,
+    id: `${input.runtime.runtimeId}-execution-trace`,
+    items,
+    role: input.runtime.role,
+    summary: input.summary,
+    surface: input.runtime.surface,
+  };
+}
+
 export function getSharedAgentRuntimeApiData(): SharedAgentRuntimeApiData {
   const routeSnapshots = [
     createAgentRuntimeSnapshot({
@@ -386,6 +433,25 @@ export function getSharedAgentRuntimeApiData(): SharedAgentRuntimeApiData {
     },
     tools: agentToolRegistry,
   };
+}
+
+function createTraceCoverage(items: AgentTraceItem[]): Record<AgentTraceLayer, boolean> {
+  const layers: AgentTraceLayer[] = ["context", "workflow", "llm", "guardrail", "approval", "tool"];
+
+  return layers.reduce<Record<AgentTraceLayer, boolean>>(
+    (coverage, layer) => ({
+      ...coverage,
+      [layer]: items.some((item) => item.layer === layer),
+    }),
+    {
+      approval: false,
+      context: false,
+      guardrail: false,
+      llm: false,
+      tool: false,
+      workflow: false,
+    },
+  );
 }
 
 function createGuardrails(role: AgentRole): string[] {

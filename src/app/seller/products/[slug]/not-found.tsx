@@ -6,7 +6,7 @@ export default function ProductNotFound() {
       <p className="text-sm text-emerald-200/80">Ürün detayı</p>
       <h2 className="mt-3 text-3xl font-semibold tracking-[-0.05em] text-white">Ürün bulunamadı.</h2>
       <p className="mt-4 max-w-[60ch] text-sm leading-7 text-zinc-500">
-        Bu slug için ürün sağlık contract’ı üretilemedi. Ürün radarından geçerli bir ürün seç.
+        Bu ürün kaydı bulunamadı. Ürün radarından geçerli bir ürün seç.
       </p>
       <Link
         href="/seller/products"

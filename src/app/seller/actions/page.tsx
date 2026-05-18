@@ -15,8 +15,8 @@ export default async function SellerActionsPage({
   if (!data) {
     return (
       <EmptyPanel
-        title="Aksiyon contract'ı üretilemedi"
-        description="Satıcı workflow çıktısı yok. Mock seller veya seller action üretimi kontrol edilmeli."
+        title="Aksiyonlar hazırlanamadı"
+        description="Satıcı aksiyonları şu anda okunamadı. Biraz sonra tekrar dene."
       />
     );
   }

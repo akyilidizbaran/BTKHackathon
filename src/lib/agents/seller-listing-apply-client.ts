@@ -136,7 +136,7 @@ export function applySellerListingMutation(
     auditId: entry.id,
     eventName: entry.eventName,
     fieldCount: data.summary.fieldCount,
-    message: `${data.product.name} için listing mutation uygulandı.`,
+    message: `${data.product.name} için listeleme değişikliği uygulandı.`,
     productId: data.product.id,
     productName: data.product.name,
     rollbackAvailable: true,
@@ -154,7 +154,7 @@ export function rollbackSellerListingMutation(auditId: string): SellerListingMut
     return {
       auditId,
       eventName: sellerListingMutationUpdatedEvent,
-      message: "Geri alınacak audit kaydı bulunamadı.",
+      message: "Geri alınacak işlem kaydı bulunamadı.",
       ok: false,
     };
   }
@@ -163,7 +163,7 @@ export function rollbackSellerListingMutation(auditId: string): SellerListingMut
     return {
       auditId,
       eventName: sellerListingMutationUpdatedEvent,
-      message: "Bu mutation zaten geri alınmış.",
+      message: "Bu değişiklik zaten geri alınmış.",
       ok: false,
       productId: target.productId,
       productName: target.productName,
@@ -207,7 +207,7 @@ export function rollbackSellerListingMutation(auditId: string): SellerListingMut
   return {
     auditId,
     eventName: sellerListingMutationUpdatedEvent,
-    message: `${target.productName} listing mutation geri alındı.`,
+    message: `${target.productName} listeleme değişikliği geri alındı.`,
     ok: true,
     productId: target.productId,
     productName: target.productName,

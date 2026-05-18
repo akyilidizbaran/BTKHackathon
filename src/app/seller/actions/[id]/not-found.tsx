@@ -5,7 +5,7 @@ export default function SellerActionDetailNotFound() {
     <div className="rounded-[1.75rem] border border-dashed border-white/10 bg-zinc-950/35 p-6">
       <p className="text-sm font-medium text-white">Aksiyon detayı bulunamadı</p>
       <p className="mt-2 max-w-[60ch] text-sm leading-6 text-zinc-500">
-        İstenen aksiyon id değeri mevcut seller workflow çıktısında yok. Aksiyon listesine dönüp geçerli bir kayıt seç.
+        Bu aksiyon kaydı bulunamadı. Aksiyon listesine dönüp geçerli bir kayıt seç.
       </p>
       <Link
         href="/seller/actions"

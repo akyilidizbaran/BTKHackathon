@@ -50,8 +50,12 @@ const {
   getBuyerAgentApiData,
   getBuyerAgentApplyApiData,
   getDefaultBuyerAgentApiData,
+  validateBuyerAgentRequest,
   validateBuyerAgentApplyRequest,
 } = require("../src/lib/api/buyer-agent");
+const {
+  getBuyerProductProfileAlert,
+} = require("../src/lib/agents/buyer-profile-product-alerts");
 const {
   getDefaultSellerAgentApiData,
   getSellerAgentApiData,
@@ -91,11 +95,32 @@ const {
   normalizeFloatingAgentPathname,
 } = require("../src/lib/agents/floating-agent");
 const {
+  floatingAgentEndpoint,
+  getFloatingAgentApiData,
+  getDefaultFloatingAgentApiData,
+  validateFloatingAgentRequest,
+} = require("../src/lib/api/floating-agent");
+const {
   demoRehearsalRoute,
   getDemoRehearsalData,
 } = require("../src/lib/demo/rehearsal");
 const { getBuyerCatalogApiData } = require("../src/lib/api/buyer-catalog");
 const { getBuyerSmartCartExplanationApiData } = require("../src/lib/api/buyer-smart-cart-explanations");
+const {
+  getReviewIntelligenceApiData,
+  reviewIntelligenceEndpoint,
+  validateReviewIntelligenceRequest,
+} = require("../src/lib/api/review-intelligence");
+const {
+  generateLlmJson,
+  generateLlmText,
+  getConfiguredLlmModel,
+  getLlmModelForProvider,
+  normalizeLlmString,
+  normalizeLlmStringArray,
+  normalizeLlmProvider,
+  parseLlmJsonObject,
+} = require("../src/lib/llm");
 
 const validSellerActionTones = new Set(["positive", "neutral", "warning", "danger"]);
 const validSellerOwners = new Set(["stok", "operasyon", "icerik", "destek", "pazarlama", "finans"]);
@@ -117,19 +142,24 @@ main().catch((error) => {
 
 async function main() {
   validateMockDataIntegrity();
+  await validateLlmProviderContracts();
   validateScoringLayer();
   validateSellerWorkflows();
   validateSellerApiContracts();
+  await validateReviewIntelligenceApiContracts();
   await validateSellerActionExplanationApiContracts();
   validateBuyerWorkflows();
   validateBuyerApiContracts();
   validateBuyerCatalogApiContracts();
-  validateBuyerAgentApiContracts();
-  validateSellerAgentApiContracts();
-  validateSellerListingMutationApplyContracts();
+  await validateBuyerAgentApiContracts();
+  await validateSellerAgentApiContracts();
+  await validateSellerListingMutationApplyContracts();
   validateSharedAgentRuntimeContracts();
   validateFloatingAgentContracts();
+  await validateFloatingAgentApiContracts();
   validateDemoRehearsalContracts();
+  validateAgentTraceUiContracts();
+  validateAgentComponentExtractionContracts();
   validateSellerProfileApiContracts();
   validateBuyerProfileApiContracts();
   await validateBuyerSmartCartExplanationApiContracts();
@@ -161,12 +191,14 @@ async function main() {
       `Seller actions: ${generateSellerActionsWorkflow("seller-commercepilot")?.actions.length ?? 0}`,
       `Seller action detail endpoint: ${getSellerActionDetailApiData("restock-ergoflex-calisma-sandalyesi")?.contract.endpoint ?? "missing"}`,
       `Seller action explanation endpoint: ${restockExplanation?.contract.endpoint ?? "missing"}`,
+      `Review intelligence endpoint: ${reviewIntelligenceEndpoint}`,
       `Buyer smart cart explanation endpoint: ${buyerExplanation.contract.endpoint}`,
       `Seller API products: ${getSellerProductsApiData("seller-commercepilot")?.products.length ?? 0}`,
       `Seller buyer signals: ${getSellerBuyerSignalsApiData("seller-commercepilot")?.signals.length ?? 0}`,
       `Buyer catalog products: ${getBuyerCatalogApiData().products.length}`,
       `Buyer agent endpoint: ${getDefaultBuyerAgentApiData().contract.endpoint}`,
       `Seller agent endpoint: ${getDefaultSellerAgentApiData().contract.endpoint}`,
+      `Floating agent endpoint: ${getDefaultFloatingAgentApiData().contract.endpoint}`,
       `Shared agent runtime endpoint: ${sharedAgentRuntimeEndpoint}`,
       `Seller profile endpoint: ${getDefaultSellerProfileApiData().contract.endpoint}`,
       `Buyer profile endpoint: ${getDefaultBuyerProfileApiData().contract.endpoint}`,
@@ -174,6 +206,136 @@ async function main() {
       "Buyer prompts: 7",
     ].join("\n"),
   );
+}
+
+async function validateLlmProviderContracts() {
+  const previousEnv = snapshotLlmEnv();
+
+  try {
+    assert(normalizeLlmProvider("openai") === "openai", "LLM provider openai normalize edilemedi");
+    assert(normalizeLlmProvider("Gemini") === "gemini", "LLM provider gemini normalize edilemedi");
+    assert(normalizeLlmProvider("deterministic") === "deterministic", "LLM provider deterministic normalize edilemedi");
+    assert(!normalizeLlmProvider("anthropic"), "unsupported LLM provider normalize edilmemeli");
+    assert(
+      getLlmModelForProvider("openai") === (process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini"),
+      "OpenAI default model contract yanlış",
+    );
+
+    process.env.LLM_PROVIDER = "deterministic";
+    delete process.env.OPENAI_API_KEY;
+    delete process.env.GEMINI_API_KEY;
+
+    const deterministic = await generateLlmText({
+      fallbackText: "fallback-ok",
+      input: "test input",
+      instructions: "test instruction",
+    });
+
+    assert(deterministic.status === "fallback", "deterministic provider fallback dönmeli");
+    assert(deterministic.provider === "deterministic", "deterministic provider yanlış");
+    assert(deterministic.error?.code === "DETERMINISTIC_LLM_PROVIDER", "deterministic fallback code yanlış");
+    assert(deterministic.text === "fallback-ok", "deterministic fallback text yanlış");
+
+    process.env.LLM_PROVIDER = "gemini";
+    process.env.GEMINI_MODEL = "gemini-3-flash-preview";
+    delete process.env.GEMINI_API_KEY;
+
+    const missingGeminiKey = await generateLlmText({
+      fallbackText: "gemini-fallback-ok",
+      input: "test input",
+      instructions: "test instruction",
+    });
+
+    assert(missingGeminiKey.status === "fallback", "Gemini key yokken fallback dönmeli");
+    assert(missingGeminiKey.provider === "deterministic", "Gemini key yokken deterministic provider dönmeli");
+    assert(missingGeminiKey.model === "gemini-3-flash-preview", "Gemini fallback model contract yanlış");
+    assert(missingGeminiKey.error?.code === "GEMINI_API_KEY_MISSING", "Gemini missing key code yanlış");
+
+    process.env.LLM_PROVIDER = "unsupported-provider";
+
+    const unsupportedProvider = await generateLlmText({
+      fallbackText: "unsupported-fallback-ok",
+      input: "test input",
+      instructions: "test instruction",
+    });
+
+    assert(unsupportedProvider.status === "fallback", "unsupported provider fallback dönmeli");
+    assert(unsupportedProvider.provider === "deterministic", "unsupported provider deterministic dönmeli");
+    assert(unsupportedProvider.error?.code === "UNSUPPORTED_LLM_PROVIDER", "unsupported provider code yanlış");
+
+    const fencedJson = parseLlmJsonObject('```json\n{"title":"  Test ","bullets":[" A ","B",""]}\n```');
+
+    assert(fencedJson?.title === "  Test ", "LLM JSON fenced parse contract yanlış");
+    assert(normalizeLlmString(fencedJson?.title, "fallback") === "Test", "LLM normalize string contract yanlış");
+    assert(
+      normalizeLlmStringArray(fencedJson?.bullets, ["fallback"], 2).join("|") === "A|B",
+      "LLM normalize string array contract yanlış",
+    );
+
+    const forcedJson = await generateLlmJson({
+      fallbackValue: { title: "Fallback", bullets: ["Fallback bullet"] },
+      forceFallback: true,
+      input: "json input",
+      instructions: "json instructions",
+      validate: (value, fallbackValue) => ({
+        ok: true,
+        value: {
+          bullets: normalizeLlmStringArray(value.bullets, fallbackValue.bullets, 3),
+          title: normalizeLlmString(value.title, fallbackValue.title),
+        },
+      }),
+    });
+
+    assert(forcedJson.status === "fallback", "forced JSON fallback status yanlış");
+    assert(forcedJson.provider === "deterministic", "forced JSON provider deterministic olmalı");
+    assert(forcedJson.model === getConfiguredLlmModel(), "forced JSON model configured model olmalı");
+    assert(forcedJson.value.title === "Fallback", "forced JSON fallback value yanlış");
+    assert(forcedJson.fallbackReason?.includes("FORCED_FALLBACK"), "forced JSON fallback reason eksik");
+
+    const invalidJson = await generateLlmJson({
+      fallbackValue: { title: "Schema fallback" },
+      input: "json input",
+      instructions: "json instructions",
+      modelTextOverride: '{"title":""}',
+      validate: (value) => {
+        const title = normalizeLlmString(value.title, "");
+
+        return title
+          ? { ok: true, value: { title } }
+          : {
+              code: "TITLE_REQUIRED",
+              message: "title alanı zorunlu.",
+              ok: false,
+            };
+      },
+    });
+
+    assert(invalidJson.status === "fallback", "invalid JSON validation fallback dönmeli");
+    assert(invalidJson.value.title === "Schema fallback", "invalid JSON validation fallback value yanlış");
+    assert(invalidJson.fallbackReason?.includes("TITLE_REQUIRED"), "invalid JSON fallback reason code eksik");
+  } finally {
+    restoreLlmEnv(previousEnv);
+  }
+}
+
+function snapshotLlmEnv() {
+  return {
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    GEMINI_MODEL: process.env.GEMINI_MODEL,
+    LLM_PROVIDER: process.env.LLM_PROVIDER,
+    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    OPENAI_MODEL: process.env.OPENAI_MODEL,
+  };
+}
+
+function restoreLlmEnv(snapshot) {
+  Object.entries(snapshot).forEach(([key, value]) => {
+    if (typeof value === "string") {
+      process.env[key] = value;
+    } else {
+      delete process.env[key];
+    }
+  });
 }
 
 function registerTypeScriptRuntime() {
@@ -595,8 +757,117 @@ function validateSellerApiContracts() {
   }
 }
 
+async function validateReviewIntelligenceApiContracts() {
+  const forcedData = await getReviewIntelligenceApiData(
+    {
+      productId: "prod-connectplus-usb-c-hub",
+      sellerId: "seller-commercepilot",
+    },
+    { forceFallback: true },
+  );
+  const modelDrivenData = await getReviewIntelligenceApiData(
+    {
+      productId: "prod-connectplus-usb-c-hub",
+      sellerId: "seller-commercepilot",
+    },
+    {
+      modelTextOverride: JSON.stringify({
+        buyerFacingWarning: "LLM uyarısı: uyumluluk ve güç geçişi bilgisini satın almadan önce kontrol et.",
+        listingFixSuggestions: [
+          "LLM önerisi: cihaz uyumluluğu, HDMI ve güç geçişi değerlerini teknik özelliklerde ayır.",
+          "LLM önerisi: uzun kullanımda ısınma beklentisini SSS alanına taşı.",
+        ],
+        repeatedComplaintThemes: ["uyumluluk", "olmayan-tema"],
+        reviewClusters: [
+          {
+            id: "llm-compatibility",
+            reviewIds: ["rev-026", "missing-review"],
+            sentiment: "negative",
+            severity: "high",
+            summary: "LLM cluster: uyumluluk ve güç geçişi belirsizliği tekrar ediyor.",
+            theme: "uyumluluk",
+          },
+        ],
+        riskSummary: "LLM risk özeti: uyumluluk ve iade riski ürün sayfasında cevaplanmalı.",
+        sellerReplyDrafts: [
+          {
+            body: "LLM yanıtı: cihaz uyumluluğu ve güç geçişi bilgisini daha açık hale getiriyoruz.",
+            reviewId: "rev-026",
+            title: "LLM destek yanıtı",
+          },
+          {
+            body: "Bu geçersiz review id temizlenmeli.",
+            reviewId: "missing-review",
+            title: "Geçersiz yanıt",
+          },
+        ],
+      }),
+    },
+  );
+  const missingProduct = await getReviewIntelligenceApiData({
+    productId: "missing-product",
+  });
+  const validRequest = validateReviewIntelligenceRequest({
+    productId: "prod-connectplus-usb-c-hub",
+  });
+  const missingRequest = validateReviewIntelligenceRequest({
+    productId: " ",
+  });
+
+  assert(Boolean(forcedData), "review intelligence forced data üretilemedi");
+  assert(Boolean(modelDrivenData), "review intelligence model override data üretilemedi");
+  assert(!missingProduct, "olmayan ürün review intelligence undefined dönmeli");
+  assert(validRequest.ok, "review intelligence valid request doğrulanmalı");
+  assert(!missingRequest.ok && missingRequest.code === "PRODUCT_REQUIRED", "review intelligence missing product validation yanlış");
+
+  if (!forcedData || !modelDrivenData) {
+    return;
+  }
+
+  assert(forcedData.contract.endpoint === reviewIntelligenceEndpoint, "review intelligence endpoint yanlış");
+  assert(forcedData.contract.method === "POST", "review intelligence method yanlış");
+  assert(forcedData.contract.envelope === "success/data/error", "review intelligence envelope yanlış");
+  assert(forcedData.contract.modelCall === "runtime-only", "review intelligence build-time çağrı yapmamalı");
+  assert(forcedData.product.id === "prod-connectplus-usb-c-hub", "review intelligence product id yanlış");
+  assert(forcedData.reviewStats.sourceReviewCount >= 2, "review intelligence source review count zayıf");
+  assert(forcedData.intelligence.status === "fallback", "forced review intelligence fallback dönmeli");
+  assert(forcedData.intelligence.provider === "deterministic", "forced review intelligence provider deterministic olmalı");
+  assert(forcedData.intelligence.fallbackReason?.includes("FORCED_FALLBACK"), "forced review intelligence fallback reason eksik");
+  assert(forcedData.intelligence.reviewClusters.length > 0, "review intelligence cluster eksik");
+  assert(forcedData.intelligence.repeatedComplaintThemes.includes("uyumluluk"), "review intelligence repeated theme eksik");
+  assert(forcedData.intelligence.listingFixSuggestions.length >= 2, "review intelligence listing fix önerisi eksik");
+  assert(forcedData.intelligence.sellerReplyDrafts.length > 0, "review intelligence seller reply draft eksik");
+  assert(forcedData.intelligence.buyerFacingWarning.length > 0, "review intelligence buyer warning eksik");
+  assert(
+    forcedData.intelligence.reviewClusters.every((cluster) =>
+      cluster.reviewIds.every((reviewId) => forcedData.source.sourceReviewIds.includes(reviewId))
+    ),
+    "review intelligence kaynak dışı review id taşıyor",
+  );
+  assert(modelDrivenData.intelligence.status === "generated", "review intelligence model override generated olmalı");
+  assert(
+    modelDrivenData.intelligence.reviewClusters[0]?.summary.includes("LLM cluster"),
+    "review intelligence LLM cluster summary uygulanmadı",
+  );
+  assert(
+    !modelDrivenData.intelligence.reviewClusters[0]?.reviewIds.includes("missing-review"),
+    "review intelligence invalid review id filtrelenmedi",
+  );
+  assert(
+    !modelDrivenData.intelligence.repeatedComplaintThemes.includes("olmayan-tema"),
+    "review intelligence invalid theme filtrelenmedi",
+  );
+  assert(
+    modelDrivenData.intelligence.sellerReplyDrafts.some((draft) => draft.body.includes("LLM yanıtı")),
+    "review intelligence LLM seller reply uygulanmadı",
+  );
+}
+
 async function validateSellerActionExplanationApiContracts() {
   const restockExplanation = await getSellerActionExplanationApiData("restock-ergoflex-calisma-sandalyesi", {
+    forceFallback: true,
+  });
+  const reviewExplanation = await getSellerActionExplanationApiData("review_attention-connectplus-usb-c-hub", {
     forceFallback: true,
   });
   const missingExplanation = await getSellerActionExplanationApiData("missing-action", {
@@ -632,6 +903,24 @@ async function validateSellerActionExplanationApiContracts() {
   );
   assert(restockExplanation.source.actionEndpoint === "/api/seller/actions/restock-ergoflex-calisma-sandalyesi", "action explanation source endpoint yanlış");
   assert(restockExplanation.source.evidenceCount >= 5, "action explanation source evidence count eksik");
+  assert(Boolean(reviewExplanation), "review action explanation üretilemedi");
+
+  if (reviewExplanation) {
+    assert(
+      reviewExplanation.source.reviewIntelligenceProductId === "prod-connectplus-usb-c-hub",
+      "review action explanation review intelligence product id eksik",
+    );
+    assert(
+      reviewExplanation.source.reviewIntelligenceStatus === "fallback",
+      "review action explanation review intelligence status yanlış",
+    );
+    assert(
+      reviewExplanation.explanation.summary.includes("yorum güveni") ||
+        reviewExplanation.explanation.summary.includes("Review") ||
+        reviewExplanation.explanation.summary.includes("yorum"),
+      "review action explanation review intelligence özetini taşımıyor",
+    );
+  }
 }
 
 function validateBuyerWorkflows() {
@@ -656,6 +945,13 @@ function validateBuyerWorkflows() {
       expectedIntent: "home_office_setup",
       expectedBudget: 3000,
       requiredRoles: ["ergonomics", "input_device"],
+    },
+    {
+      prompt: "iki bin tl altında mevcut ürünleri sırala.",
+      buyerId: "buyer-aylin",
+      expectedIntent: "generic",
+      expectedBudget: 2000,
+      requiredRoles: [],
     },
     {
       prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
@@ -773,12 +1069,34 @@ function validateBuyerCatalogApiContracts() {
   );
 }
 
-function validateBuyerAgentApiContracts() {
-  const data = getBuyerAgentApiData({
-    buyerId: "buyer-aylin",
-    prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
-  });
+async function validateBuyerAgentApiContracts() {
+  const data = await getBuyerAgentApiData(
+    {
+      buyerId: "buyer-aylin",
+      prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
+    },
+    { forceFallback: true },
+  );
   const defaultData = getDefaultBuyerAgentApiData();
+  const lastProductId = data.recommendations.at(-1)?.product.id ?? data.recommendations[0]?.product.id;
+  const modelRankOverride = await getBuyerAgentApiData(
+    {
+      buyerId: "buyer-aylin",
+      prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
+    },
+    {
+      modelTextOverride: JSON.stringify({
+        cartStrategySuggestion: "replace",
+        confirmationQuestion: "Bu LLM sıralamasını sepete ekleyeyim mi?",
+        messageContent: "Toplantı setup için en güçlü adayı önceledim.",
+        rankedProductIds: ["missing-product", lastProductId, data.recommendations[0]?.product.id],
+        recommendationReasons: {
+          [lastProductId]: "LLM gerekçesi: toplantı akışındaki rolü daha acil.",
+        },
+        riskNotes: ["LLM risk notu: stok ve teslimat sinyalini kontrol et."],
+      }),
+    },
+  );
   const applyData = getBuyerAgentApplyApiData({
     items: data.recommendations.map((recommendation) => ({
       productId: recommendation.product.id,
@@ -794,6 +1112,28 @@ function validateBuyerAgentApiContracts() {
     items: [],
     strategy: "append",
   });
+  const unsupportedPrompt = validateBuyerAgentRequest({
+    buyerId: "buyer-aylin",
+    prompt: "2000 TL altında PlayStation 5 öner.",
+  });
+  const unsupportedNarrativeOverride = await getBuyerAgentApiData(
+    {
+      buyerId: "buyer-aylin",
+      prompt: "Toplantı için uyumlu kamera mikrofon hub öner.",
+    },
+    {
+      modelTextOverride: JSON.stringify({
+        cartStrategySuggestion: "append",
+        confirmationQuestion: "Bu iPhone seçkisini sepete ekleyeyim mi?",
+        messageContent: "iPhone ile uyumlu bir toplantı seti hazırladım.",
+        rankedProductIds: data.recommendations.map((recommendation) => recommendation.product.id),
+        recommendationReasons: {
+          [data.recommendations[0]?.product.id]: "iPhone ile en uyumlu aksesuar olduğu için seçildi.",
+        },
+        riskNotes: ["iPhone stok durumunu kontrol et."],
+      }),
+    },
+  );
 
   assert(defaultData.contract.endpoint === "/api/buyer/agent", "buyer agent endpoint yanlış");
   assert(defaultData.contract.method === "POST", "buyer agent method yanlış");
@@ -807,6 +1147,11 @@ function validateBuyerAgentApiContracts() {
     "buyer agent apply approval tool plan eksik",
   );
   assert(data.runtime.handoff.nextMilestone === "8R", "buyer agent runtime handoff 8R olmalı");
+  validateAgentTrace("buyer agent", data.agentTrace, {
+    role: "buyer",
+    surface: "route",
+    toolIds: ["buyer.agent.cart.apply.preview"],
+  });
   assert(data.applyPreview.toolId === "buyer.agent.cart.apply.preview", "buyer agent apply preview tool id yanlış");
   assert(data.applyPreview.endpoint === "/api/buyer/agent/apply", "buyer agent apply preview endpoint yanlış");
   assert(data.applyPreview.requiresApproval, "buyer agent apply preview onay sınırı eksik");
@@ -824,6 +1169,18 @@ function validateBuyerAgentApiContracts() {
   assert(data.summary.itemCount > 0, "buyer agent öneri dönmeli");
   assert(data.message.content.length > 0, "buyer agent mesajı eksik");
   assert(data.message.confirmationQuestion.includes("sepete"), "buyer agent onay sorusu eksik");
+  assert(data.orchestration.status === "fallback", "forced buyer agent orchestration fallback dönmeli");
+  assert(data.orchestration.provider === "deterministic", "forced buyer agent orchestration provider deterministic olmalı");
+  assert(data.orchestration.rankedProductIds.length === data.recommendations.length, "buyer agent ranked product ids eksik");
+  assert(data.orchestration.cartStrategySuggestion === "append", "forced buyer agent default strategy append olmalı");
+  assert(data.orchestration.fallbackReason?.includes("FORCED_FALLBACK"), "forced buyer agent fallback reason eksik");
+  assert(modelRankOverride.orchestration.status === "generated", "model override buyer agent generated dönmeli");
+  assert(modelRankOverride.orchestration.cartStrategySuggestion === "replace", "model override strategy normalize yanlış");
+  assert(!modelRankOverride.orchestration.rankedProductIds.includes("missing-product"), "buyer agent LLM katalog dışı product id geçiriyor");
+  assert(
+    modelRankOverride.recommendations[0]?.primaryReason.includes("LLM gerekçesi"),
+    "buyer agent LLM recommendation reason uygulanmadı",
+  );
   assert(
     data.recommendations.every((recommendation) => recommendation.product.image.src === "/catalog/buyer-product-sprite.png"),
     "buyer agent ürün görsel contract yanlış",
@@ -849,18 +1206,73 @@ function validateBuyerAgentApiContracts() {
   assert(applyData.summary.totalPrice > 0, "buyer agent apply total eksik");
   assert(!invalidStrategy.ok && invalidStrategy.code === "INVALID_STRATEGY", "buyer agent invalid strategy validation yanlış");
   assert(!emptyItems.ok && emptyItems.code === "ITEMS_REQUIRED", "buyer agent empty item validation yanlış");
+  assert(
+    !unsupportedPrompt.ok && unsupportedPrompt.code === "BUYER_CATALOG_UNSUPPORTED_PROMPT",
+    "buyer agent unsupported katalog prompt'u route validation'da engellenmeli",
+  );
+  assert(
+    !unsupportedNarrativeOverride.message.content.toLocaleLowerCase("tr-TR").includes("iphone") &&
+      !unsupportedNarrativeOverride.message.confirmationQuestion.toLocaleLowerCase("tr-TR").includes("iphone") &&
+      Object.values(unsupportedNarrativeOverride.orchestration.recommendationReasons).every(
+        (reason) => !reason.toLocaleLowerCase("tr-TR").includes("iphone"),
+      ),
+    "buyer agent LLM narrative katalog dışı ürün terimini geçirmemeli",
+  );
 }
 
-function validateSellerAgentApiContracts() {
+async function validateSellerAgentApiContracts() {
   const defaultData = getDefaultSellerAgentApiData();
-  const slowMoverData = getSellerAgentApiData({
-    prompt: "Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla.",
-    sellerId: "seller-commercepilot",
-  });
-  const negativeReviewData = getSellerAgentApiData({
-    prompt: "Negatif yorum gelen ürünleri grupla.",
-    sellerId: "seller-commercepilot",
-  });
+  const slowMoverData = await getSellerAgentApiData(
+    {
+      prompt: "Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla.",
+      sellerId: "seller-commercepilot",
+    },
+    { forceFallback: true },
+  );
+  const negativeReviewData = await getSellerAgentApiData(
+    {
+      prompt: "Negatif yorum gelen ürünleri grupla.",
+      sellerId: "seller-commercepilot",
+    },
+    { forceFallback: true },
+  );
+  const modelProduct = slowMoverData.productFindings[0].product;
+  const modelActionId = slowMoverData.actionSuggestions[0].id;
+  const modelDrivenData = await getSellerAgentApiData(
+    {
+      prompt: "Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla.",
+      sellerId: "seller-commercepilot",
+    },
+    {
+      modelTextOverride: JSON.stringify({
+        activeFocus: "slow-movers",
+        actionReasons: {
+          [modelActionId]: "LLM action gerekçesi: kampanya metni ve fiyat indirimi aynı onay akışına bağlanmalı.",
+        },
+        draft: {
+          campaignLabel: "LLM vitrin hızlandırma",
+          description: "LLM taslağı satış hızı düşük üründe itirazı ve kampanya netliğini aynı açıklamada toplar.",
+          price: Math.round(modelProduct.price * 0.94),
+          productId: modelProduct.id,
+          rationale: "LLM draft onay sonrası uygulanacak fiyat ve içerik önerisini hazırlar.",
+          title: `${modelProduct.name} | LLM hızlandırılmış vitrin`,
+        },
+        messageContent: "LLM orchestration satılmayan ürün adaylarını ürün kanıtı, action etkisi ve onaylı draft ile sıraladı.",
+        messageHeadline: "LLM satıcı odağını ve draft taslağını hazırladı.",
+        nextStepDetails: {
+          "approval-boundary": "LLM taslak apply işlemi için satıcı onayı bekler.",
+          "open-action": "LLM önce kampanya action detayının açılmasını önerir.",
+          "open-products": "LLM ürün kanıtını satılmayanlar filtresinde açar.",
+        },
+        productReasons: {
+          [modelProduct.id]: "LLM gerekçesi: düşük sipariş hızı ve bağlı kampanya action'ı aynı anda öncelik verdiriyor.",
+        },
+        rankedActionIds: [modelActionId, "invalid-action"],
+        rankedProductIds: [modelProduct.id, "invalid-product"],
+        safetyNote: "Onay olmadan fiyat, kampanya veya listeleme değişikliği yapmam.",
+      }),
+    },
+  );
   const validRequest = validateSellerAgentRequest({
     prompt: "Stok riski olan ürünleri göster.",
   });
@@ -876,13 +1288,28 @@ function validateSellerAgentApiContracts() {
   assert(defaultData.contract.method === "POST", "seller agent method yanlış");
   assert(defaultData.contract.envelope === "success/data/error", "seller agent envelope contract yanlış");
   assert(defaultData.contract.source === "seller-agent-deterministic-workflow", "seller agent source yanlış");
+  assert(defaultData.orchestration.provider === "deterministic", "seller agent default orchestration provider yanlış");
+  assert(defaultData.orchestration.status === "fallback", "seller agent default orchestration status yanlış");
   assert(defaultData.runtime.role === "seller", "seller agent runtime role yanlış");
   assert(defaultData.runtime.promptTemplate.id === "seller-growth-route", "seller agent prompt registry id yanlış");
   assert(defaultData.runtime.toolPlan.some((tool) => tool.id === "seller.products.rank"), "seller agent products tool plan eksik");
   assert(defaultData.runtime.toolPlan.some((tool) => tool.requiresApproval), "seller agent approval tool plan eksik");
   assert(defaultData.runtime.handoff.nextMilestone === "8R", "seller agent runtime handoff 8R olmalı");
+  validateAgentTrace("seller agent default", defaultData.agentTrace, {
+    role: "seller",
+    surface: "route",
+    toolIds: [sellerAgentListingApplyToolId],
+  });
+  validateAgentTrace("seller agent slow movers", slowMoverData.agentTrace, {
+    role: "seller",
+    surface: "route",
+    toolIds: [sellerAgentListingApplyToolId],
+  });
   assert(defaultData.message.safetyNote.includes("Onay"), "seller agent safety note onay sınırı eksik");
   assert(slowMoverData.activeFocus === "slow-movers", "seller agent slow movers focus yanlış");
+  assert(slowMoverData.orchestration.status === "fallback", "seller agent forced fallback orchestration status yanlış");
+  assert(slowMoverData.orchestration.rankedProductIds[0] === slowMoverData.productFindings[0].product.id, "seller agent orchestration product ranking uyumsuz");
+  assert(slowMoverData.orchestration.rankedActionIds[0] === slowMoverData.actionSuggestions[0].id, "seller agent orchestration action ranking uyumsuz");
   assert(
     slowMoverData.runtime.toolPlan.some((tool) => tool.id === "seller.profile.permissions"),
     "seller agent permission tool plan eksik",
@@ -926,16 +1353,39 @@ function validateSellerAgentApiContracts() {
     "seller agent draft route/floating surface eksik",
   );
   assert(negativeReviewData.activeFocus === "negative-reviews", "seller agent negative review focus yanlış");
+  assert(modelDrivenData.orchestration.status === "generated", "seller agent model override generated olmalı");
+  assert(modelDrivenData.orchestration.rankedProductIds.includes(modelProduct.id), "seller agent LLM ranked product id eksik");
+  assert(!modelDrivenData.orchestration.rankedProductIds.includes("invalid-product"), "seller agent LLM katalog dışı product id filtrelenmedi");
+  assert(!modelDrivenData.orchestration.rankedActionIds.includes("invalid-action"), "seller agent LLM katalog dışı action id filtrelenmedi");
+  assert(
+    modelDrivenData.productFindings[0].reason.includes("LLM gerekçesi"),
+    "seller agent LLM product reason uygulanmadı",
+  );
+  assert(
+    modelDrivenData.actionSuggestions[0].expectedOutcome.includes("LLM action gerekçesi"),
+    "seller agent LLM action reason uygulanmadı",
+  );
+  assert(
+    modelDrivenData.draftPreview?.afterListing.title.includes("LLM hızlandırılmış"),
+    "seller agent LLM draft title uygulanmadı",
+  );
+  assert(
+    modelDrivenData.draftPreview?.applyRequest.mutation.title === modelDrivenData.draftPreview?.afterListing.title,
+    "seller agent LLM draft apply request mutation uyumsuz",
+  );
   assert(validRequest.ok, "seller agent valid request doğrulanmalı");
   assert(!missingPrompt.ok && missingPrompt.code === "PROMPT_REQUIRED", "seller agent missing prompt validation yanlış");
   assert(!longPrompt.ok && longPrompt.code === "PROMPT_TOO_LONG", "seller agent long prompt validation yanlış");
 }
 
-function validateSellerListingMutationApplyContracts() {
-  const agentData = getSellerAgentApiData({
-    prompt: "Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla.",
-    sellerId: "seller-commercepilot",
-  });
+async function validateSellerListingMutationApplyContracts() {
+  const agentData = await getSellerAgentApiData(
+    {
+      prompt: "Satılmayan ürünlerimi sırala ve ilk 3 sebebi açıkla.",
+      sellerId: "seller-commercepilot",
+    },
+    { forceFallback: true },
+  );
   const draftPreview = agentData.draftPreview;
   const invalidBody = validateSellerListingMutationApplyRequest(null);
   const missingProduct = validateSellerListingMutationApplyRequest({
@@ -1060,8 +1510,15 @@ function validateFloatingAgentContracts() {
     pathname: "/seller/products",
     role: "seller",
   });
+  const buyerProductWarningContext = createFloatingAgentContext({
+    pathname: "/buyer/products/ergoflex-calisma-sandalyesi",
+    role: "buyer",
+  });
   const normalizedPath = normalizeFloatingAgentPathname("/seller/products/");
   const defaultStore = createDefaultFloatingAgentStore();
+  const profileProductAlert = getBuyerProductProfileAlert({
+    pathname: "/buyer/products/ergoflex-calisma-sandalyesi",
+  });
 
   assert(floatingAgentStorageKey === "commercepilot.floatingAgent.v1", "floating agent storage key yanlış");
   assert(floatingAgentUpdatedEvent === "commercepilot:floating-agent-updated", "floating agent event yanlış");
@@ -1076,6 +1533,11 @@ function validateFloatingAgentContracts() {
   assert(buyerContext.runtime.request.routeContext === "/buyer/cart", "floating buyer route context yanlış");
   assert(buyerContext.runtime.runtimeId === "buyer-floating-8q", "floating buyer runtime id yanlış");
   assert(buyerContext.runtime.handoff.nextMilestone === "8R", "floating buyer handoff 8R olmalı");
+  validateAgentTrace("floating buyer", buyerContext.agentTrace, {
+    role: "buyer",
+    surface: "floating",
+    toolIds: ["buyer.agent.cart.apply.preview"],
+  });
   assert(
     buyerContext.capabilities.some((capability) => capability.id === "buyer-cart-apply" && capability.requiresApproval),
     "floating buyer cart apply capability eksik",
@@ -1085,12 +1547,24 @@ function validateFloatingAgentContracts() {
       buyerContext.controls.some((control) => control.id === "snooze-page"),
     "floating buyer controls eksik",
   );
+  assert(profileProductAlert?.title.toLocaleLowerCase("tr-TR").includes("kargo"), "buyer product profile alert kargo uyarısı üretmeli");
+  assert(
+    buyerProductWarningContext.proactiveTone === "warning" &&
+      buyerProductWarningContext.profileAlert?.productId === "prod-ergoflex-calisma-sandalyesi" &&
+      buyerProductWarningContext.proactiveMessage.includes("hızlı teslimat"),
+    "floating buyer ürün detayında profil/yorum uyarısı proactive mesaja taşınmalı",
+  );
   assert(sellerContext.role === "seller", "floating seller role yanlış");
   assert(sellerContext.routeLabel === "Seller ürünler", "floating seller route label yanlış");
   assert(sellerContext.runtime.surface === "floating", "floating seller runtime surface yanlış");
   assert(sellerContext.runtime.request.routeContext === "/seller/products", "floating seller route context yanlış");
   assert(sellerContext.runtime.runtimeId === "seller-floating-8q", "floating seller runtime id yanlış");
   assert(sellerContext.runtime.handoff.nextMilestone === "8R", "floating seller handoff 8R olmalı");
+  validateAgentTrace("floating seller", sellerContext.agentTrace, {
+    role: "seller",
+    surface: "floating",
+    toolIds: [sellerAgentListingApplyToolId],
+  });
   assert(
     sellerContext.capabilities.some((capability) => capability.id === "seller-listing-apply" && capability.requiresApproval),
     "floating seller listing apply capability eksik",
@@ -1101,10 +1575,236 @@ function validateFloatingAgentContracts() {
   );
 }
 
+async function validateFloatingAgentApiContracts() {
+  const invalid = validateFloatingAgentRequest({
+    pathname: "/buyer/products",
+    prompt: "x",
+    role: "buyer",
+  });
+  const valid = validateFloatingAgentRequest({
+    actorId: "buyer-aylin",
+    history: [
+      {
+        content: "Bu agent ne yapıyor?",
+        role: "user",
+      },
+    ],
+    pathname: "/buyer/products/",
+    prompt: "Sepetim otomatik değişir mi?",
+    role: "buyer",
+  });
+  const buyerChat = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [],
+      pathname: "/buyer/products",
+      prompt: "Sepetim otomatik değişir mi?",
+      role: "buyer",
+    },
+    { forceFallback: true },
+  );
+  const buyerAction = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [],
+      pathname: "/buyer/products",
+      prompt: "Anneme 1000 TL altında hızlı teslim hediye öner.",
+      role: "buyer",
+    },
+    { forceFallback: true },
+  );
+  const sellerAction = await getFloatingAgentApiData(
+    {
+      actorId: "seller-commercepilot",
+      history: [],
+      pathname: "/seller/products",
+      prompt: "Satılmayan ürünleri sırala ve listing taslağı hazırla.",
+      role: "seller",
+    },
+    { forceFallback: true },
+  );
+  const outOfScope = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [],
+      pathname: "/buyer/products",
+      prompt: "Bugün hava nasıl?",
+      role: "buyer",
+    },
+    { forceFallback: true },
+  );
+  const modelRoutedChat = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [],
+      pathname: "/buyer/products",
+      prompt: "Bu panel ne işe yarıyor?",
+      role: "buyer",
+    },
+    {
+      modelTextOverride: JSON.stringify({
+        answer: "Bu panel alışveriş içinde kısa cevap verir; aksiyon gerekirse öneriyi onaya taşır.",
+        confidence: 0.91,
+        mode: "chat",
+        reason: "Kullanıcı ürün içi yardım soruyor.",
+      }),
+    },
+  );
+  const modelMisroutedBuyerAction = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [
+        {
+          content: "Sepetim otomatik değişir mi?",
+          role: "user",
+        },
+        {
+          content: "Hayır. Onay vermeden sepetini değiştirmem.",
+          role: "assistant",
+        },
+      ],
+      pathname: "/buyer/products",
+      prompt: "Anneme 1000 TL altında hızlı teslim hediye öner.",
+      role: "buyer",
+    },
+    {
+      modelTextOverride: JSON.stringify({
+        answer: "Hayır, sepet otomatik değişmez.",
+        confidence: 0.71,
+        mode: "chat",
+        reason: "Model geçmişteki güvenlik sorusuna takıldı.",
+      }),
+    },
+  );
+  const unsupportedBuyerCatalogPrompt = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [],
+      pathname: "/buyer/products",
+      prompt: "2000 TL altında iPhone önerir misin?",
+      role: "buyer",
+    },
+    { forceFallback: true },
+  );
+  const unsupportedConsolePrompt = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [],
+      pathname: "/buyer/products",
+      prompt: "PlayStation 5 ve oyun kolu sepete hazırla.",
+      role: "buyer",
+    },
+    { forceFallback: true },
+  );
+  const buyerRoleSellerPrompt = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [],
+      pathname: "/buyer/products",
+      prompt: "Satılmayan ürünlerimi sırala ve stok riskini açıkla.",
+      role: "buyer",
+    },
+    { forceFallback: true },
+  );
+  const sellerRoleBuyerPrompt = await getFloatingAgentApiData(
+    {
+      actorId: "seller-commercepilot",
+      history: [],
+      pathname: "/seller",
+      prompt: "Anneme hızlı teslim hediye öner ve sepete ekle.",
+      role: "seller",
+    },
+    { forceFallback: true },
+  );
+  const staleModelActionPrompt = await getFloatingAgentApiData(
+    {
+      actorId: "buyer-aylin",
+      history: [
+        {
+          content: "Toplantı için kamera mikrofon öner.",
+          role: "user",
+        },
+      ],
+      pathname: "/buyer/products",
+      prompt: "2000 TL altı mevcut ürünleri sıralar mısın?",
+      role: "buyer",
+    },
+    {
+      modelTextOverride: JSON.stringify({
+        actionPrompt: "Toplantı için kamera mikrofon öner.",
+        answer: "Önceki toplantı materyallerini sıralıyorum.",
+        confidence: 0.86,
+        mode: "buyer-agent",
+        reason: "Model geçmiş komuta takıldı.",
+      }),
+    },
+  );
+
+  assert(!invalid.ok && invalid.code === "PROMPT_TOO_SHORT", "floating agent kısa prompt validation yanlış");
+  assert(valid.ok && valid.value.pathname === "/buyer/products", "floating agent request normalize yanlış");
+  assert(floatingAgentEndpoint === "/api/agent/floating", "floating agent endpoint yanlış");
+  assert(buyerChat.contract.endpoint === floatingAgentEndpoint, "floating agent contract endpoint yanlış");
+  assert(buyerChat.decision.mode === "chat", "floating buyer help sorusu chat mode dönmeli");
+  assert(!buyerChat.buyerAgent, "floating buyer chat sorusu agentic öneri üretmemeli");
+  assert(
+    buyerChat.message.content.toLocaleLowerCase("tr-TR").includes("onay"),
+    "floating buyer chat cevabı onay sınırını anlatmalı",
+  );
+  assert(buyerAction.decision.mode === "buyer-agent", "floating buyer action buyer-agent mode dönmeli");
+  assert(Boolean(buyerAction.buyerAgent), "floating buyer action buyerAgent data üretmeli");
+  assert(!buyerAction.sellerAgent, "floating buyer action sellerAgent üretmemeli");
+  assert(buyerAction.decision.actionPrompt?.includes("Anneme"), "floating buyer action prompt korunmalı");
+  assert(sellerAction.decision.mode === "seller-agent", "floating seller action seller-agent mode dönmeli");
+  assert(Boolean(sellerAction.sellerAgent), "floating seller action sellerAgent data üretmeli");
+  assert(!sellerAction.buyerAgent, "floating seller action buyerAgent üretmemeli");
+  assert(outOfScope.decision.mode === "chat", "floating out-of-scope soru chat boundary dönmeli");
+  assert(
+    outOfScope.message.content.includes("CommercePilot"),
+    "floating out-of-scope cevabı commerce sınırını belirtmeli",
+  );
+  assert(modelRoutedChat.orchestration.status === "generated", "floating model override generated olmalı");
+  assert(modelRoutedChat.decision.mode === "chat", "floating model override chat mode korunmalı");
+  assert(
+    modelMisroutedBuyerAction.decision.mode === "buyer-agent" && Boolean(modelMisroutedBuyerAction.buyerAgent),
+    "floating current prompt explicit action ise history kaynaklı chat misroute override edilmeli",
+  );
+  assert(
+    unsupportedBuyerCatalogPrompt.decision.mode === "chat" &&
+      !unsupportedBuyerCatalogPrompt.buyerAgent &&
+      unsupportedBuyerCatalogPrompt.message.content.includes("kataloğunda yok"),
+    "floating katalog dışı buyer ürün prompt'u eski/uydurma öneri üretmemeli",
+  );
+  assert(
+    unsupportedConsolePrompt.decision.mode === "chat" &&
+      !unsupportedConsolePrompt.buyerAgent &&
+      unsupportedConsolePrompt.message.content.includes("PlayStation"),
+    "floating PlayStation gibi katalog dışı ürün prompt'u öneri/apply üretmemeli",
+  );
+  assert(
+    buyerRoleSellerPrompt.decision.mode === "chat" &&
+      !buyerRoleSellerPrompt.buyerAgent &&
+      buyerRoleSellerPrompt.message.content.includes("satıcı operasyonu"),
+    "floating buyer rolünde seller-only komut buyer-agent mode'a düşmemeli",
+  );
+  assert(
+    sellerRoleBuyerPrompt.decision.mode === "chat" &&
+      !sellerRoleBuyerPrompt.sellerAgent &&
+      sellerRoleBuyerPrompt.message.content.includes("alıcı sepeti"),
+    "floating seller rolünde buyer-only komut seller-agent mode'a düşmemeli",
+  );
+  assert(
+    staleModelActionPrompt.decision.mode === "buyer-agent" &&
+      staleModelActionPrompt.decision.actionPrompt === "2000 TL altı mevcut ürünleri sıralar mısın?",
+    "floating current prompt action ise modelin eski actionPrompt'u kullanılmamalı",
+  );
+}
+
 function validateDemoRehearsalContracts() {
   const demo = getDemoRehearsalData();
   const laneIds = new Set(demo.runbook.map((lane) => lane.id));
   const qaIds = new Set(demo.qaChecks.map((check) => check.id));
+  const llmProofIds = new Set(demo.llmProofs.map((proof) => proof.id));
+  const agentTraceProofIds = new Set(demo.agentTraceProofs.map((proof) => proof.id));
 
   assert(demoRehearsalRoute === "/demo", "demo rehearsal route yanlış");
   assert(demo.milestone === "8R", "demo milestone 8R olmalı");
@@ -1124,11 +1824,50 @@ function validateDemoRehearsalContracts() {
     });
   });
   assert(demo.proofCards.length === 3, "demo proof card üç adet olmalı");
-  assert(demo.qaChecks.length >= 4, "demo QA checklist eksik");
-  assert(qaIds.has("qa-check") && qaIds.has("qa-build") && qaIds.has("qa-runtime") && qaIds.has("qa-browser"), "demo QA id eksik");
+  assert(demo.qaChecks.length >= 5, "demo QA checklist eksik");
+  assert(
+    qaIds.has("qa-check") &&
+      qaIds.has("qa-build") &&
+      qaIds.has("qa-runtime") &&
+      qaIds.has("qa-browser") &&
+      qaIds.has("qa-llm-trace"),
+    "demo QA id eksik",
+  );
   assert(demo.qaChecks.some((check) => check.command === "npm run check"), "demo npm run check kanıtı eksik");
   assert(demo.qaChecks.some((check) => check.command === "npm run build"), "demo npm run build kanıtı eksik");
   assert(demo.marquee.some((item) => item.includes("Runtime 8Q.1")), "demo runtime marquee eksik");
+  assert(demo.marquee.some((item) => item.includes("LLM trace")), "demo LLM trace marquee eksik");
+  assert(demo.llmProofs.length >= 5, "demo LLM proof listesi eksik");
+  assert(demo.agentTraceProofs.length >= 3, "demo agent trace proof listesi eksik");
+  assert(
+    agentTraceProofIds.has("buyer-agent-execution-trace") &&
+      agentTraceProofIds.has("seller-agent-execution-trace") &&
+      agentTraceProofIds.has("floating-agent-execution-trace"),
+    "demo agent trace proof id eksik",
+  );
+  assert(
+    llmProofIds.has("buyer-agent-llm") &&
+      llmProofIds.has("seller-agent-llm") &&
+      llmProofIds.has("buyer-explanation-llm") &&
+      llmProofIds.has("seller-explanation-llm") &&
+      llmProofIds.has("review-intelligence-llm"),
+    "demo LLM proof id eksik",
+  );
+  demo.llmProofs.forEach((proof) => {
+    assert(proof.route.startsWith("/") && proof.endpoint.length > 8, `${proof.id}: LLM proof route/endpoint eksik`);
+    assert(proof.fields.some((field) => field.endsWith(".status")), `${proof.id}: status field eksik`);
+    assert(proof.fields.some((field) => field.endsWith(".provider")), `${proof.id}: provider field eksik`);
+    assert(proof.fields.some((field) => field.endsWith(".model")), `${proof.id}: model field eksik`);
+    assert(proof.fields.some((field) => field.endsWith(".fallbackReason")), `${proof.id}: fallbackReason field eksik`);
+  });
+  demo.agentTraceProofs.forEach((proof) => {
+    assert(proof.route.startsWith("/") && proof.endpoint.length > 8, `${proof.id}: agent trace route/endpoint eksik`);
+    ["context", "workflow", "llm", "guardrail", "approval", "tool"].forEach((layer) => {
+      assert(proof.requiredLayers.includes(layer), `${proof.id}: ${layer} layer proof eksik`);
+    });
+    assert(proof.expectedToolIds.length > 0, `${proof.id}: expected tool id eksik`);
+    assert(proof.status === "contracted", `${proof.id}: trace proof status yanlış`);
+  });
 }
 
 function validateSellerProfileApiContracts() {
@@ -1330,6 +2069,7 @@ async function validateBuyerSmartCartExplanationApiContracts() {
   assert(explanation.source.smartCartEndpoint === "/api/buyer/smart-cart", "buyer explanation source endpoint yanlış");
   assert(explanation.source.selectedItemCount >= 3, "buyer explanation source selected count eksik");
   assert(explanation.source.sellerSignalCount > 0, "buyer explanation source seller signal eksik");
+  assert(explanation.source.reviewIntelligenceProductCount > 0, "buyer explanation review intelligence enrichment eksik");
 
   const noBudgetGuard = await getBuyerSmartCartExplanationApiData(
     {
@@ -1378,6 +2118,131 @@ function validateExplainableScore(label, score) {
   assert(score.drivers.length > 0, `${label}: drivers eksik`);
   assert(Boolean(score.evidence), `${label}: evidence eksik`);
   assert(score.recommendedFocus.length > 0, `${label}: recommendedFocus eksik`);
+}
+
+function validateAgentTrace(label, trace, options) {
+  const requiredLayers = ["context", "workflow", "llm", "guardrail", "approval", "tool"];
+
+  assert(Boolean(trace), `${label}: agent trace eksik`);
+
+  if (!trace) {
+    return;
+  }
+
+  assert(trace.role === options.role, `${label}: trace role yanlış`);
+  assert(trace.surface === options.surface, `${label}: trace surface yanlış`);
+  assert(typeof trace.id === "string" && trace.id.includes("execution-trace"), `${label}: trace id yanlış`);
+  assert(typeof trace.summary === "string" && trace.summary.length > 24, `${label}: trace summary zayıf`);
+  assert(Array.isArray(trace.items) && trace.items.length >= requiredLayers.length, `${label}: trace item coverage zayıf`);
+  assert(Boolean(trace.generatedAt), `${label}: trace generatedAt eksik`);
+
+  trace.items.forEach((item, index) => {
+    assert(item.order === index + 1, `${label}: trace order ${item.id} yanlış`);
+    assert(typeof item.label === "string" && item.label.length > 4, `${label}: trace label eksik`);
+    assert(typeof item.detail === "string" && item.detail.length > 16, `${label}: trace detail zayıf`);
+  });
+
+  requiredLayers.forEach((layer) => {
+    assert(trace.coverage?.[layer] === true, `${label}: trace ${layer} coverage eksik`);
+    assert(trace.items.some((item) => item.layer === layer), `${label}: trace ${layer} item eksik`);
+  });
+
+  options.toolIds.forEach((toolId) => {
+    assert(trace.items.some((item) => item.toolId === toolId), `${label}: trace tool id ${toolId} eksik`);
+  });
+
+  assert(
+    trace.items.some((item) => item.layer === "approval" && item.requiresApproval),
+    `${label}: trace approval boundary eksik`,
+  );
+}
+
+function validateAgentTraceUiContracts() {
+  const componentSource = readProjectFile("src/components/commerce/agent-execution-trace-panel.tsx");
+  const buyerSource = readProjectFile("src/components/commerce/buyer-agent-workspace.tsx");
+  const buyerCatalogSource = readProjectFile("src/components/commerce/buyer-catalog-grid.tsx");
+  const buyerProfileSource = readProjectFile("src/components/commerce/buyer-profile-workspace.tsx");
+  const sellerSource = readProjectFile("src/components/commerce/seller-agent-workspace.tsx");
+  const floatingSource = readProjectFile("src/components/commerce/floating-agent-panel.tsx");
+  const demoSource = readProjectFile("src/components/commerce/demo-rehearsal-workspace.tsx");
+  const requiredLayers = ["context", "workflow", "llm", "guardrail", "approval", "tool"];
+
+  assert(componentSource.includes("export function AgentExecutionTracePanel"), "agent trace panel component export eksik");
+  assert(componentSource.includes("grid-flow-dense"), "agent trace panel coverage grid dense değil");
+  requiredLayers.forEach((layer) => {
+    assert(componentSource.includes(layer), `agent trace panel ${layer} layer görünürlüğü eksik`);
+  });
+
+  assert(!buyerSource.includes("AgentExecutionTracePanel"), "buyer agent kullanıcı ekranında teknik trace görünmemeli");
+  assert(buyerSource.includes("BuyerAgentFaq"), "buyer agent açıklanabilirlik SSS alanı eksik");
+  assert(
+    buyerCatalogSource.includes("snap-x snap-mandatory") && !buyerCatalogSource.includes("gsap.from"),
+    "buyer catalog yatay slider sadeleşmesi eksik",
+  );
+  assert(
+    buyerProfileSource.includes("reviewsPerPage = 5") && buyerProfileSource.includes("visibleReviews.map"),
+    "buyer profile 5'li yorum sayfalaması eksik",
+  );
+  assert(
+    sellerSource.includes("AgentExecutionTracePanel") && sellerSource.includes("trace={data.agentTrace}"),
+    "seller agent trace panel UI bağlanmadı",
+  );
+  assert(
+    !floatingSource.includes("AgentExecutionTracePanel") &&
+      !floatingSource.includes("LlmStatusBadge") &&
+      floatingSource.includes("Nasıl yardımcı olayım?") &&
+      floatingSource.includes("placeholder={context.defaultPrompt}") &&
+      floatingSource.includes('setPromptDraft({ contextKey, value: "" })') &&
+      floatingSource.includes("history: []") &&
+      floatingSource.includes("openFreshSession") &&
+      !floatingSource.includes("appendFloatingAgentTurn"),
+    "floating agent kullanıcı chatbot yüzeyine sadeleşmedi",
+  );
+  assert(
+    demoSource.includes("data.agentTraceProofs.map") && demoSource.includes("AgentTraceProofCard"),
+    "demo agent trace proof UI bağlanmadı",
+  );
+}
+
+function validateAgentComponentExtractionContracts() {
+  const buyerWorkspaceSource = readProjectFile("src/components/commerce/buyer-agent-workspace.tsx");
+  const buyerPanelsSource = readProjectFile("src/components/commerce/buyer-agent-panels.tsx");
+  const sellerWorkspaceSource = readProjectFile("src/components/commerce/seller-agent-workspace.tsx");
+  const sellerListingPanelsSource = readProjectFile("src/components/commerce/seller-agent-listing-panels.tsx");
+  const floatingSource = readProjectFile("src/components/commerce/floating-agent-panel.tsx");
+  const floatingResultSource = readProjectFile("src/components/commerce/floating-agent-result-panel.tsx");
+
+  [
+    "BuyerAgentConversationPanel",
+    "BuyerRecommendationCard",
+    "BuyerAgentApplyPanel",
+    "BuyerAgentFaq",
+    "BuyerRecommendationSkeleton",
+    "BuyerAgentEmptyPanel",
+  ].forEach((componentName) => {
+    assert(buyerPanelsSource.includes(`export function ${componentName}`), `buyer agent panel export eksik: ${componentName}`);
+    assert(buyerWorkspaceSource.includes(componentName), `buyer workspace component import/kullanım eksik: ${componentName}`);
+  });
+
+  [
+    "ListingSnapshot",
+    "ListingMutationApprovalPanel",
+  ].forEach((componentName) => {
+    assert(
+      sellerListingPanelsSource.includes(`export function ${componentName}`),
+      `seller listing panel export eksik: ${componentName}`,
+    );
+    assert(sellerWorkspaceSource.includes(componentName), `seller workspace component import/kullanım eksik: ${componentName}`);
+  });
+
+  assert(
+    floatingResultSource.includes("export function FloatingResultPanel") && floatingSource.includes("FloatingResultPanel"),
+    "floating result panel extraction contract eksik",
+  );
+}
+
+function readProjectFile(relativePath) {
+  return fs.readFileSync(path.join(root, relativePath), "utf8");
 }
 
 function idSet(label, items) {
