@@ -1,17 +1,17 @@
-# CommercePilot Docs
+# CommercePilot Dokümantasyonu
 
-Start here if you are reviewing the repository:
+Projeyi inceliyorsanız buradan başlayın:
 
-| Document | Purpose |
+| Doküman | Amaç |
 |---|---|
-| [REPRODUCIBILITY.md](REPRODUCIBILITY.md) | Environment, run commands, reviewer route order, deterministic claims, known non-reproducible parts. |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | System architecture, proof map, data/scoring/workflow/LLM/agent boundaries. |
-| [VALIDATION_OUTPUT.md](VALIDATION_OUTPUT.md) | Expected `npm run validate:workflows` output and what it proves. |
-| [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Jury/reviewer walkthrough, prompts, expected product behavior and technical proof points. |
+| [REPRODUCIBILITY.md](REPRODUCIBILITY.md) | Ortam bilgisi, çalıştırma komutları, inceleme rota sırası, deterministik iddialar ve MVP dışında kalan kısımlar. |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Sistem mimarisi, kanıt haritası, veri/skor/workflow/LLM/agent sınırları. |
+| [VALIDATION_OUTPUT.md](VALIDATION_OUTPUT.md) | `npm run validate:workflows` komutundan beklenen çıktı ve neyi kanıtladığı. |
+| [DEMO_SCRIPT.md](DEMO_SCRIPT.md) | Jüri/teknik inceleyici demo akışı, prompt örnekleri, beklenen ürün davranışı ve teknik kanıt noktaları. |
 
-Root-level supporting documents:
+Kök dizindeki destek dokümanları:
 
-| Document | Purpose |
+| Doküman | Amaç |
 |---|---|
-| [../TECHNICAL_AUDIT_COMPONENT_MOCKS.md](../TECHNICAL_AUDIT_COMPONENT_MOCKS.md) | Smoke coverage, component extraction status, mock/local inventory, technical priorities. |
-| [../PROJECT_MEMORY.md](../PROJECT_MEMORY.md) | Append-only project memory, decisions, milestones and current state. |
+| [../TECHNICAL_AUDIT_COMPONENT_MOCKS.md](../TECHNICAL_AUDIT_COMPONENT_MOCKS.md) | Smoke kapsamı, component extraction durumu, mock/lokal envanter ve teknik öncelikler. |
+| [../PROJECT_MEMORY.md](../PROJECT_MEMORY.md) | Append-only proje hafızası, kararlar, milestone'lar ve güncel durum. |

@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Talha Kilic reviewer profiline göre GitHub/repo sunumu reproducible engineering çizgisine güçlendirildi.
+  * Vercel deploy öncesi GitHub'da görünen ana dokümantasyon ve açıklama dosyaları Türkçeye taşındı.
 * Son değişiklik neydi?
-  * README quick-run, reproducibility guide, docs index, validation output reference, architecture proof map, audit proof table ve known MVP limits eklendi/güçlendirildi.
+  * README, docs index, reproducibility, validation output, architecture, demo metni ve technical audit dosyaları Türkçe hale getirildi; route/env/komut/kod identifier'ları bilinçli olarak korunuyor.
 * Bir sonraki net adım ne?
-  * Kullanıcı manuel demo smoke yapacak; canlı demo/deploy URL hazırlığı bunun ardından ele alınacak.
+  * Değişiklikler GitHub'a pushlanacak; ardından kullanıcı manuel demo smoke yapacak ve Vercel deploy URL hazırlığına geçilecek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -269,6 +269,7 @@
 * 2026-05-17 — Karar: Floating Agent her panel açılışında temiz oturumla başlayacak ve API'ye önceki sohbet history'si göndermeyecek. | Gerekçe: Önceki komutlar yeni prompt'u kirleterek katalog dışı/yanlış öneri üretebiliyordu. | Etki: `FloatingAgentPanel` local `sessionTurns` kullanır, persistent history yazmaz, `POST /api/agent/floating` çağrısına `history: []` gönderir; unsupported buyer catalog prompt'ları chat boundary döner ve modelden gelen stale `actionPrompt` current prompt ile override edilir. | Alternatifler: Sayfa bazlı persistent history tutmak veya sadece model guard'ına güvenmek.
 * 2026-05-17 — Karar: Buyer/Floating Agent hallucination guardrail'i deterministik katalog ve rol sınırıyla güçlendirilecek. | Gerekçe: Manuel testlerde LLM/router bazen katalog dışı ürünleri veya yanlış roldeki komutları eski agentic akışa taşıyabiliyordu. | Etki: `buyer-catalog-guardrails.ts` eklendi; `/api/buyer/agent` unsupported catalog prompt'larını 422 ile reddeder; Floating Agent buyer/seller role-mismatch prompt'larını chat boundary'ye çeker; buyer Agent LLM narrative alanları katalog dışı terimlere karşı sanitize edilir; kelimeyle yazılmış bütçeler (`iki bin tl`) workflow'da parse edilir. | Alternatifler: Sadece prompt engineering veya unsupported keyword listesini floating içinde tutmak.
 * 2026-05-17 — Karar: Buyer ürün detayında profil + geçmiş yorum/şikayet + ürün yorum sinyali tersliği sağ alt Agent warning'ine bağlanacak. | Gerekçe: Agent pet'in değeri yalnızca komut beklemek değil, kullanıcı profiline ters düşen ürünlerde zamanında uyarı vermek. | Etki: `buyer-profile-product-alerts.ts` eklendi; ürün detay route'unda kargo/iade/kalite/ses/materyal/renk riskleri profile göre hesaplanır ve `FloatingAgentContext.proactiveTone=warning` ile UI'a taşınır. | Alternatifler: Uyarıyı sadece ürün detay kartında statik metin olarak göstermek.
+* 2026-05-18 — Karar: Public/reviewer-facing dokümantasyon Türkçe tutulacak; route, env, komut, dosya ve kod identifier'ları çevrilmeyecek. | Gerekçe: Jüri Türkçe okuyacak, ancak teknik doğrulanabilirlik için executable identifier'lar birebir kalmalı. | Etki: README ve `docs/*` ana inceleme dosyaları Türkçeye taşındı; Vercel deploy öncesi repo vitrini Türkçe olacak. | Alternatifler: İngilizce README'i korumak veya tüm kod identifier'larını çevirerek kırılma riski almak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -1545,6 +1546,19 @@
 * Doğrulama:
   * `npm run validate:workflows`, `npm run check`, `npm run build`, `git diff --check` geçti.
   * Markdown local link kontrolü geçti; `.DS_Store`, `.log`, `.tmp`, `.out` kalıntısı bulunmadı.
+
+### 2026-05-18 Public Turkish Documentation Pass
+
+* Kapsam:
+  * `README.md`, `docs/README.md`, `docs/REPRODUCIBILITY.md`, `docs/VALIDATION_OUTPUT.md`, `docs/ARCHITECTURE.md`, `docs/DEMO_SCRIPT.md` ve `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` Türkçeye taşındı.
+  * Jüri hızlı akışı, teknik inceleyici çalıştırma adımları, Gemini/deterministik fallback pozisyonu, mimari kanıt haritası, demo metni, teknik denetim ve MVP sınırları Türkçe anlatımla yenilendi.
+  * Komutlar, route'lar, env değişkenleri, dosya yolları ve kod identifier'ları çalışabilirliği korumak için çevrilmedi.
+* Doğrulama:
+  * İngilizce başlık/cümle taraması temiz.
+  * Markdown local link kontrolü geçti.
+  * `git diff --check` geçti.
+  * `npm run check` geçti: lint, typecheck, workflow validation ve 13 component testi başarılı.
+  * `npm run build` geçti; Next.js production build 141 static page üretti.
 
 ### Güncelleme Kaydı
 

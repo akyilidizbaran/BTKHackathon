@@ -1,125 +1,125 @@
 # TECHNICAL_AUDIT_COMPONENT_MOCKS
 
-Date: 2026-05-17
+Tarih: 2026-05-17
 
-## 1) Audit Scope
+## 1) Denetim Kapsamı
 
-This audit checks three areas:
+Bu teknik denetim üç alanı kontrol eder:
 
-* Technical improvements needed before delivery.
-* Which large UI modules should be extracted into smaller testable components.
-* Which parts of the site are still mock/demo/local-only.
+* Teslim öncesi güçlendirilmesi gereken teknik noktalar.
+* Daha küçük ve test edilebilir bileşenlere ayrılması gereken büyük UI modülleri.
+* Sitede hâlâ mock, demo veya sadece lokal çalışan bölümler.
 
-## 2) Tests Run
+## 2) Çalıştırılan Testler
 
-Commands:
+Komutlar:
 
-* `npm run check` passed.
-* `npm run build` passed.
-* `git diff --check` passed.
-* `npm run typecheck` passed after component extraction.
-* `npm run validate:workflows` now includes extracted component export/use contract checks.
-* `npm run test:components` passed with 3 test files and 13 component/user-event tests.
+* `npm run check` geçti.
+* `npm run build` geçti.
+* `git diff --check` geçti.
+* `npm run typecheck`, component extraction sonrasında geçti.
+* `npm run validate:workflows` artık çıkarılan component export/use contract kontrollerini de içeriyor.
+* `npm run test:components`, 3 test dosyası ve 13 component/user-event testiyle geçti.
 
-Route smoke:
+Rota smoke testi:
 
 * `/`, `/buyer/products`, `/buyer/cart`, `/buyer/agent`, `/buyer/profile`, `/buyer/products/ergoflex-calisma-sandalyesi`
 * `/seller`, `/seller/products`, `/seller/products/ergoflex-calisma-sandalyesi`, `/seller/actions`, `/seller/actions/restock-ergoflex-calisma-sandalyesi`, `/seller/agent`, `/seller/profile`
 * `/demo`
 
-All returned HTTP 200 on `http://localhost:3000`.
+Tüm rotalar `http://localhost:3000` üzerinde HTTP 200 döndürdü.
 
-API smoke:
+API smoke testi:
 
-* `GET /api/buyer/catalog` returned 48 products.
-* `POST /api/agent/floating` chat question returned `mode=chat`.
-* `POST /api/agent/floating` buyer action returned `mode=buyer-agent`.
-* `POST /api/buyer/agent` returned OpenAI generated recommendations.
-* `POST /api/seller/agent` returned OpenAI generated seller findings.
-* `POST /api/review-intelligence` returned OpenAI generated review intelligence.
-* `GET /api/seller/products`, `/api/seller/actions`, `/api/seller/profile`, `/api/buyer/profile` returned success.
+* `GET /api/buyer/catalog` 48 ürün döndürdü.
+* `POST /api/agent/floating` sohbet sorusunda `mode=chat` döndürdü.
+* `POST /api/agent/floating` buyer aksiyonunda `mode=buyer-agent` döndürdü.
+* `POST /api/buyer/agent` OpenAI tarafından üretilmiş öneriler döndürdü.
+* `POST /api/seller/agent` OpenAI tarafından üretilmiş satıcı bulguları döndürdü.
+* `POST /api/review-intelligence` OpenAI tarafından üretilmiş review intelligence çıktısı döndürdü.
+* `GET /api/seller/products`, `/api/seller/actions`, `/api/seller/profile`, `/api/buyer/profile` başarılı döndü.
 
-Reviewer proof route table:
+Teknik inceleyici kanıt route tablosu:
 
-| Surface | Route/API | Proof signal |
+| Yüzey | Route/API | Kanıt sinyali |
 |---|---|---|
-| Role gateway | `/` | Buyer/seller entry points are separated but share one commerce system. |
-| Buyer catalog | `/buyer/products` | 48 contract-backed products, category filters, sorting, sprite-backed product images. |
-| Buyer product detail | `/buyer/products/calliel-spf50-gunes-kremi` | Purchase panel, store CTA, 4-item review/note pagination, Agent note. |
-| Buyer Agent | `/buyer/agent`, `POST /api/buyer/agent` | Catalog-bound recommendation and explicit append/replace approval. |
-| Buyer cart | `/buyer/cart` | Local cart state, quantity controls, suggested products. |
-| Seller overview | `/seller`, `GET /api/seller/overview` | Risk cards, buyer/seller signal loop and deduplicated priority queue. |
-| Seller products | `/seller/products`, `GET /api/seller/products` | Product radar, health score, search/sort/focus filters. |
-| Seller actions | `/seller/actions`, `GET /api/seller/actions` | Action queue grouped by focus, product evidence links. |
-| Seller action detail | `/seller/actions/[id]`, `GET /api/seller/actions/[id]` | Work steps, affected products, explanation contract, review highlights where relevant. |
-| Seller Agent | `/seller/agent`, `POST /api/seller/agent` | Findings, draft listing preview, approval and local rollback boundary. |
-| Floating Agent | `POST /api/agent/floating` | Route-aware buyer/seller/chat modes and role mismatch guardrails. |
-| Review Intelligence | `POST /api/review-intelligence` | Source review id/theme constrained LLM contract. |
-| Demo proof | `/demo` | Human-readable runbook and proof stack for jury/reviewer walkthrough. |
+| Rol geçidi | `/` | Buyer/seller girişleri ayrıdır ama aynı commerce sistemini paylaşır. |
+| Buyer katalog | `/buyer/products` | 48 contract-backed ürün, kategori filtreleri, sıralama ve sprite-backed ürün görselleri. |
+| Buyer ürün detayı | `/buyer/products/calliel-spf50-gunes-kremi` | Satın alma paneli, mağaza CTA'sı, 4 kayıtlık yorum/not sayfalama ve Agent notu. |
+| Buyer Agent | `/buyer/agent`, `POST /api/buyer/agent` | Katalog sınırları içinde öneri ve açık append/replace onayı. |
+| Buyer sepet | `/buyer/cart` | Lokal sepet state'i, adet kontrolleri ve önerilen ürünler. |
+| Seller overview | `/seller`, `GET /api/seller/overview` | Risk kartları, buyer/seller sinyal döngüsü ve deduplicate edilmiş öncelik kuyruğu. |
+| Seller ürünler | `/seller/products`, `GET /api/seller/products` | Product radar, health score, arama/sıralama/focus filtreleri. |
+| Seller aksiyonlar | `/seller/actions`, `GET /api/seller/actions` | Focus'a göre gruplanmış aksiyon kuyruğu ve ürün kanıt linkleri. |
+| Seller aksiyon detayı | `/seller/actions/[id]`, `GET /api/seller/actions/[id]` | İş adımları, etkilenen ürünler, açıklama contract'ı ve ilgili yerlerde yorum öne çıkanları. |
+| Seller Agent | `/seller/agent`, `POST /api/seller/agent` | Bulgular, draft listing preview, onay ve lokal rollback sınırı. |
+| Floating Agent | `POST /api/agent/floating` | Route-aware buyer/seller/chat modları ve rol uyuşmazlığı guardrail'leri. |
+| Review Intelligence | `POST /api/review-intelligence` | Source review id/theme ile sınırlandırılmış LLM contract'ı. |
+| Demo proof | `/demo` | Jüri/teknik inceleyici yürüyüşü için insan tarafından okunabilir runbook ve proof stack. |
 
-Puppeteer component smoke:
+Puppeteer component smoke testi:
 
-* `BuyerCatalogGrid`: horizontal slider exists, 48 product cards render, faded cards are gone, add-to-cart writes to local cart state.
-* `BuyerProfileWorkspace`: review pagination exists and can move to page 2.
-* `FloatingAgentPanel`: chat question stays chat-only; follow-up buyer action produces product recommendation and approval buttons.
-* `FloatingAgentPanel` fresh-session guard: unsupported `iPhone` prompt produced catalog boundary, no apply buttons rendered, reopen started fresh, textarea stayed empty and persisted history length stayed 0.
-* Agent hallucination guard: unsupported `PlayStation` prompt, buyer-role seller operation prompt, seller-role buyer cart prompt and stale `iPhone` LLM narrative are blocked/sanitized in validation.
-* Buyer profile/product warning: `/buyer/products/ergoflex-calisma-sandalyesi` produces a profile-based fast-shipping warning for Aylin and pushes it into Floating Agent proactive state.
-* `SellerProductsWorkspace`: products render with selected evidence rail.
-* `SellerActionsWorkspace`: action cards and detail links render.
-* Component extraction pass: `/buyer/agent` still renders Buyer composer, FAQ and approval panel without technical trace; Floating panel opens with empty textarea and route default as placeholder; `/seller/agent` still renders tool-calling trace, listing snapshots, approval button and audit log.
+* `BuyerCatalogGrid`: yatay slider var, 48 ürün kartı render oluyor, soluk kartlar kaldırıldı, sepete ekleme lokal sepet state'ine yazıyor.
+* `BuyerProfileWorkspace`: yorum sayfalama var ve 2. sayfaya geçilebiliyor.
+* `FloatingAgentPanel`: sohbet sorusu chat-only kalıyor; devamındaki buyer aksiyonu ürün önerisi ve onay butonları üretiyor.
+* `FloatingAgentPanel` temiz oturum guard'ı: desteklenmeyen `iPhone` prompt'u katalog sınırı cevabı üretti, apply butonları render olmadı, yeniden açılış temiz başladı, textarea boş kaldı ve kalıcı history uzunluğu 0 kaldı.
+* Agent hallucination guard: desteklenmeyen `PlayStation` prompt'u, buyer rolünde seller operasyon prompt'u, seller rolünde buyer sepet prompt'u ve stale `iPhone` LLM anlatısı validation tarafından engelleniyor veya sanitize ediliyor.
+* Buyer profil/ürün uyarısı: `/buyer/products/ergoflex-calisma-sandalyesi`, Aylin için profil bazlı hızlı kargo uyarısı üretiyor ve bunu Floating Agent proactive state'ine taşıyor.
+* `SellerProductsWorkspace`: ürünler seçili evidence rail ile render oluyor.
+* `SellerActionsWorkspace`: aksiyon kartları ve detay linkleri render oluyor.
+* Component extraction pass: `/buyer/agent` hâlâ Buyer composer, FAQ ve approval panelini teknik trace göstermeden render ediyor; Floating panel boş textarea ve route default placeholder ile açılıyor; `/seller/agent` tool-calling trace, listing snapshots, onay butonu ve audit log'u render ediyor.
 
-Component test coverage:
+Bileşen test kapsamı:
 
-* `buyer-agent-panels.test.tsx`: conversation copy, recommendation card links, approval append/replace callbacks, disabled apply state and FAQ expansion.
-* `floating-agent-result-panel.test.tsx`: buyer result append/replace, loading disabled state, seller draft apply/rollback and null render for missing role data.
-* `seller-agent-listing-panels.test.tsx`: before/after snapshots, draft delta rows, empty audit state, apply callback, rollback callback, applied/rolled-back/error notices.
+* `buyer-agent-panels.test.tsx`: sohbet metinleri, öneri kartı linkleri, append/replace onay callback'leri, disabled apply state ve FAQ açılımı.
+* `floating-agent-result-panel.test.tsx`: buyer result append/replace, loading disabled state, seller draft apply/rollback ve role data eksikken null render.
+* `seller-agent-listing-panels.test.tsx`: before/after snapshots, draft delta satırları, boş audit state, apply callback, rollback callback, applied/rolled-back/error notice'ları.
 
-## 3) Issue Found And Fixed During Audit
+## 3) Denetimde Bulunan ve Çözülen Sorunlar
 
-Floating Agent had a multi-turn risk:
+Floating Agent'ta çok turlu akış riski vardı:
 
-* The textarea used the route default prompt as an actual value.
-* When a user typed after an existing message, the new prompt could concatenate with the previous/default prompt.
-* In a chat-to-action sequence, this could keep the request in chat mode instead of routing to buyer-agent.
+* Textarea, route default prompt'unu gerçek değer olarak kullanıyordu.
+* Kullanıcı mevcut mesajdan sonra yazdığında yeni prompt önceki/default prompt ile birleşebiliyordu.
+* Chat'ten aksiyona geçişte bu durum isteği buyer-agent yerine chat modunda tutabiliyordu.
 
-Fix applied:
+Uygulanan düzeltme:
 
-* Floating textarea now uses `placeholder={context.defaultPrompt}` and starts empty.
-* After a successful send, the textarea clears.
-* Floating intent router now overrides history/model misroutes when the current prompt is clearly an agentic buyer/seller action.
-* Validation now protects this behavior.
+* Floating textarea artık `placeholder={context.defaultPrompt}` kullanıyor ve boş başlıyor.
+* Başarılı gönderimden sonra textarea temizleniyor.
+* Floating intent router, güncel prompt açıkça agentic buyer/seller aksiyonuysa history/model kaynaklı yanlış route kararını eziyor.
+* Validation bu davranışı koruyor.
 
-Second guard added after unsupported catalog testing:
+Desteklenmeyen katalog testinden sonra eklenen ikinci guard:
 
-* Floating panel now keeps only in-panel ephemeral `sessionTurns` and sends `history: []` to `/api/agent/floating`.
-* Each panel opening resets prompt, result cards, apply state and local chat turns.
-* Buyer prompts for clearly unsupported product families such as iPhone/phone/console/TV/white goods/shoes return a catalog-boundary chat answer instead of `buyer-agent` recommendations.
-* If an LLM/model override returns a stale `actionPrompt`, explicit current buyer/seller action prompts win before the downstream Agent contract runs.
-* Validation checks `history: []`, `openFreshSession`, no persistent `appendFloatingAgentTurn` use in the panel, unsupported catalog boundary and stale `actionPrompt` override.
+* Floating panel yalnızca panel içi geçici `sessionTurns` tutuyor ve `/api/agent/floating` endpoint'ine `history: []` gönderiyor.
+* Her panel açılışı prompt, result card'lar, apply state ve lokal chat turn'lerini sıfırlıyor.
+* iPhone/telefon/konsol/TV/beyaz eşya/ayakkabı gibi açıkça desteklenmeyen ürün aileleri için buyer prompt'ları `buyer-agent` önerisi yerine katalog sınırı chat cevabı döndürüyor.
+* LLM/model override stale bir `actionPrompt` döndürürse downstream Agent contract çalışmadan önce açık güncel buyer/seller aksiyon prompt'u kazanıyor.
+* Validation `history: []`, `openFreshSession`, panelde kalıcı `appendFloatingAgentTurn` kullanılmaması, unsupported catalog boundary ve stale `actionPrompt` override kontrollerini içeriyor.
 
-Third guard added after manual hallucination testing:
+Manuel hallucination testinden sonra eklenen üçüncü guard:
 
-* `src/lib/agents/buyer-catalog-guardrails.ts` centralizes unsupported buyer catalog detection.
-* `/api/buyer/agent` now rejects unsupported catalog prompts before smart-cart orchestration.
-* Floating Agent now blocks role mismatch: buyer panel does not run seller operations, seller panel does not run buyer cart/hediye commands.
-* Buyer Agent LLM narrative fields are sanitized if they mention unsupported catalog terms such as `iPhone`.
-* Smart-cart budget extraction now supports written Turkish amounts such as `iki bin tl`.
-* `src/lib/agents/buyer-profile-product-alerts.ts` computes buyer product-detail warnings from profile preferences, previous complaint themes and product review/metric risk signals.
+* `src/lib/agents/buyer-catalog-guardrails.ts` desteklenmeyen buyer katalog tespitini merkezileştiriyor.
+* `/api/buyer/agent`, smart-cart orchestration öncesinde desteklenmeyen katalog prompt'larını reddediyor.
+* Floating Agent rol uyuşmazlığını engelliyor: buyer paneli seller operasyonu, seller paneli buyer sepet/hediye komutu çalıştırmıyor.
+* Buyer Agent LLM anlatı alanları `iPhone` gibi desteklenmeyen katalog terimleri içerirse sanitize ediliyor.
+* Smart-cart bütçe parser'ı `iki bin tl` gibi yazıyla ifade edilen Türkçe tutarları destekliyor.
+* `src/lib/agents/buyer-profile-product-alerts.ts` profil tercihleri, önceki şikayet temaları ve ürün yorum/metrik risk sinyallerinden buyer ürün detay uyarıları hesaplıyor.
 
-## 4) Component Extraction Status And Priority
+## 4) Bileşen Ayrıştırma Durumu ve Öncelik
 
-Completed first extraction pass:
+Tamamlanan ilk extraction pass:
 
-| Area | New file | Kept in orchestration file |
+| Alan | Yeni dosya | Orchestration dosyasında kalan |
 |---|---|---|
-| Floating Agent result/apply UI | `src/components/commerce/floating-agent-result-panel.tsx` | `src/components/commerce/floating-agent-panel.tsx` keeps route context, prompt submit, buyer/seller apply and controls. |
-| Buyer Agent panels | `src/components/commerce/buyer-agent-panels.tsx` | `src/components/commerce/buyer-agent-workspace.tsx` keeps prompt/API request, profile selection, cart count and apply state. |
-| Seller listing approval UI | `src/components/commerce/seller-agent-listing-panels.tsx` | `src/components/commerce/seller-agent-workspace.tsx` keeps prompt/API request, audit state, product findings, runtime and trace proof. |
+| Floating Agent result/apply UI | `src/components/commerce/floating-agent-result-panel.tsx` | `src/components/commerce/floating-agent-panel.tsx` route context, prompt submit, buyer/seller apply ve kontrolleri tutuyor. |
+| Buyer Agent panelleri | `src/components/commerce/buyer-agent-panels.tsx` | `src/components/commerce/buyer-agent-workspace.tsx` prompt/API request, profile selection, cart count ve apply state'i tutuyor. |
+| Seller listing approval UI | `src/components/commerce/seller-agent-listing-panels.tsx` | `src/components/commerce/seller-agent-workspace.tsx` prompt/API request, audit state, ürün bulguları, runtime ve trace proof'u tutuyor. |
 
-Current line counts after first pass:
+İlk pass sonrası mevcut satır sayıları:
 
-| File | Lines |
+| Dosya | Satır |
 |---|---:|
 | `src/components/commerce/floating-agent-panel.tsx` | 452 |
 | `src/components/commerce/floating-agent-result-panel.tsx` | 149 |
@@ -128,135 +128,135 @@ Current line counts after first pass:
 | `src/components/commerce/seller-agent-workspace.tsx` | 740 |
 | `src/components/commerce/seller-agent-listing-panels.tsx` | 231 |
 
-Current largest UI modules:
+Mevcut en büyük UI modülleri:
 
-| Priority | File | Lines | Why it should be extracted |
+| Öncelik | Dosya | Satır | Neden ayrıştırılmalı? |
 |---|---:|---:|---|
-| P0 | `src/components/commerce/seller-profile-workspace.tsx` | 1010 | Too many form controls, permission cards, notification controls, alert rules and status panels in one file. |
-| P0 | `src/components/commerce/seller-agent-workspace.tsx` | 740 | Product findings, conversation, evidence panels and trace/sidebar still remain; listing approval was extracted. |
-| P1 | `src/components/commerce/buyer-agent-workspace.tsx` | 377 | First pass completed; next risk is adding dedicated component/user-event tests. |
-| P1 | `src/components/commerce/seller-actions-workspace.tsx` | 676 | Filter state, action cards, selected rail and empty state are coupled. |
-| P1 | `src/components/commerce/seller-products-workspace.tsx` | 668 | Filter/search/sort, product rows and selected rail should be split. |
-| P1 | `src/components/commerce/demo-rehearsal-workspace.tsx` | 656 | Demo proof cards and runbook cards are static render components that can be extracted. |
-| P1 | `src/components/commerce/buyer-profile-workspace.tsx` | 605 | Profile form, preference chips, color editor and review pagination should be split. |
-| P1 | `src/components/commerce/floating-agent-panel.tsx` | 452 | Result cards are extracted; remaining split candidates are history, prompt form and controls. |
+| P0 | `src/components/commerce/seller-profile-workspace.tsx` | 1010 | Form kontrolleri, permission kartları, bildirim kontrolleri, alert kuralları ve status panelleri tek dosyada fazla yoğun. |
+| P0 | `src/components/commerce/seller-agent-workspace.tsx` | 740 | Product findings, conversation, evidence panelleri ve trace/sidebar hâlâ aynı dosyada; listing approval ayrıştırıldı. |
+| P1 | `src/components/commerce/buyer-agent-workspace.tsx` | 377 | İlk pass tamamlandı; sonraki risk dedicated component/user-event testlerini artırmak. |
+| P1 | `src/components/commerce/seller-actions-workspace.tsx` | 676 | Filter state, action card'lar, selected rail ve empty state birbirine bağlı. |
+| P1 | `src/components/commerce/seller-products-workspace.tsx` | 668 | Filter/search/sort, ürün satırları ve selected rail ayrılmalı. |
+| P1 | `src/components/commerce/demo-rehearsal-workspace.tsx` | 656 | Demo proof kartları ve runbook kartları statik render bileşenleri olarak ayrıştırılabilir. |
+| P1 | `src/components/commerce/buyer-profile-workspace.tsx` | 605 | Profil formu, tercih chip'leri, renk editörü ve yorum sayfalama ayrılmalı. |
+| P1 | `src/components/commerce/floating-agent-panel.tsx` | 452 | Result card'lar ayrıldı; kalan adaylar history, prompt form ve kontroller. |
 
-Recommended extraction order:
+Önerilen extraction sırası:
 
-1. `SellerAgentWorkspace`: extract `SellerAgentConversation`, `SellerProductFindingCard`, `EvidenceSummaryPanel`, `NextStepsPanel`.
-2. `FloatingAgentPanel`: extract `FloatingChatHistory`, `FloatingPromptForm`, `FloatingControls`.
-3. `SellerProfileWorkspace`: extract reusable form controls first, then permission/capability/audit sections.
-4. `SellerProductsWorkspace` and `SellerActionsWorkspace`: extract list item cards and selected rail components.
-5. Add broader user-event tests for profile pagination/forms, seller filters and floating prompt submit flows.
+1. `SellerAgentWorkspace`: `SellerAgentConversation`, `SellerProductFindingCard`, `EvidenceSummaryPanel`, `NextStepsPanel` çıkar.
+2. `FloatingAgentPanel`: `FloatingChatHistory`, `FloatingPromptForm`, `FloatingControls` çıkar.
+3. `SellerProfileWorkspace`: önce tekrar kullanılabilir form kontrollerini, sonra permission/capability/audit bölümlerini çıkar.
+4. `SellerProductsWorkspace` ve `SellerActionsWorkspace`: list item card'ları ve selected rail component'lerini çıkar.
+5. Profile pagination/form'ları, seller filtreleri ve floating prompt submit akışları için daha geniş user-event testleri ekle.
 
-## 5) Test Infrastructure Status
+## 5) Test Altyapısı Durumu
 
-Dedicated component test stack is now present in `package.json`.
+Dedicated component test stack artık `package.json` içinde mevcut.
 
-Current coverage is:
+Mevcut kapsam:
 
 * `eslint`
 * `tsc --noEmit`
 * `scripts/validate-workflows.js`
 * `vitest` + `jsdom`
 * React Testing Library + User Event
-* manual/automated HTTP smoke
+* manuel/otomatik HTTP smoke
 * Puppeteer smoke
 
-What is still missing:
+Hâlâ eksik olanlar:
 
-* Broader user-event tests for full forms, filters and pagination.
-* API route tests that run without a live Next server.
-* Browser regression tests committed as repeatable scripts.
+* Tam form, filtre ve sayfalama akışları için daha geniş user-event testleri.
+* Canlı Next server gerektirmeden çalışan API route testleri.
+* Commitlenmiş, tekrar çalıştırılabilir browser regression script'leri.
 
-Recommended next test expansion:
+Önerilen sonraki test genişletmesi:
 
-* Vitest for pure functions and API contract builders.
-* More React Testing Library coverage for seller profile, buyer profile and product/action list filters.
-* Committed Puppeteer smoke script for buyer/seller/floating critical paths.
+* Pure function'lar ve API contract builder'ları için Vitest.
+* Seller profile, buyer profile ve product/action liste filtreleri için daha fazla React Testing Library kapsamı.
+* Buyer/seller/floating kritik yolları için commitlenmiş Puppeteer smoke script'i.
 
-## 6) Mock / Demo / Local-Only Inventory
+## 6) Mock / Demo / Sadece Lokal Envanteri
 
-Mock data source:
+Mock data kaynağı:
 
-* `src/data/mock/*`: products, reviews, orders, carts, inventory events, relations, buyers and sellers.
-* `src/lib/data/*`: reads only local mock data.
+* `src/data/mock/*`: ürünler, yorumlar, siparişler, sepetler, envanter event'leri, ilişkiler, buyer'lar ve seller'lar.
+* `src/lib/data/*`: yalnızca lokal mock data okur.
 
-Mock commerce contracts:
+Mock commerce contract'ları:
 
 * `src/lib/api/buyer-catalog.ts`: `source: "mock-commerce-catalog"`.
-* `src/lib/api/seller.ts`: `source: "mock-workflow"` and `demoSellerId = "seller-commercepilot"`.
+* `src/lib/api/seller.ts`: `source: "mock-workflow"` ve `demoSellerId = "seller-commercepilot"`.
 * `src/lib/api/buyer-profile.ts`: `source: "buyer-profile-mock"`.
 * `src/lib/api/seller-profile.ts`: `source: "seller-profile-mock"`.
 
-Local-only state:
+Sadece lokal state:
 
-* Buyer cart: `commercepilot.buyerCart.v1` in `localStorage`.
-* Buyer profile draft: `commercepilot.buyerProfile.v1` in `localStorage`.
-* Seller profile draft: `commercepilot.sellerProfile.v1` in `localStorage`.
-* Seller listing mutation/audit store: `commercepilot.sellerListingMutations.v1` in `localStorage`.
-* Floating Agent control state: `commercepilot.floatingAgent.v1` in `localStorage`; legacy `history` may exist in the store shape but the current panel does not persist new chat turns or send stored history to the API.
+* Buyer sepet: `commercepilot.buyerCart.v1`, `localStorage` içinde.
+* Buyer profil taslağı: `commercepilot.buyerProfile.v1`, `localStorage` içinde.
+* Seller profil taslağı: `commercepilot.sellerProfile.v1`, `localStorage` içinde.
+* Seller listing mutation/audit store: `commercepilot.sellerListingMutations.v1`, `localStorage` içinde.
+* Floating Agent control state: `commercepilot.floatingAgent.v1`, `localStorage` içinde. Eski `history` alanı store shape içinde bulunabilir ama mevcut panel yeni chat turn'lerini kalıcı yazmaz ve stored history'yi API'ye göndermez.
 
-Mock mutations:
+Mock mutation'lar:
 
-* Buyer cart apply validates payload server-side, then client writes to `localStorage`.
-* Seller listing apply validates preview/apply server-side, then client writes override and audit log to `localStorage`.
-* Rollback is client-side over the local audit store.
+* Buyer cart apply payload'u server-side doğrulanır; ardından client temiz payload'u `localStorage` içine yazar.
+* Seller listing apply preview/apply server-side doğrulanır; ardından client override ve audit log'u `localStorage` içine yazar.
+* Rollback, lokal audit store üzerinde client-side çalışır.
 
-Mock visual assets:
+Mock görsel asset'ler:
 
-* Product/category imagery uses the shared sprite `public/catalog/buyer-product-sprite.png`.
-* This is acceptable for demo, but weaker than product-specific assets for final presentation polish.
+* Ürün/kategori görselleri ortak sprite `public/catalog/buyer-product-sprite.png` kullanır.
+* Demo için kabul edilebilir; final sunum polish'i için SKU bazlı ürün görsellerinden daha zayıftır.
 
-LLM fallback/demo behavior:
+LLM fallback/demo davranışı:
 
-* Initial GET/default agent data is deterministic and does not call LLM.
-* Live POST agent/explanation endpoints call the configured provider, with deterministic fallback if provider/key/model output fails.
-* Gemini final provider switch is still planned for 9A.
+* İlk GET/default Agent data deterministiktir ve LLM çağırmaz.
+* Canlı POST agent/explanation endpoint'leri yapılandırılmış provider'ı çağırır; provider/key/model output başarısız olursa deterministic fallback kullanır.
+* Gemini final provider geçişi hâlâ planlıdır.
 
-Not real yet:
+Henüz gerçek olmayanlar:
 
 * Authentication/session/roles.
 * Database persistence.
 * Payment/checkout/order creation.
-* Real inventory reservation.
-* Real shipping/fulfillment.
+* Gerçek stok rezervasyonu.
+* Gerçek kargo/fulfillment.
 * Real seller account management.
 * Server-side audit trail.
 * Server-side cart/profile persistence.
 * Product image generation per SKU.
 * Production analytics/telemetry.
 
-## 7) Technical Improvements To Prioritize
+## 7) Önceliklendirilecek Teknik İyileştirmeler
 
-1. Add repeatable test stack.
-   Current validation is strong for data/workflow contracts, but not enough for component behavior. Add Vitest + React Testing Library and turn the Puppeteer smoke cases above into a script.
+1. Tekrar çalıştırılabilir test stack'ini genişlet.
+   Mevcut validation data/workflow contract'ları için güçlü; ancak component davranışı için hâlâ sınırlı. Vitest + React Testing Library kapsamını büyüt ve yukarıdaki Puppeteer smoke case'lerini script haline getir.
 
-2. Extract large workspace components.
-   The biggest risk is not runtime failure; it is future edits breaking UI behavior because too many concerns live in each workspace file.
+2. Büyük workspace component'lerini ayrıştır.
+   En büyük risk runtime failure değil; tek workspace dosyasında fazla concern kaldığı için sonraki UI değişikliklerinin davranış kırması.
 
-3. Replace localStorage persistence with a server persistence boundary.
-   Cart, profile, floating history, seller listing audit and rollback should eventually move behind API/storage interfaces.
+3. `localStorage` persistence'ını server persistence sınırına taşı.
+   Cart, profile, floating history, seller listing audit ve rollback ileride API/storage interface'lerinin arkasına alınmalı.
 
-4. Add auth/session abstraction.
-   `buyer-aylin` and `seller-commercepilot` are hardcoded demo identities. This should become a typed session/user context before any real deployment story.
+4. Auth/session abstraction ekle.
+   `buyer-aylin` ve `seller-commercepilot` hardcoded demo identity'lerdir. Gerçek deployment anlatısından önce typed session/user context'e dönüşmelidir.
 
-5. Improve LLM latency and observability.
-   Smoke showed generated calls can take several seconds, with seller agent around 10s in one run. Add request timeout, latency metadata, UI loading thresholds and provider telemetry.
+5. LLM latency ve observability'yi iyileştir.
+   Smoke sırasında generated çağrıların birkaç saniye sürebildiği, seller agent'ın bir çalıştırmada yaklaşık 10 saniyeye çıktığı görüldü. Request timeout, latency metadata, UI loading threshold'ları ve sağlayıcı telemetry'si eklenmeli.
 
-6. Strengthen intent router tests.
-   The audit already found one chat-to-action issue. Keep adding adversarial multi-turn tests: help question -> product task, product task -> safety question, seller action -> rollback question.
+6. Intent router testlerini güçlendir.
+   Denetim bir chat-to-action sorununu yakaladı. Adversarial multi-turn testler eklemeye devam et: yardım sorusu -> ürün görevi, ürün görevi -> güvenlik sorusu, seller aksiyonu -> rollback sorusu.
 
-7. Move technical proof away from user surfaces but keep `/demo` proof strong.
-   Buyer/Floating should stay product-like; `/demo`, validation and API contracts should carry jury proof.
+7. Teknik proof'u kullanıcı yüzeyinden uzak tut ama `/demo` proof'unu güçlü bırak.
+   Buyer/Floating yüzeyleri ürün gibi kalmalı; jüri kanıtını `/demo`, validation ve API contract'ları taşımalı.
 
-8. Decide what remains intentionally mock for delivery.
-   Real operations are out of scope, but the presentation should state clearly: "mock data, real LLM orchestration, typed guardrails, local approved mutations."
+8. Teslimde neyin bilerek mock kaldığını netleştir.
+   Gerçek operasyonlar kapsam dışı; sunum şu cümleyi açık taşımalı: "mock data, gerçek LLM orchestration, typed guardrails, local approved mutations."
 
-## 8) Current Assessment
+## 8) Güncel Değerlendirme
 
-Technically the project is coherent for a hackathon product:
+Teknik olarak proje hackathon ürünü için tutarlı:
 
-* The app is not just static TSX; it has typed API contracts, workflow validation, LLM provider abstraction, agent guardrails and approval boundaries.
-* The biggest remaining weakness is test isolation and persistence, not the core agent architecture.
-* The clearest next engineering step is extracting components plus adding component tests before adding more features.
+* Uygulama yalnızca statik TSX değildir; typed API contract'ları, workflow validation, LLM provider abstraction, Agent guardrail'leri ve approval boundary'leri vardır.
+* En büyük kalan zayıflık core Agent mimarisi değil; test isolation ve persistence katmanıdır.
+* En net sonraki engineering adımı, yeni özellik eklemeden önce component extraction ve component test kapsamını artırmaktır.

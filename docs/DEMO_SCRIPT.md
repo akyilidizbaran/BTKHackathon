@@ -1,531 +1,548 @@
-# CommercePilot Demo Script
+# CommercePilot Demo Metni
 
-This script is for judges, reviewers, and teammates who want to evaluate CommercePilot quickly without guessing the intended path through the app.
+Bu metin; jüri, teknik inceleyici ve ekip arkadaşlarının uygulama içinde doğru yolu tahmin etmek zorunda kalmadan CommercePilot'u hızlı değerlendirebilmesi için yazıldı.
 
-The goal is to show three things:
+Demo üç şeyi göstermeli:
 
-1. CommercePilot feels like a real buyer/seller commerce product, not a static dashboard.
-2. The Agent can recommend, explain, preview, and apply approved actions.
-3. The technical boundary is explicit: deterministic commerce logic first, LLM assistance second, typed validation and approval before any mutation.
+1. CommercePilot statik dashboard değil, gerçek bir buyer/seller commerce ürünü gibi davranır.
+2. Agent öneri yapabilir, açıklayabilir, preview üretebilir ve yalnızca onaylanan aksiyonları uygulayabilir.
+3. Teknik sınır açıktır: önce deterministik commerce logic, sonra LLM desteği, mutation öncesi typed validation ve kullanıcı onayı.
 
-## 1. Setup
+## 1. Kurulum
 
-Install and run:
+Kurun ve çalıştırın:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open:
+Açın:
 
 ```text
 http://localhost:3000
 ```
 
-For production-like local rehearsal:
+Production benzeri lokal prova:
 
 ```bash
 npm run build
 npm run start
 ```
 
-Optional LLM setup:
+Opsiyonel LLM kurulumu:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Set one provider:
-
-```text
-LLM_PROVIDER=openai
-OPENAI_API_KEY=...
-```
-
-or:
+Hackathon sunumunda hedef sağlayıcı:
 
 ```text
 LLM_PROVIDER=gemini
 GEMINI_API_KEY=...
 ```
 
-If keys are missing, supported flows fall back deterministically. CI runs with:
+API key yoksa desteklenen akışlar deterministik fallback'e döner. CI şu modda çalışır:
 
 ```text
 LLM_PROVIDER=deterministic
 ```
 
-## 2. Pre-Demo Checks
+Not: OpenAI adapter'ı provider bağımsızlığı göstermek ve lokal geliştirme için tutulur. Jüri sunumunda ana hikaye Gemini veya deterministic fallback olmalıdır.
 
-Run these before presenting:
+## 2. Demo Öncesi Kontroller
+
+Sunumdan önce çalıştırın:
 
 ```bash
 npm run check
 npm run build
 ```
 
-Expected result:
+Beklenen sonuç:
 
-- Lint passes.
-- TypeScript passes.
-- Workflow validation passes.
-- Component tests pass.
-- Next production build completes.
+- Lint geçer.
+- TypeScript geçer.
+- Workflow validation geçer.
+- Component testleri geçer.
+- Next üretim build'i tamamlanır.
 
-Useful proof files:
+Faydalı kanıt dosyaları:
 
 - [docs/ARCHITECTURE.md](ARCHITECTURE.md)
+- [docs/REPRODUCIBILITY.md](REPRODUCIBILITY.md)
+- [docs/VALIDATION_OUTPUT.md](VALIDATION_OUTPUT.md)
 - [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](../TECHNICAL_AUDIT_COMPONENT_MOCKS.md)
 - [scripts/validate-workflows.js](../scripts/validate-workflows.js)
 
-## 3. Fast Reviewer Path
+## 3. 7 Dakikalık Jüri Modu
 
-If someone only has 5 minutes:
+Kısa sunum için önerilen akış:
 
-1. Open `/demo`.
-2. Open `/buyer/products`.
-3. Open `/buyer/agent`.
-4. Open `/seller`.
-5. Open `/seller/agent`.
-6. Read [docs/ARCHITECTURE.md](ARCHITECTURE.md).
-7. Run `npm run check`.
+| Süre | Rota | Ne gösterilecek |
+|---:|---|---|
+| 0:00-0:30 | `/` veya `/demo` | CommercePilot'un çift taraflı commerce intelligence ürünü olduğu anlatılır. |
+| 0:30-1:30 | `/buyer/products` | Buyer marketplace, kategori, ürün görseli, fiyat, rating, teslimat ve sepet girişi gösterilir. |
+| 1:30-2:30 | `/buyer/agent` | “Toplantı için uyumlu kamera mikrofon hub öner.” prompt'u ile katalogla sınırlı öneri ve cart approval gösterilir. |
+| 2:30-3:30 | `/seller` | Satıcı risk kartları, öncelik kuyruğu ve seller intelligence yüzeyi gösterilir. |
+| 3:30-4:30 | `/seller/actions` | Aksiyon kuyruğu ve ürün kanıtları gösterilir. |
+| 4:30-6:00 | `/seller/agent` | Listing draft preview, onay, local audit ve rollback boundary gösterilir. |
+| 6:00-7:00 | `/demo` + terminal | `npm run check`, guardrail ve Gemini/deterministic fallback pozisyonu anlatılır. |
 
-What they should understand:
+Kapanış cümlesi:
 
-- Buyer and seller surfaces are both productized.
-- Agent flows are backed by typed contracts.
-- The LLM does not directly mutate state.
-- Guardrails and approval boundaries are first-class.
+> CommercePilot bir AI wrapper değil; mock data üzerinde çalışan, deterministik workflow, LLM validation, kullanıcı onayı ve local apply boundary'leri olan agentic commerce MVP'sidir.
 
-## 4. Full Demo Flow
+## 4. Hızlı Teknik İnceleyici Rotası
 
-Recommended length: 10 to 12 minutes.
+Teknik inceleyicinin yalnızca 5 dakikası varsa:
 
-### Opening: Role Gateway
+1. `/demo` rotasını açın.
+2. `/buyer/products` rotasını açın.
+3. `/buyer/agent` rotasını açın.
+4. `/seller` rotasını açın.
+5. `/seller/agent` rotasını açın.
+6. [docs/ARCHITECTURE.md](ARCHITECTURE.md) dosyasını okuyun.
+7. `npm run check` çalıştırın.
 
-Route:
+Anlaması gereken ana noktalar:
+
+- Buyer ve seller yüzeyleri ürünleşmiş durumda.
+- Agent akışları typed contract'lara dayanıyor.
+- LLM doğrudan state mutate etmiyor.
+- Guardrail ve approval boundary birinci sınıf mimari parça.
+
+## 5. Tam Demo Akışı
+
+Önerilen süre: 10-12 dakika.
+
+### Açılış: Rol Girişi
+
+Rota:
 
 ```text
 /
 ```
 
-Say:
+Söylenecek:
 
-> CommercePilot is a two-sided commerce intelligence platform. Buyers get a familiar shopping experience with an assistant that can build a cart. Sellers get an operations cockpit that turns stock, reviews, returns, margin, and product health into approved actions.
+> CommercePilot iki taraflı bir commerce intelligence platformu. Alıcı tarafı tanıdık bir alışveriş deneyimi sunar; satıcı tarafı stok, yorum, iade, margin ve product health sinyallerini onaylanabilir aksiyonlara çevirir.
 
-Show:
+Gösterilecekler:
 
-- Buyer entry.
-- Seller entry.
-- Demo route if visible.
+- Buyer girişi.
+- Seller girişi.
+- Varsa demo rotası.
 
-Technical point:
+Teknik nokta:
 
-- The app is split into buyer, seller, agent, and demo surfaces, but they share commerce data and typed agent contracts.
+- Uygulama buyer, seller, agent ve demo yüzeylerine ayrılmıştır ama commerce verisi ve typed agent contract'ları ortaktır.
 
-## 5. Buyer Demo
+## 6. Buyer Demo
 
-### Step 1: Product Discovery
+### Adım 1: Ürün Keşfi
 
-Route:
+Rota:
 
 ```text
 /buyer/products
 ```
 
-Show:
+Gösterilecekler:
 
-- Category filters.
-- Product cards.
-- Product images.
-- Price, rating, delivery, discount, and add-to-cart controls.
+- Kategori filtreleri.
+- Ürün kartları.
+- Ürün görselleri.
+- Fiyat, puan, teslimat, indirim ve sepete ekleme kontrolleri.
 
-Say:
+Söylenecek:
 
-> The buyer side is intentionally familiar. The Agent does not replace shopping; it works on top of an actual marketplace surface.
+> Buyer tarafı bilerek tanıdık tutuldu. Agent alışverişin yerine geçmiyor; gerçek marketplace yüzeyinin üzerinde çalışıyor.
 
-Expected result:
+Beklenen sonuç:
 
-- Product grid renders.
-- Product card CTAs are visible.
-- The user can inspect products before using the Agent.
+- Ürün grid'i render olur.
+- Ürün kartı CTA'ları görünür.
+- Kullanıcı Agent kullanmadan önce ürünleri inceleyebilir.
 
-Technical point:
+Teknik nokta:
 
-- Catalog data is contract-driven by `src/lib/api/buyer-catalog.ts`.
-- The Agent can only choose from this catalog.
+- Catalog verisi `src/lib/api/buyer-catalog.ts` contract'ından gelir.
+- Agent yalnızca bu katalogdan seçim yapabilir.
 
-### Step 2: Product Detail
+### Adım 2: Ürün Detay
 
-Route:
+Rota:
 
 ```text
-/buyer/products/clearcam-webcam
+/buyer/products/calliel-spf50-gunes-kremi
 ```
 
-Show:
+Gösterilecekler:
 
-- Product media.
-- Purchase panel.
-- Quantity controls.
-- Delivery and campaign information.
-- Seller information.
+- Ürün görseli.
+- Satın alma paneli.
+- Adet kontrolleri.
+- Teslimat ve kampanya bilgisi.
+- Satıcı bilgisi.
+- 4'lü sayfalama ile ürün yorumları ve ürün notları.
 
-Say:
+Söylenecek:
 
-> Product detail behaves like a commerce page, not an AI answer page. The Agent can help, but product context and purchase controls remain explicit.
+> Ürün detay sayfası AI cevap ekranı gibi değil, commerce sayfası gibi davranır. Agent yardımcı olur ama ürün bağlamı ve satın alma kontrolleri açık kalır.
 
-Expected result:
+Beklenen sonuç:
 
-- Product detail route works for catalog products.
-- Add-to-cart and buy controls are visible.
+- Dynamic product detail route çalışır.
+- Add-to-cart ve buy kontrolleri görünür.
+- `Mağazaya Git` gerçek mağaza filtre linkine gider.
 
-Technical point:
+Teknik nokta:
 
-- Dynamic product routes are generated from the shared product data.
+- Dynamic product route'ları shared product data'dan üretilir.
 
-### Step 3: Buyer Agent Recommendation
+### Adım 3: Buyer Agent Önerisi
 
-Route:
+Rota:
 
 ```text
 /buyer/agent
 ```
 
-Suggested prompt:
+Önerilen prompt:
 
 ```text
 Toplantı için uyumlu kamera mikrofon hub öner.
 ```
 
-Show:
+Gösterilecekler:
 
-- Agent answer.
-- Recommended catalog products.
-- Reasons and risk notes.
-- Append/replace cart approval buttons.
+- Agent cevabı.
+- Önerilen katalog ürünleri.
+- Gerekçeler ve risk notları.
+- Append/replace cart approval butonları.
 
-Say:
+Söylenecek:
 
-> The Agent can explain and rank, but it is catalog-bound. It cannot invent unsupported products, and it cannot write to the cart until the user chooses append or replace.
+> Agent açıklayabilir ve sıralayabilir ama katalogla sınırlıdır. Desteklenmeyen ürün uyduramaz ve kullanıcı append veya replace seçmeden sepete yazamaz.
 
-Expected result:
+Beklenen sonuç:
 
-- Buyer Agent returns product recommendations.
-- Approval buttons are visible.
-- If LLM is configured, provider/status is visible where supported; otherwise deterministic fallback keeps the demo working.
+- Buyer Agent ürün önerisi döndürür.
+- Approval butonları görünür.
+- LLM ayarlıysa provider/status görülebilir; değilse deterministik fallback demo'yu çalışır tutar.
 
-Technical point:
+Teknik nokta:
 
-- `src/lib/api/buyer-agent.ts` orchestrates deterministic candidates plus LLM JSON.
-- `src/lib/agents/buyer-catalog-guardrails.ts` blocks unsupported product families.
-- `src/lib/agents/buyer-cart-apply.ts` validates apply payloads.
+- `src/lib/api/buyer-agent.ts` deterministik candidate'ları LLM JSON orchestration ile birleştirir.
+- `src/lib/agents/buyer-catalog-guardrails.ts` desteklenmeyen ürün ailelerini engeller.
+- `src/lib/agents/buyer-cart-apply.ts` apply payload'larını validate eder.
 
-### Step 4: Cart Apply
+### Adım 4: Cart Apply
 
-Route:
+Rota:
 
 ```text
 /buyer/cart
 ```
 
-Show:
+Gösterilecekler:
 
-- Existing cart items.
-- Quantity controls.
-- Suggested products.
-- Floating Agent panel.
+- Mevcut sepet ürünleri.
+- Adet kontrolleri.
+- Önerilen ürünler.
+- Floating Agent paneli.
 
-Optional prompt in Floating Agent:
+Opsiyonel Floating Agent prompt'u:
 
 ```text
 Toplantı için sepetimi tamamla.
 ```
 
-Say:
+Söylenecek:
 
-> The floating Agent uses the same apply boundary as the full Buyer Agent page. It is not a separate widget with different rules.
+> Floating Agent, full Buyer Agent sayfasıyla aynı apply boundary'yi kullanır. Ayrı kuralları olan farklı bir widget değildir.
 
-Expected result:
+Beklenen sonuç:
 
-- Approved cart mutation updates local cart state.
-- Cart quantity controls remain user-editable.
+- Onaylanan cart mutation local cart state'i günceller.
+- Cart quantity kontrolleri kullanıcı tarafından düzenlenebilir kalır.
 
-Technical point:
+Teknik nokta:
 
-- Client apply is handled by `src/lib/agents/buyer-cart-apply-client.ts` and `src/lib/cart/buyer-cart.ts`.
-- State is intentionally localStorage for the MVP.
+- Client apply `src/lib/agents/buyer-cart-apply-client.ts` ve `src/lib/cart/buyer-cart.ts` üzerinden yapılır.
+- State MVP'de bilinçli olarak `localStorage` kullanır.
 
-## 6. Seller Demo
+## 7. Seller Demo
 
-### Step 1: Seller Overview
+### Adım 1: Seller Overview
 
-Route:
+Rota:
 
 ```text
 /seller
 ```
 
-Show:
+Gösterilecekler:
 
-- Four risk cards.
+- Dört risk kartı.
 - Priority queue.
-- Product distribution.
-- Products that need attention.
+- Ürün dağılımı.
+- Dikkat isteyen ürünler.
 
-Say:
+Söylenecek:
 
-> The seller side converts commerce signals into an operations queue: stock risk, negative reviews, return risk, and slow movers.
+> Seller tarafı commerce sinyallerini operasyon kuyruğuna çevirir: stok riski, negatif yorumlar, iade riski ve satılmayan ürünler.
 
-Expected result:
+Beklenen sonuç:
 
-- Risk cards link to product/action focus routes.
-- Priority queue has no duplicate action links.
+- Risk kartları ilgili product/action focus rotalarına gider.
+- Priority queue duplicate action link göstermez.
 
-Technical point:
+Teknik nokta:
 
-- Seller overview is built by `src/lib/api/seller.ts`.
-- Product health and action priority come from deterministic scoring and workflows.
+- Seller overview `src/lib/api/seller.ts` tarafından oluşturulur.
+- Product health ve action priority deterministik scoring/workflow katmanından gelir.
 
-### Step 2: Seller Product Radar
+### Adım 2: Seller Product Radar
 
-Route:
+Rota:
 
 ```text
 /seller/products?focus=stock-risk
 ```
 
-Show:
+Gösterilecekler:
 
-- Focus chips.
-- Search and sorting.
-- Product rows with health, stock, sales, reviews, and risk signals.
+- Focus chip'leri.
+- Search ve sorting.
+- Health, stock, sales, review ve risk sinyali taşıyan ürün satırları.
 - Linked action CTA.
 
-Say:
+Söylenecek:
 
-> Overview cards do not just display metrics. They route into a real product management surface with filters and linked actions.
+> Overview kartları sadece metrik göstermez; gerçek ürün yönetim yüzeyine, filtrelere ve bağlantılı aksiyonlara gider.
 
-Expected result:
+Beklenen sonuç:
 
-- Stock-risk filter is active.
-- Risk products and linked actions are visible.
+- Stock-risk filtresi aktiftir.
+- Riskli ürünler ve bağlı aksiyonlar görünür.
 
-Technical point:
+Teknik nokta:
 
-- The same seller product contract powers UI and API behavior.
+- Aynı seller product contract UI ve API davranışını besler.
 
-### Step 3: Seller Action Detail
+### Adım 3: Seller Action Detail
 
-Route:
+Rota:
 
 ```text
 /seller/actions/restock-ergoflex-calisma-sandalyesi
 ```
 
-Show:
+Gösterilecekler:
 
 - Action priority.
-- Affected products.
-- Work steps.
+- Etkilenen ürünler.
+- İş adımları.
 - Evidence/signal panel.
 - Explanation panel.
 
-Say:
+Söylenecek:
 
-> Seller actions are explainable. The user sees affected products and work steps before going to the Agent for a draft or mutation.
+> Seller action'lar açıklanabilirdir. Kullanıcı Agent'a draft veya mutation için gitmeden önce etkilenen ürünleri ve yapılacak işi görür.
 
-Expected result:
+Beklenen sonuç:
 
-- Action detail loads.
-- Affected product links are visible.
-- Explanation panel is concise and product-facing.
+- Action detail yüklenir.
+- Etkilenen ürün linkleri görünür.
+- Explanation panel kısa ve ürün odaklıdır.
 
-Technical point:
+Teknik nokta:
 
-- Action details come from `src/lib/api/seller.ts`.
-- Explanations use `src/lib/api/seller-action-explanations.ts`.
+- Action detail verisi `src/lib/api/seller.ts` içinden gelir.
+- Açıklamalar `src/lib/api/seller-action-explanations.ts` ile üretilir.
 
-### Step 4: Seller Agent Approval And Audit
+### Adım 4: Seller Agent Approval ve Audit
 
-Route:
+Rota:
 
 ```text
 /seller/agent
 ```
 
-Suggested prompt:
+Önerilen prompt:
 
 ```text
 Stok riski olan ürünleri göster ve bugün ne yapacağımı sırala.
 ```
 
-Show:
+Gösterilecekler:
 
 - Seller findings.
-- Action suggestions.
+- Action suggestion'ları.
 - Listing before/after preview.
-- Approval button.
+- Approval butonu.
 - Audit log.
 - Rollback.
 
-Say:
+Söylenecek:
 
-> This is the key technical boundary: the Agent can draft a listing change, but the seller must approve it. Approved changes go into an audit trail, and local rollback is available.
+> En kritik teknik sınır burada: Agent listing değişikliği draft eder ama satıcı onaylamadan uygulayamaz. Onaylanan değişiklik audit trail'e gider ve local rollback yapılabilir.
 
-Expected result:
+Beklenen sonuç:
 
-- Draft preview is visible.
-- Apply requires explicit click.
-- Audit entry appears after apply.
-- Rollback can reverse applied local state.
+- Draft preview görünür.
+- Apply açık kullanıcı click'i ister.
+- Apply sonrası audit entry oluşur.
+- Rollback local state'i geri alabilir.
 
-Technical point:
+Teknik nokta:
 
-- `src/lib/api/seller-agent.ts` builds the agent result.
-- `src/lib/agents/seller-listing-apply.ts` validates apply requests.
-- `src/lib/agents/seller-listing-apply-client.ts` writes local override and audit state.
+- `src/lib/api/seller-agent.ts` agent sonucunu üretir.
+- `src/lib/agents/seller-listing-apply.ts` apply request'lerini validate eder.
+- `src/lib/agents/seller-listing-apply-client.ts` local override ve audit state yazar.
 
-## 7. Floating Agent Demo
+## 8. Floating Agent Demo
 
-### Step 1: Buyer Context
+### Adım 1: Buyer Context
 
-Route:
+Rota:
 
 ```text
 /buyer/cart
 ```
 
-Show:
+Gösterilecekler:
 
-- Open the floating Agent panel.
-- Ask a buyer cart question or recommendation prompt.
-- Confirm that buyer actions are available.
+- Floating Agent panelini açın.
+- Buyer cart sorusu veya öneri prompt'u yazın.
+- Buyer action'ların kullanılabilir olduğunu gösterin.
 
-Say:
+Söylenecek:
 
-> The floating Agent reads route context and exposes buyer capabilities on buyer pages.
+> Floating Agent route context'i okur ve buyer sayfalarında buyer capability'leri açar.
 
-Expected result:
+Beklenen sonuç:
 
-- Floating panel opens.
-- Buyer-focused prompt routes to buyer-agent behavior when action-oriented.
+- Floating panel açılır.
+- Action-oriented buyer prompt buyer-agent davranışına yönlenir.
 
-### Step 2: Seller Context
+### Adım 2: Seller Context
 
-Route:
-
-```text
-/seller/products
-```
-
-Show:
-
-- Open floating Agent.
-- Ask for seller product/action help.
-- Confirm seller-focused behavior.
-
-Say:
-
-> The same mini panel changes capabilities by route. It does not run buyer cart actions on seller pages.
-
-Expected result:
-
-- Seller-focused prompt routes to seller-agent behavior.
-- Listing apply still requires approval.
-
-### Step 3: Controls
-
-Route:
+Rota:
 
 ```text
 /seller/products
 ```
 
-Show:
+Gösterilecekler:
 
-- Mute.
-- Disable warnings on this page.
-- Hide controls if relevant.
+- Floating Agent'ı açın.
+- Seller product/action yardımı isteyin.
+- Seller odaklı davranışı gösterin.
 
-Say:
+Söylenecek:
 
-> A proactive Agent needs user controls. CommercePilot keeps mute and page-level controls in local state.
+> Aynı mini panel route'a göre capability değiştirir. Seller sayfasında buyer cart action çalıştırmaz.
 
-Expected result:
+Beklenen sonuç:
 
-- Floating control state persists locally.
+- Seller prompt seller-agent davranışına yönlenir.
+- Listing apply yine onay ister.
 
-Technical point:
+### Adım 3: Kontroller
 
-- Floating controls use `commercepilot.floatingAgent.v1`.
-- The panel starts fresh and does not send stored history back to the API.
+Rota:
 
-## 8. Review Intelligence Proof
+```text
+/seller/products
+```
 
-Route:
+Gösterilecekler:
+
+- Sessize al.
+- Bu sayfada uyarma.
+- Gerekirse gizle kontrolleri.
+
+Söylenecek:
+
+> Proactive Agent kullanıcı kontrolü gerektirir. CommercePilot mute ve page-level kontrolleri local state'te tutar.
+
+Beklenen sonuç:
+
+- Floating control state local olarak korunur.
+
+Teknik nokta:
+
+- Floating kontroller `commercepilot.floatingAgent.v1` kullanır.
+- Panel temiz başlar ve stored history API'ye gönderilmez.
+
+## 9. Review Intelligence Kanıtı
+
+Rota:
 
 ```text
 /seller/actions/review_attention-connectplus-usb-c-hub
 ```
 
-Show:
+Gösterilecekler:
 
-- Real review highlights.
+- Gerçek review highlight'ları.
 - Review-related action summary.
-- Seller response or copy suggestion area where visible.
+- Görünüyorsa seller response veya copy suggestion alanı.
 
-Say:
+Söylenecek:
 
-> Review intelligence is a typed LLM contract. It can cluster and summarize existing reviews, but it cannot invent source review ids or mutate product data.
+> Review intelligence typed LLM contract'tır. Mevcut yorumları cluster/summarize edebilir ama source review id uyduramaz ve product data mutate edemez.
 
-Expected result:
+Beklenen sonuç:
 
-- Review action page shows actual review content.
-- Review risk is grounded in existing product reviews.
+- Review action page gerçek yorum içeriği gösterir.
+- Review risk mevcut product review'larına dayanır.
 
-Technical point:
+Teknik nokta:
 
-- `src/lib/api/review-intelligence.ts` validates source review ids and allowed theme labels.
+- `src/lib/api/review-intelligence.ts` source review id ve allowed theme label doğrulaması yapar.
 
-## 9. Technical Proof Route
+## 10. Teknik Proof Rotası
 
-Route:
+Rota:
 
 ```text
 /demo
 ```
 
-Show:
+Gösterilecekler:
 
 - Buyer demo lane.
 - Seller demo lane.
 - Floating Agent lane.
-- LLM proof list.
-- Agent trace proof list.
-- QA checks.
+- LLM proof listesi.
+- Agent trace proof listesi.
+- QA check'leri.
 
-Say:
+Söylenecek:
 
-> The demo route is the proof surface. Product-facing buyer screens stay clean, while `/demo` keeps runtime, LLM, trace, and QA evidence discoverable.
+> Demo route proof surface'tir. Buyer ekranları ürün gibi temiz kalır; `/demo` runtime, LLM, trace ve QA kanıtlarını görünür tutar.
 
-Expected result:
+Beklenen sonuç:
 
-- Runbook lanes are visible.
-- QA cards point to `npm run check`, `npm run build`, runtime smoke, and browser rehearsal.
+- Runbook lane'leri görünür.
+- QA kartları `npm run check`, `npm run build`, runtime smoke ve browser rehearsal'a işaret eder.
 
-Technical point:
+Teknik nokta:
 
-- `/demo` is backed by `src/lib/demo/rehearsal.ts`.
+- `/demo`, `src/lib/demo/rehearsal.ts` tarafından beslenir.
 
-## 10. Guardrail Scenarios
+## 11. Guardrail Senaryoları
 
-Use these if reviewers ask how hallucination or role mismatch is handled.
+Teknik inceleyici hallucination veya rol uyuşmazlığı sorarsa bunları kullanın.
 
-### Unsupported Buyer Catalog Prompt
+### Desteklenmeyen Buyer Catalog Prompt
 
-Route:
+Rota:
 
 ```text
 /buyer/agent
@@ -537,19 +554,19 @@ Prompt:
 iPhone öner
 ```
 
-Expected:
+Beklenen:
 
-- Agent should not invent phone products.
-- It should return a catalog-boundary answer or fallback behavior.
+- Agent telefon ürünü uydurmamalı.
+- Catalog-boundary answer veya fallback davranışı dönmeli.
 
-Proof:
+Kanıt:
 
 - `src/lib/agents/buyer-catalog-guardrails.ts`
 - `scripts/validate-workflows.js`
 
 ### Buyer-Seller Role Mismatch
 
-Route:
+Rota:
 
 ```text
 /buyer/cart
@@ -561,13 +578,13 @@ Floating prompt:
 Stok riski olan ürünleri sırala.
 ```
 
-Expected:
+Beklenen:
 
-- Buyer surface should not run seller operations.
+- Buyer surface seller operation çalıştırmamalı.
 
 ### Seller-Buyer Role Mismatch
 
-Route:
+Rota:
 
 ```text
 /seller/products
@@ -579,32 +596,32 @@ Floating prompt:
 Sepetime 3 ürün ekle.
 ```
 
-Expected:
+Beklenen:
 
-- Seller surface should not run buyer cart mutation.
+- Seller surface buyer cart mutation çalıştırmamalı.
 
-## 11. What To Emphasize
+## 12. Vurgulanacak Noktalar
 
-Use these points in the final explanation:
+Final anlatıda bu noktaları kullanın:
 
-- CommercePilot is not using LLM output as raw truth.
-- Deterministic workflows choose the candidate universe.
-- LLM output is parsed, normalized, and validated.
-- Buyer Agent is catalog-bound.
-- Seller Agent is approval-bound.
-- Floating Agent shares the same apply contracts as full agent pages.
-- Technical proof is visible in `/demo`, docs, validation script, and CI.
+- CommercePilot LLM çıktısını ham gerçeklik olarak kullanmaz.
+- Deterministik workflow'lar candidate universe'ü seçer.
+- LLM çıktısı parse, normalize ve validate edilir.
+- Buyer Agent katalogla sınırlıdır.
+- Seller Agent approval-bound çalışır.
+- Floating Agent full agent sayfalarıyla aynı apply contract'larını paylaşır.
+- Teknik proof `/demo`, dokümanlar, validation script ve CI içinde görünürdür.
 
-## 12. Known Limits To State Clearly
+## 13. Açık Söylenecek Limitler
 
-Be direct about these limits:
+Bu limitleri doğrudan söyleyin:
 
-- Data is curated mock commerce data.
-- Auth and database persistence are not implemented.
-- Cart/profile/listing audit state is localStorage.
-- Product media uses a controlled sprite.
-- Payment, order creation, fulfillment, and real inventory reservation are out of scope.
+- Veri curated mock commerce verisidir.
+- Kimlik doğrulama ve veritabanı kalıcılığı uygulanmadı.
+- Cart/profile/listing audit state `localStorage` kullanır.
+- Ürün medyası kontrollü sprite kullanır.
+- Ödeme, sipariş oluşturma, fulfillment ve gerçek stok rezervasyonu scope dışında.
 
-The intended positioning:
+Doğru konumlandırma:
 
-> Mock data, real LLM orchestration, typed guardrails, approved local mutations.
+> Mock data, gerçek LLM orchestration, typed guardrail'ler ve onaylı local mutation'lar.

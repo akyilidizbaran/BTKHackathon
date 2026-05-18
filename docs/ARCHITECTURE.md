@@ -1,79 +1,78 @@
-# CommercePilot Architecture
+# CommercePilot Mimarisi
 
-This document explains how CommercePilot works internally. It is written for reviewers who want to understand the engineering shape without reading every route and component first.
+Bu doküman, CommercePilot'un içeride nasıl çalıştığını açıklar. Amaç, teknik inceleyicinin her route ve component'i tek tek okumadan önce mühendislik yapısını hızlıca anlamasıdır.
 
-## 1. System Overview
+## 1. Sistem Özeti
 
-CommercePilot is built around a strict separation between deterministic commerce logic and LLM-assisted language or ranking work.
+CommercePilot, deterministik commerce logic ile LLM destekli dil/sıralama katmanını kesin şekilde ayırır.
 
 ```text
-curated mock commerce data
-  -> typed data access helpers
-  -> deterministic scoring modules
-  -> workflow builders
-  -> UI/API contract builders
-  -> LLM orchestration, when needed
-  -> typed validation and guardrails
-  -> user approval
-  -> deterministic local apply functions
+curated mock commerce verisi
+  -> typed data access helper'ları
+  -> deterministik scoring modülleri
+  -> workflow builder'ları
+  -> UI/API contract builder'ları
+  -> gerektiğinde LLM orchestration
+  -> typed validation ve guardrail'ler
+  -> kullanıcı onayı
+  -> deterministik local apply fonksiyonları
 ```
 
-The LLM never owns the source of truth. It can explain, rank, draft, and summarize. Product selection, mutation payloads, catalog boundaries, approval requirements, and rollback behavior remain typed application contracts.
+LLM hiçbir zaman source of truth değildir. Açıklama yapabilir, sıralayabilir, draft üretebilir ve özetleyebilir. Ürün seçimi, mutation payload'ları, katalog sınırları, onay gereklilikleri ve rollback davranışı typed application contract'ları tarafından korunur.
 
-## 2. Reviewer Proof Map
+## 2. Teknik İnceleyici Kanıt Haritası
 
-This table maps the main technical claims to the files a reviewer should inspect first.
+Bu tablo, ana teknik iddiaları teknik inceleyicinin önce incelemesi gereken dosyalarla eşler.
 
-| Claim | Primary files | How to verify |
+| İddia | Ana dosyalar | Nasıl doğrulanır |
 |---|---|---|
-| The catalog and commerce state are curated, not random fixtures. | `src/data/mock/*`, `src/lib/data/*` | Run `npm run validate:workflows` and inspect product/review counts. |
-| Product health and seller actions come from deterministic scoring. | `src/lib/scoring/*`, `src/lib/workflows/seller-actions.ts`, `src/lib/workflows/product-health.ts` | Inspect score evidence fields and run `npm run check`. |
-| Buyer recommendations are catalog-bound. | `src/lib/workflows/buyer-smart-cart.ts`, `src/lib/api/buyer-agent.ts`, `src/lib/agents/buyer-catalog-guardrails.ts` | Try unsupported prompts such as phones or consoles; validation blocks fake products. |
-| LLM output is validated before UI/apply usage. | `src/lib/llm/json.ts`, `src/lib/api/buyer-agent.ts`, `src/lib/api/seller-agent.ts`, `src/lib/api/review-intelligence.ts` | Inspect validator functions and fallback paths. |
-| Cart and seller listing mutations require approval. | `src/lib/agents/buyer-cart-apply.ts`, `src/lib/agents/seller-listing-apply.ts`, client apply helpers | Follow `/buyer/agent` and `/seller/agent`; apply buttons are explicit. |
-| Floating Agent shares route-agent boundaries. | `src/lib/api/floating-agent.ts`, `src/components/commerce/floating-agent-panel.tsx` | Route mismatch and unsupported catalog prompts are blocked. |
-| CI can run without API keys. | `.github/workflows/ci.yml`, `src/lib/llm/*`, `scripts/validate-workflows.js` | CI uses deterministic provider mode and runs `check` + `build`. |
+| Catalog ve commerce state rastgele fixture değil, curated mock datadır. | `src/data/mock/*`, `src/lib/data/*` | `npm run validate:workflows` çalıştırın, product/review sayılarını inceleyin. |
+| Product health ve seller action'lar deterministik scoring'den gelir. | `src/lib/scoring/*`, `src/lib/workflows/seller-actions.ts`, `src/lib/workflows/product-health.ts` | Score evidence alanlarını inceleyin ve `npm run check` çalıştırın. |
+| Buyer önerileri katalogla sınırlıdır. | `src/lib/workflows/buyer-smart-cart.ts`, `src/lib/api/buyer-agent.ts`, `src/lib/agents/buyer-catalog-guardrails.ts` | Telefon/konsol gibi desteklenmeyen prompt'ları deneyin; validation fake ürünleri engeller. |
+| LLM çıktısı UI/apply kullanımından önce validate edilir. | `src/lib/llm/json.ts`, `src/lib/api/buyer-agent.ts`, `src/lib/api/seller-agent.ts`, `src/lib/api/review-intelligence.ts` | Validator fonksiyonlarını ve fallback yollarını inceleyin. |
+| Cart ve seller listing mutation'ları onay ister. | `src/lib/agents/buyer-cart-apply.ts`, `src/lib/agents/seller-listing-apply.ts`, client apply helper'ları | `/buyer/agent` ve `/seller/agent` akışlarını izleyin; apply butonları açık kullanıcı aksiyonudur. |
+| Floating Agent, route agent boundary'lerini paylaşır. | `src/lib/api/floating-agent.ts`, `src/components/commerce/floating-agent-panel.tsx` | Role mismatch ve unsupported catalog prompt'ları engellenir. |
+| CI API key olmadan çalışabilir. | `.github/workflows/ci.yml`, `src/lib/llm/*`, `scripts/validate-workflows.js` | CI deterministic provider modunda `check` ve `build` çalıştırır. |
 
-## 3. Layer Map
+## 3. Katman Haritası
 
 ```text
 src/data/mock
   Products, sellers, buyers, orders, reviews, carts, inventory events, relations.
 
 src/lib/data
-  Read helpers and joined commerce views over the mock dataset.
+  Mock dataset üzerinde read helper'ları ve birleşik commerce view'ları.
 
 src/lib/scoring
-  Product health, inventory, reviews, listing, returns, shipping, profitability,
-  and promotion-readiness scores.
+  Product health, inventory, reviews, listing, returns, shipping, profitability
+  ve promotion-readiness skorları.
 
 src/lib/workflows
-  Use-case workflows such as buyer smart cart, seller growth actions,
-  and product health analysis.
+  Buyer smart cart, seller growth actions ve product health analysis gibi use-case workflow'ları.
 
 src/lib/api
-  Typed contract builders used by both App Router pages and API routes.
+  App Router page'leri ve API route'ları tarafından paylaşılan typed contract builder'lar.
 
 src/lib/llm
   Provider-neutral text/JSON generation, OpenAI adapter, Gemini adapter,
-  deterministic fallback, JSON extraction, and normalization helpers.
+  deterministic fallback, JSON extraction ve normalization helper'ları.
 
 src/lib/agents
-  Runtime registry, tool metadata, route/floating context, catalog guardrails,
-  profile warnings, apply contracts, local apply helpers, audit and rollback.
+  Runtime registry, tool metadata, route/floating context, catalog guardrail'leri,
+  profile warning'leri, apply contract'ları, local apply helper'ları, audit ve rollback.
 
 src/components/commerce
-  Product-facing buyer/seller UI, agent UI, proof/demo UI, and extracted panels.
+  Buyer/seller ürün yüzeyleri, agent UI, proof/demo UI ve ayrıştırılmış paneller.
 
 src/app
-  Next.js App Router pages and API routes.
+  Next.js App Router page ve API route'ları.
 ```
 
-## 4. Data And Scoring
+## 4. Veri ve Scoring
 
-The app starts with curated mock data in `src/data/mock`. The mock data is intentionally shaped around demo stories rather than random fixtures.
+Uygulama `src/data/mock` içindeki curated mock data ile başlar. Mock data rastgele fixture gibi değil, demo hikayelerini taşıyacak şekilde tasarlanmıştır.
 
-Important entry points:
+Önemli giriş noktaları:
 
 - `src/data/mock/products.ts`
 - `src/data/mock/reviews.ts`
@@ -83,49 +82,53 @@ Important entry points:
 - `src/data/mock/buyers.ts`
 - `src/data/mock/sellers.ts`
 
-Scoring lives in `src/lib/scoring`. It turns raw commerce signals into explainable scores:
+Scoring katmanı `src/lib/scoring` altında yaşar ve ham commerce sinyallerini açıklanabilir skorlara çevirir:
 
 - Inventory risk.
-- Review and sentiment risk.
+- Review ve sentiment risk.
 - Listing quality.
 - Return risk.
 - Shipping reliability.
-- Profitability and margin pressure.
+- Profitability ve margin pressure.
 - Promotion readiness.
 - Aggregate product health.
 
-Workflows in `src/lib/workflows` consume those scores and produce use-case outputs:
+`src/lib/workflows` altındaki workflow'lar bu skorları kullanarak use-case çıktıları üretir:
 
-- `buyer-smart-cart.ts` creates buyer recommendation candidates.
-- `seller-actions.ts` creates seller growth/action recommendations.
-- `product-health.ts` creates product-level health analysis.
+- `buyer-smart-cart.ts` buyer recommendation candidate'ları üretir.
+- `seller-actions.ts` seller growth/action recommendation'ları üretir.
+- `product-health.ts` ürün bazlı health analysis üretir.
 
 ## 5. API Contract Pattern
 
-CommercePilot avoids duplicating logic between pages and API routes. Shared builders in `src/lib/api` produce the typed data contracts; route handlers and server components both consume the same builders.
+CommercePilot, page ve API route arasında logic tekrarını önler. `src/lib/api` içindeki shared builder'lar typed data contract üretir; route handler'lar ve server component'ler aynı builder'ları kullanır.
 
-Examples:
+Örnekler:
 
-- `src/lib/api/buyer-catalog.ts` powers buyer catalog UI and `GET /api/buyer/catalog`.
-- `src/lib/api/buyer-agent.ts` powers `/buyer/agent` and `POST /api/buyer/agent`.
-- `src/lib/api/seller.ts` powers seller overview, products, actions, product health, and buyer signals.
-- `src/lib/api/seller-agent.ts` powers `/seller/agent` and `POST /api/seller/agent`.
-- `src/lib/api/floating-agent.ts` powers the floating panel API.
-- `src/lib/api/review-intelligence.ts` powers review intelligence.
+- `src/lib/api/buyer-catalog.ts`, buyer catalog UI ve `GET /api/buyer/catalog` için veri üretir.
+- `src/lib/api/buyer-agent.ts`, `/buyer/agent` ve `POST /api/buyer/agent` akışını besler.
+- `src/lib/api/seller.ts`, seller overview, products, actions, product health ve buyer signals yüzeylerini besler.
+- `src/lib/api/seller-agent.ts`, `/seller/agent` ve `POST /api/seller/agent` akışını besler.
+- `src/lib/api/floating-agent.ts`, floating panel API'sini besler.
+- `src/lib/api/review-intelligence.ts`, review intelligence contract'ını üretir.
 
-The API envelope convention is:
+API envelope konvansiyonu:
 
 ```text
 success/data/error
 ```
 
-The shared response helpers live in `src/lib/api/responses.ts`.
+Shared response helper'ları:
 
-## 6. LLM Provider Layer
+```text
+src/lib/api/responses.ts
+```
 
-The LLM layer is provider-neutral by design.
+## 6. LLM Provider Katmanı
 
-Important files:
+LLM katmanı provider bağımsız tasarlanmıştır.
+
+Önemli dosyalar:
 
 - `src/lib/llm/index.ts`
 - `src/lib/llm/common.ts`
@@ -134,13 +137,13 @@ Important files:
 - `src/lib/llm/json.ts`
 - `src/lib/llm/types.ts`
 
-Supported provider modes:
+Desteklenen sağlayıcı modları:
 
 - `openai`
 - `gemini`
 - `deterministic`
 
-Environment variables:
+Ortam değişkeni isimleri:
 
 ```text
 LLM_PROVIDER
@@ -150,57 +153,63 @@ GEMINI_MODEL
 GEMINI_API_KEY
 ```
 
-Structured generation uses `generateLlmJson<T>()`. It extracts JSON, normalizes strings and arrays, runs a caller-provided validator, and falls back deterministically when parsing or validation fails.
+Hackathon sunumunda ana pozisyon Gemini veya deterministik fallback olmalıdır. OpenAI adapter'ı provider abstraction kanıtı ve lokal geliştirme esnekliği için bulunur.
 
-This matters because CommercePilot uses LLM output only after type-level and domain-level validation.
+Structured generation `generateLlmJson<T>()` üzerinden yapılır. Bu helper JSON çıkarır, string/array normalize eder, caller-provided validator çalıştırır ve parsing/validation başarısız olursa deterministik fallback'e döner.
+
+Bu kritik çünkü CommercePilot LLM çıktısını yalnızca type-level ve domain-level validation sonrası kullanır.
 
 ## 7. Agent Runtime
 
-The shared agent runtime registry lives in `src/lib/agents/runtime.ts`.
+Shared agent runtime registry:
 
-It defines:
+```text
+src/lib/agents/runtime.ts
+```
 
-- Prompt templates.
+Bu katman şunları tanımlar:
+
+- Prompt template'leri.
 - Tool registry.
-- Tool plans.
-- Runtime snapshots.
-- Guardrail summaries.
+- Tool plan'ları.
+- Runtime snapshot'ları.
+- Guardrail özetleri.
 - Application-level execution trace metadata.
 
-Current high-level agent roles:
+Mevcut high-level agent rolleri:
 
 - `buyer`
 - `seller`
 
-Current surfaces:
+Mevcut surface'ler:
 
 - `route`
 - `floating`
 
-Important runtime concepts:
+Önemli runtime kavramları:
 
-- Prompt templates define max prompt length, role, endpoint, and response contract.
-- Tool definitions mark whether approval is required.
-- Trace items describe workflow, context, LLM, tool, guardrail, and approval layers.
-- Runtime snapshots let `/demo` and technical proof surfaces show what the agent is allowed to do.
+- Prompt template'leri max prompt length, role, endpoint ve response contract bilgisi taşır.
+- Tool definition'ları approval gerekip gerekmediğini belirtir.
+- Trace item'ları workflow, context, LLM, tool, guardrail ve approval katmanlarını açıklar.
+- Runtime snapshot'ları `/demo` ve teknik proof yüzeylerinde agent'ın ne yapabileceğini gösterir.
 
-## 8. Buyer Agent Flow
+## 8. Buyer Agent Akışı
 
-The buyer agent flow is catalog-bound.
+Buyer agent akışı katalogla sınırlıdır.
 
 ```text
 User prompt
   -> validateBuyerAgentRequest
   -> buyer catalog + profile + smart-cart workflow
-  -> LLM JSON orchestration for message, ranking, reasons, risk notes
-  -> product id whitelist and unsupported catalog guardrails
+  -> message, ranking, reasons, risk notes için LLM JSON orchestration
+  -> product id whitelist ve unsupported catalog guardrail'leri
   -> BuyerAgentApiData
-  -> user chooses append or replace
+  -> kullanıcı append veya replace seçer
   -> /api/buyer/agent/apply validation
-  -> buyer-cart-apply-client writes local cart state
+  -> buyer-cart-apply-client local cart state'e yazar
 ```
 
-Important files:
+Önemli dosyalar:
 
 - `src/lib/api/buyer-agent.ts`
 - `src/lib/agents/buyer-catalog-guardrails.ts`
@@ -210,32 +219,32 @@ Important files:
 - `src/components/commerce/buyer-agent-workspace.tsx`
 - `src/components/commerce/buyer-agent-panels.tsx`
 
-Key boundaries:
+Ana boundary'ler:
 
-- Buyer Agent can only recommend existing catalog products.
-- Unsupported product families return a boundary answer instead of fake recommendations.
-- Cart mutations require explicit user action.
-- Apply is deterministic and client-side over validated payloads.
+- Buyer Agent yalnızca mevcut katalog ürünlerini önerebilir.
+- Desteklenmeyen ürün aileleri fake recommendation yerine boundary answer döndürür.
+- Cart mutation'ları açık kullanıcı aksiyonu gerektirir.
+- Apply deterministiktir ve validated payload üzerinden client-side çalışır.
 
-## 9. Seller Agent Flow
+## 9. Seller Agent Akışı
 
-The seller agent flow is approval-bound.
+Seller agent akışı approval-bound tasarlanmıştır.
 
 ```text
 User prompt
   -> validateSellerAgentRequest
   -> seller products + seller actions workflows
-  -> LLM JSON orchestration for focus, ranking, reasons, draft listing text
-  -> product/action id whitelist and mutation shape validation
+  -> focus, ranking, reasons, draft listing text için LLM JSON orchestration
+  -> product/action id whitelist ve mutation shape validation
   -> SellerAgentApiData
   -> before/after listing preview
   -> user approval
   -> /api/seller/agent/apply validation
-  -> seller-listing-apply-client writes local override and audit entry
-  -> rollback can reverse applied local audit entries
+  -> seller-listing-apply-client local override ve audit entry yazar
+  -> rollback applied local audit entry'leri geri alabilir
 ```
 
-Important files:
+Önemli dosyalar:
 
 - `src/lib/api/seller-agent.ts`
 - `src/lib/agents/seller-listing-apply.ts`
@@ -243,28 +252,28 @@ Important files:
 - `src/components/commerce/seller-agent-workspace.tsx`
 - `src/components/commerce/seller-agent-listing-panels.tsx`
 
-Key boundaries:
+Ana boundary'ler:
 
-- Seller Agent cannot mutate listing, price, campaign, stock, or copy without approval.
-- LLM-generated drafts are normalized into the shared listing mutation preview contract.
-- Audit and rollback are local-only for the MVP, but the apply boundary is explicit.
+- Seller Agent listing, price, campaign, stock veya copy alanlarını onay olmadan değiştiremez.
+- LLM-generated draft'lar shared listing mutation preview contract'ına normalize edilir.
+- Audit ve rollback MVP'de yalnızca lokaldir; buna rağmen apply boundary açıktır.
 
-## 10. Floating Agent Flow
+## 10. Floating Agent Akışı
 
-The floating agent is not a separate toy widget. It shares the same runtime and apply boundaries as the route-level buyer and seller agents.
+Floating agent ayrı bir oyuncak widget değildir. Route-level buyer/seller agent'larla aynı runtime ve apply boundary'lerini paylaşır.
 
 ```text
-Current route
+Mevcut route
   -> createFloatingAgentContext
   -> default role/context/capability hints
   -> user prompt
   -> validateFloatingAgentRequest
-  -> route/role intent guardrails
-  -> buyer-agent, seller-agent, or chat mode
-  -> approved apply uses shared buyer/seller apply helpers
+  -> route/role intent guardrail'leri
+  -> buyer-agent, seller-agent veya chat mode
+  -> approved apply shared buyer/seller apply helper'larını kullanır
 ```
 
-Important files:
+Önemli dosyalar:
 
 - `src/lib/agents/floating-agent.ts`
 - `src/lib/agents/floating-agent-client.ts`
@@ -272,50 +281,50 @@ Important files:
 - `src/components/commerce/floating-agent-panel.tsx`
 - `src/components/commerce/floating-agent-result-panel.tsx`
 
-Key boundaries:
+Ana boundary'ler:
 
-- Each panel opening starts fresh.
-- Stored floating history is not sent to the API.
-- Buyer surfaces do not run seller operations.
-- Seller surfaces do not run buyer cart operations.
-- Approved cart/listing operations use the same shared apply contracts as full agent pages.
+- Her panel açılışı temiz başlar.
+- Stored floating history API'ye gönderilmez.
+- Buyer surface seller operation çalıştırmaz.
+- Seller surface buyer cart operation çalıştırmaz.
+- Onaylı cart/listing operation'ları full agent page'leriyle aynı shared apply contract'larını kullanır.
 
-## 11. Review Intelligence And Product Warnings
+## 11. Review Intelligence ve Product Warning'ler
 
-Review intelligence is a separate typed LLM contract.
+Review intelligence ayrı bir typed LLM contract'tır.
 
-Important files:
+Önemli dosyalar:
 
 - `src/lib/api/review-intelligence.ts`
 - `src/lib/api/seller-action-explanations.ts`
 - `src/lib/api/buyer-smart-cart-explanations.ts`
 - `src/lib/agents/buyer-profile-product-alerts.ts`
 
-Review intelligence can produce:
+Review intelligence şu çıktıları üretebilir:
 
-- Review clusters.
-- Repeated complaint themes.
+- Review cluster'ları.
+- Tekrar eden complaint theme'leri.
 - Risk summary.
-- Listing fix suggestions.
-- Seller reply drafts.
+- Listing fix suggestion'ları.
+- Seller reply draft'ları.
 - Buyer-facing warning.
 
-Guardrails:
+Guardrail'ler:
 
-- Source review ids must be from known reviews.
-- Theme labels must be from allowed known themes.
-- Review intelligence enriches explanations and warnings; it does not mutate product data.
+- Source review id'leri bilinen yorumlardan gelmelidir.
+- Theme label'ları izinli known theme setinden gelmelidir.
+- Review intelligence açıklama ve warning'leri zenginleştirir; product data'yı mutate etmez.
 
-Buyer product warnings combine:
+Buyer product warning'leri şunları birleştirir:
 
-- Buyer profile preferences.
-- Previous complaint themes.
-- Product reviews and metric risk signals.
-- Route context for floating proactive state.
+- Buyer profile tercihleri.
+- Önceki complaint theme'leri.
+- Product review ve metric risk sinyalleri.
+- Floating proactive state için route context.
 
-## 12. UI Structure
+## 12. UI Yapısı
 
-Primary product surfaces:
+Ana ürün yüzeyleri:
 
 - Buyer catalog: `src/components/commerce/buyer-catalog-grid.tsx`
 - Buyer cart: `src/components/commerce/buyer-cart-workspace.tsx`
@@ -326,7 +335,7 @@ Primary product surfaces:
 - Seller profile: `src/components/commerce/seller-profile-workspace.tsx`
 - Shared shell: `src/components/commerce/workspace-shell.tsx`
 
-Agent/proof surfaces:
+Agent/proof yüzeyleri:
 
 - Buyer Agent: `src/components/commerce/buyer-agent-workspace.tsx`
 - Seller Agent: `src/components/commerce/seller-agent-workspace.tsx`
@@ -335,13 +344,13 @@ Agent/proof surfaces:
 - Execution trace proof: `src/components/commerce/agent-execution-trace-panel.tsx`
 - Demo route: `src/components/commerce/demo-rehearsal-workspace.tsx`
 
-The app intentionally keeps technical proof mostly out of buyer/floating user surfaces while exposing it in seller/demo/proof surfaces where it helps technical review.
+Uygulama, teknik proof bilgisini buyer/floating kullanıcı yüzeylerinden büyük ölçüde uzak tutar; bu bilgiyi teknik inceleme için seller/demo/proof yüzeylerinde görünür kılar.
 
-## 13. Persistence Model
+## 13. Persistence Modeli
 
-This MVP does not use a real database.
+Bu MVP gerçek veritabanı kullanmaz.
 
-Local storage keys:
+Local storage key'leri:
 
 - Buyer cart: `commercepilot.buyerCart.v1`
 - Buyer profile draft: `commercepilot.buyerProfile.v1`
@@ -349,17 +358,17 @@ Local storage keys:
 - Seller listing mutations/audit: `commercepilot.sellerListingMutations.v1`
 - Floating Agent controls: `commercepilot.floatingAgent.v1`
 
-The important architectural choice is that apply contracts already exist. Replacing local storage with server persistence should not require the LLM or UI layers to own mutation semantics.
+Önemli mimari karar, apply contract'larının şimdiden var olmasıdır. Local storage'ı server persistence ile değiştirmek LLM veya UI katmanının mutation semantics sahibi olmasını gerektirmemelidir.
 
-## 14. Verification
+## 14. Doğrulama
 
-Primary command:
+Ana komut:
 
 ```bash
 npm run check
 ```
 
-This runs:
+Bu komut şunları çalıştırır:
 
 - `eslint`
 - `tsc --noEmit`
@@ -372,23 +381,23 @@ Production build:
 npm run build
 ```
 
-GitHub Actions runs both commands with:
+GitHub Actions iki komutu da şu provider moduyla çalıştırır:
 
 ```text
 LLM_PROVIDER=deterministic
 ```
 
-This keeps CI independent of API keys and external LLM availability.
+Böylece CI API key ve harici LLM erişimine bağımlı kalmaz.
 
-## 15. Current Technical Debt
+## 15. Güncel Teknik Borç
 
-Known engineering gaps:
+Bilinen mühendislik boşlukları:
 
-- Large workspace components still need more extraction.
-- Browser smoke coverage is documented but not yet committed as a repeatable script.
-- Persistence is local-only.
-- Demo identities are hardcoded.
-- LLM latency and telemetry need stronger instrumentation.
-- API route tests should be added without requiring a live Next server.
+- Büyük workspace component'leri daha fazla ayrıştırılmalı.
+- Browser smoke coverage dokümante edildi ama tekrar çalıştırılabilir script olarak commitlenmedi.
+- Persistence yalnızca lokal.
+- Demo identity'ler hardcoded.
+- LLM latency ve telemetry daha güçlü instrumentation gerektiriyor.
+- Canlı Next server gerektirmeyen API route testleri eklenmeli.
 
-These are known limits, not hidden architecture assumptions.
+Bunlar gizlenen mimari varsayımlar değil, bilinen limitlerdir.

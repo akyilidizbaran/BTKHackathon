@@ -1,10 +1,10 @@
-# CommercePilot Reproducibility Guide
+# CommercePilot Tekrar Üretilebilirlik Rehberi
 
-This document is for reviewers who want to run the project, verify the technical claims, and understand which parts are real, deterministic, LLM-assisted, or intentionally mocked.
+Bu doküman, projeyi çalıştırmak, teknik iddiaları doğrulamak ve hangi kısımların gerçek, deterministik, LLM destekli veya bilinçli olarak mock olduğunu anlamak isteyen teknik inceleyiciler için yazıldı.
 
-## 1. Environment
+## 1. Ortam
 
-Development was validated with:
+Geliştirme ve doğrulama şu sürümlerle yapıldı:
 
 ```text
 Node.js 22.22.1
@@ -12,19 +12,19 @@ npm 10.9.4
 Next.js 16.2.6
 ```
 
-Install dependencies:
+Bağımlılıkları kurun:
 
 ```bash
 npm install
 ```
 
-Optional LLM configuration:
+Opsiyonel LLM konfigürasyonu:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Supported environment variable names:
+Desteklenen ortam değişkeni isimleri:
 
 ```text
 LLM_PROVIDER
@@ -34,17 +34,19 @@ GEMINI_MODEL
 GEMINI_API_KEY
 ```
 
-The repository can be reviewed without API keys. When a provider is missing or unavailable, supported routes use deterministic fallback behavior.
+Repo API key olmadan da incelenebilir. Provider eksikse veya erişilemiyorsa desteklenen akışlar deterministik fallback davranışına döner.
 
-## 2. One-Command Verification
+Hackathon teslimi için hedef demo yolu Gemini veya deterministik fallback ile anlatılmalıdır. OpenAI adapter'ı, provider bağımsız mimariyi göstermek ve lokal geliştirme esnekliği sağlamak için kodda durur; final sunumun ana iddiası OpenAI bağımlılığı değildir.
 
-Run:
+## 2. Tek Komutla Doğrulama
+
+Çalıştırın:
 
 ```bash
 npm run check
 ```
 
-This command runs:
+Bu komut şunları çalıştırır:
 
 ```text
 eslint
@@ -53,7 +55,7 @@ node scripts/validate-workflows.js
 vitest run src/components/commerce
 ```
 
-Expected result:
+Beklenen sonuç:
 
 ```text
 Workflow validation passed.
@@ -61,15 +63,15 @@ Test Files  3 passed (3)
 Tests       13 passed (13)
 ```
 
-## 3. Production Build Verification
+## 3. Production Derleme Doğrulaması
 
-Run:
+Çalıştırın:
 
 ```bash
 npm run build
 ```
 
-Expected result:
+Beklenen sonuç:
 
 ```text
 Compiled successfully
@@ -77,79 +79,79 @@ Generating static pages
 Finalizing page optimization
 ```
 
-Then run:
+Ardından üretim server'ını açın:
 
 ```bash
 npm run start
 ```
 
-Open:
+Tarayıcıda açın:
 
 ```text
 http://localhost:3000
 ```
 
-## 4. Reviewer Route Order
+## 4. Teknik İnceleyici Rota Sırası
 
-Use this order for a fast technical review:
+Hızlı teknik inceleme için önerilen sıra:
 
-| Order | Route | What to inspect |
+| Sıra | Route | İncelenecek nokta |
 |---:|---|---|
-| 1 | `/demo` | Proof route, runbook, guardrail/agent trace framing. |
-| 2 | `/buyer/products` | Catalog contract, product images, categories, sort, cart entry points. |
-| 3 | `/buyer/products/calliel-spf50-gunes-kremi` | Product detail, store link, purchase controls, review pagination. |
-| 4 | `/buyer/agent` | Catalog-bound recommendation, approval boundary, cart apply preview. |
-| 5 | `/buyer/cart` | Local cart mutation and suggested product surface. |
-| 6 | `/seller` | Risk cards, deduplicated priority queue, seller decision surface. |
-| 7 | `/seller/products` | Product radar, health signals, action links. |
-| 8 | `/seller/actions` | Seller action queue and focus filters. |
-| 9 | `/seller/agent` | Seller findings, listing draft preview, approval and rollback boundary. |
-| 10 | `/seller/profile` | Permission model, alert rules, audit/control settings. |
+| 1 | `/demo` | Kanıt rotası, runbook, guardrail ve agent trace çerçevesi. |
+| 2 | `/buyer/products` | Catalog contract, ürün görselleri, kategoriler, sıralama ve sepet girişleri. |
+| 3 | `/buyer/products/calliel-spf50-gunes-kremi` | Ürün detay, mağaza linki, satın alma kontrolleri ve yorum pagination. |
+| 4 | `/buyer/agent` | Katalogla sınırlı öneri, onay sınırı ve cart apply preview. |
+| 5 | `/buyer/cart` | Local cart mutation ve önerilen ürün yüzeyi. |
+| 6 | `/seller` | Risk kartları, deduplicate edilmiş öncelik kuyruğu ve satıcı karar yüzeyi. |
+| 7 | `/seller/products` | Ürün radarı, sağlık sinyalleri ve aksiyon linkleri. |
+| 8 | `/seller/actions` | Satıcı aksiyon kuyruğu ve focus filtreleri. |
+| 9 | `/seller/agent` | Satıcı bulguları, listing draft preview, onay ve rollback sınırı. |
+| 10 | `/seller/profile` | Permission modeli, alert kuralları, audit ve kontrol ayarları. |
 
-## 5. Deterministic Technical Claims
+## 5. Deterministik Teknik İddialar
 
-These claims can be checked without external services:
+Bu iddialar harici servis olmadan kontrol edilebilir:
 
-- The mock catalog has 48 products.
-- The mock review set has 55 reviews.
-- Buyer Agent product recommendations are catalog-bound.
-- Unsupported catalog families are blocked instead of hallucinated.
-- Seller listing mutations require approval before local apply.
-- Review intelligence accepts only allowed review ids and allowed themes.
-- Buyer cart, buyer profile, seller profile, seller listing audit, and floating controls are local MVP state.
+- Mock katalogda 48 ürün vardır.
+- Mock review setinde 55 yorum vardır.
+- Buyer Agent ürün önerileri katalogla sınırlıdır.
+- Desteklenmeyen ürün aileleri uydurulmaz, boundary response ile durdurulur.
+- Seller listing mutation'ları local apply öncesinde kullanıcı onayı ister.
+- Review intelligence yalnızca izinli review id'leri ve izinli theme etiketlerini kabul eder.
+- Buyer cart, buyer profile, seller profile, seller listing audit ve floating controls MVP'de local state olarak tutulur.
 
-The validation source is:
+Doğrulama kaynağı:
 
 ```text
 scripts/validate-workflows.js
 ```
 
-## 6. LLM-Assisted Claims
+## 6. LLM Destekli İddialar
 
-The LLM layer is provider-neutral:
+LLM katmanı provider bağımsızdır:
 
 ```text
 src/lib/llm
 ```
 
-Supported modes:
+Desteklenen modlar:
 
 - `openai`
 - `gemini`
 - `deterministic`
 
-The LLM can explain, rank, summarize, and draft. It does not directly mutate cart or seller listing state. Mutation payloads are validated by typed application contracts before the client applies them.
+LLM açıklama, sıralama, özetleme ve draft üretme görevlerinde kullanılabilir. Cart veya seller listing state'ini doğrudan değiştirmez. Mutation payload'ları client uygulanmadan önce typed application contract'ları tarafından doğrulanır.
 
-## 7. Known Non-Reproducible Parts
+## 7. Tekrar Üretilemeyen / MVP Dışında Kalan Kısımlar
 
-The following are intentionally outside MVP scope:
+Aşağıdakiler bilinçli olarak MVP kapsamı dışındadır:
 
-- Real authentication.
-- Real database persistence.
-- Payment or checkout.
-- Real inventory reservation.
-- Real shipping/fulfillment integration.
+- Gerçek kimlik doğrulama.
+- Gerçek veritabanı kalıcılığı.
+- Ödeme veya gerçek checkout.
+- Gerçek stok rezervasyonu.
+- Gerçek kargo/fulfillment entegrasyonu.
 - Production analytics/telemetry.
-- Production SKU media.
+- Production SKU görsel medya hattı.
 
-These are documented as known limitations rather than hidden assumptions.
+Bu maddeler gizli varsayım değil, bilinen MVP sınırlarıdır.

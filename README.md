@@ -2,24 +2,36 @@
 
 [![CI](https://github.com/akyilidizbaran/BTKHackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/akyilidizbaran/BTKHackathon/actions/workflows/ci.yml)
 
-CommercePilot is a hackathon MVP for a dual-sided commerce intelligence platform: a familiar marketplace for buyers, a seller operations cockpit for merchants, and a context-aware commerce agent that can explain, recommend, preview, and apply approved actions.
+CommercePilot, hackathon MVP'si olarak geliştirilmiş çift taraflı bir ticaret zekası platformudur. Alıcı tarafında tanıdık bir marketplace deneyimi, satıcı tarafında operasyon paneli ve iki tarafın üzerinde çalışan context-aware bir commerce agent bulunur. Agent; açıklama yapabilir, ürün önerebilir, satıcı aksiyonlarını önizleyebilir ve yalnızca kullanıcı onayı sonrası geçerli aksiyonları uygulayabilir.
 
-The core technical idea is simple:
+Çekirdek teknik fikir:
 
 ```text
-curated commerce data
-  -> deterministic scoring and workflows
-  -> LLM intent, ranking, explanation, and draft generation
-  -> typed validation and guardrails
-  -> user approval
-  -> deterministic apply functions
+curated commerce verisi
+  -> deterministik scoring ve workflow'lar
+  -> LLM intent, sıralama, açıklama ve draft üretimi
+  -> typed validation ve guardrail'ler
+  -> kullanıcı onayı
+  -> deterministik apply fonksiyonları
 ```
 
-This is not a static UI prototype. The app contains typed API contracts, workflow validation, LLM provider abstraction, catalog and role guardrails, approval boundaries, local mutation/audit stores, component tests, and a repeatable validation script.
+Bu proje statik bir UI prototipi değildir. Uygulama typed API contract'ları, workflow validation, LLM provider abstraction, katalog/rol guardrail'leri, approval boundary'leri, local mutation/audit store'ları, component testleri ve tekrar çalıştırılabilir validation script'i içerir.
 
-## Reviewer Quick Run
+## Jüri Hızlı Akış
 
-For a code reviewer, the fastest reproducible path is:
+Hackathon jürisi için en kısa inceleme yolu:
+
+1. Deploy edilmiş uygulamayı açın.
+2. `/demo` rotasından ürün hikayesini görün.
+3. `/buyer/products` üzerinden marketplace yüzeyini inceleyin.
+4. `/buyer/agent` ile katalogdan sepet önerisi alın ve onay sınırını görün.
+5. `/seller` ve `/seller/actions` ile satıcı risk/aksiyon yüzeyini inceleyin.
+6. `/seller/agent` ile listing draft preview, onay ve rollback sınırını görün.
+7. Teknik kanıt için `npm run check` ve [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dosyasına bakın.
+
+## Teknik İnceleyici Hızlı Çalıştırma
+
+Kod inceleyicisi için en hızlı tekrar üretilebilir yol:
 
 ```bash
 npm install
@@ -28,221 +40,223 @@ npm run build
 npm run start
 ```
 
-Then open:
+Sonra açın:
 
 ```text
 http://localhost:3000
 ```
 
-Recommended review order:
+Önerilen inceleme sırası:
 
-1. Run `npm run check` and inspect the workflow validation output.
-2. Open `/demo` for the proof-oriented walkthrough.
-3. Open `/buyer/products`, `/buyer/agent`, `/seller`, and `/seller/agent`.
-4. Read [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+1. `npm run check` çalıştırın ve workflow validation çıktısını inceleyin.
+2. Kanıt odaklı walkthrough için `/demo` rotasını açın.
+3. `/buyer/products`, `/buyer/agent`, `/seller` ve `/seller/agent` rotalarını açın.
+4. [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) ve [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dosyalarını okuyun.
 
-The app is designed to be reviewable without API keys. If no LLM key is configured, supported flows use deterministic fallback behavior.
+Uygulama API key olmadan da incelenebilir. LLM key yoksa desteklenen akışlar deterministik fallback davranışına döner.
 
-## Current Status
+Hackathon tesliminde demo anlatısı Gemini veya deterministik fallback üzerinden kurulmalıdır. OpenAI adapter'ı provider bağımsız mimariyi göstermek ve lokal geliştirme esnekliği sağlamak için kodda durur; final sunumun ana iddiası OpenAI bağımlılığı değildir.
 
-CommercePilot is in delivery-ready hackathon MVP state.
+## Güncel Durum
 
-What is intentionally real:
+CommercePilot, teslim edilebilir hackathon MVP seviyesindedir.
 
-- Buyer and seller app surfaces built with Next.js App Router, React, TypeScript, and Tailwind CSS.
-- Deterministic commerce scoring for product health, stock risk, review risk, return risk, profitability, listing quality, and promotion readiness.
-- Buyer Agent and Seller Agent API contracts with LLM-assisted orchestration.
-- Provider-neutral LLM layer with OpenAI and Gemini adapters plus deterministic fallback.
-- Structured JSON parsing and validation before any LLM output reaches UI or apply contracts.
-- Guardrails that block catalog hallucination, role mismatch, stale LLM action prompts, and unapproved mutations.
-- Buyer cart apply and seller listing apply flows with explicit user approval.
-- Local audit and rollback behavior for seller listing mutations.
-- Component tests for extracted agent panels and workflow contract validation.
+Bilinçli olarak gerçek olan kısımlar:
 
-What is intentionally mock or local-only:
+- Buyer ve seller uygulama yüzeyleri Next.js App Router, React, TypeScript ve Tailwind CSS ile geliştirildi.
+- Product health, stock risk, review risk, return risk, profitability, listing quality ve promotion readiness için deterministik commerce scoring katmanı var.
+- Buyer Agent ve Seller Agent API contract'ları LLM destekli orchestration ile çalışır.
+- OpenAI, Gemini ve deterministic fallback destekleyen provider bağımsız LLM katmanı var.
+- LLM çıktıları UI veya apply contract'larına girmeden önce structured JSON parsing ve validation'dan geçer.
+- Catalog hallucination, role mismatch, stale LLM action prompt ve onaysız mutation davranışlarını engelleyen guardrail'ler var.
+- Buyer cart apply ve seller listing apply akışları açık kullanıcı onayı ister.
+- Seller listing mutation'ları için local audit ve rollback davranışı var.
+- Ayrıştırılmış agent panelleri ve workflow contract validation için testler bulunur.
 
-- Commerce data comes from curated mock datasets in `src/data/mock`.
-- Auth, database persistence, payments, inventory reservation, and fulfillment are out of scope for the hackathon MVP.
-- Buyer cart, buyer profile, seller profile, seller listing audit, and floating agent controls use `localStorage`.
-- Product imagery uses a controlled sprite asset instead of production SKU media.
+Bilinçli olarak mock veya yalnızca lokal olan kısımlar:
 
-## Demo Routes
+- Commerce verisi `src/data/mock` içindeki curated mock dataset'lerden gelir.
+- Kimlik doğrulama, veritabanı kalıcılığı, ödeme, stok rezervasyonu ve fulfillment hackathon MVP kapsamı dışındadır.
+- Buyer cart, buyer profile, seller profile, seller listing audit ve floating agent controls `localStorage` kullanır.
+- Ürün görselleri gerçek SKU medyası yerine kontrollü sprite asset kullanır.
 
-Use these routes to review the product quickly:
+## Demo Rotaları
 
-- `/` - role gateway.
-- `/buyer/products` - buyer marketplace catalog with category, sorting, product cards, and cart entry points.
-- `/buyer/products/[slug]` - buyer product detail and purchase panel.
-- `/buyer/cart` - local cart state, quantity controls, suggested products, and checkout mock.
-- `/buyer/agent` - buyer agent prompt, product recommendations, and approved cart mutation.
-- `/buyer/profile` - profile preferences, review history, and personalization signals.
-- `/seller` - seller overview with risk cards and deduplicated priority queue.
-- `/seller/products` - seller product radar with focus filters, search, sort, product health, and linked actions.
-- `/seller/actions` - seller action queue by category/focus.
-- `/seller/actions/[id]` - action detail with affected products, work steps, draft copy, and LLM explanation.
-- `/seller/agent` - seller agent findings, listing draft preview, approval, audit, and rollback.
-- `/seller/profile` - seller store settings, agent permissions, alert rules, quiet hours, and audit trail.
-- `/demo` - rehearsal command center for buyer, seller, floating agent, QA, and proof routes.
+Ürünü hızlı incelemek için ana rotalar:
 
-For the intended walkthrough order, use [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md).
+- `/` - rol giriş ekranı.
+- `/buyer/products` - kategori, sıralama, ürün kartları ve sepet girişleri olan buyer marketplace catalog.
+- `/buyer/products/[slug]` - buyer ürün detay ve satın alma paneli.
+- `/buyer/cart` - local cart state, adet kontrolleri, önerilen ürünler ve mock checkout.
+- `/buyer/agent` - buyer agent prompt, ürün önerileri ve onaylı cart mutation.
+- `/buyer/profile` - profil tercihleri, yorum geçmişi ve kişiselleştirme sinyalleri.
+- `/seller` - risk kartları ve deduplicate edilmiş priority queue içeren seller overview.
+- `/seller/products` - focus filtreleri, search, sort, product health ve action linkleri olan seller product radar.
+- `/seller/actions` - kategori/focus bazlı seller action queue.
+- `/seller/actions/[id]` - etkilenen ürünler, iş adımları, draft copy ve LLM explanation içeren action detail.
+- `/seller/agent` - seller agent bulguları, listing draft preview, onay, audit ve rollback.
+- `/seller/profile` - mağaza ayarları, agent permissions, alert rules, quiet hours ve audit trail.
+- `/demo` - buyer, seller, floating agent, QA ve proof rotaları için rehearsal command center.
 
-## Architecture Map
+Önerilen demo sırası için [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) dosyasını kullanın.
 
-For a fuller technical walkthrough, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+## Mimari Haritası
+
+Daha detaylı teknik walkthrough için [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) dosyasını okuyun.
 
 ```text
 src/data/mock
   curated demo products, sellers, buyers, orders, reviews, inventory, relations
 
 src/lib/data
-  typed data access helpers over the mock commerce dataset
+  mock commerce dataset üzerinde typed data access helper'ları
 
 src/lib/scoring
-  deterministic product health and commerce scoring modules
+  deterministik product health ve commerce scoring modülleri
 
 src/lib/workflows
-  buyer smart-cart, seller actions, and product-health workflows
+  buyer smart-cart, seller actions ve product-health workflow'ları
 
 src/lib/api
-  UI-facing and route-facing typed API contract builders
+  UI ve route handler'ların kullandığı typed API contract builder'ları
 
 src/lib/llm
-  provider-neutral LLM adapters, structured JSON generation, parsing, fallback
+  provider bağımsız LLM adapter'ları, structured JSON generation, parsing, fallback
 
 src/lib/agents
-  runtime registry, guardrails, apply contracts, local apply helpers, floating context
+  runtime registry, guardrail'ler, apply contract'ları, local apply helper'ları, floating context
 
 src/components/commerce
-  buyer, seller, floating agent, demo, and proof UI components
+  buyer, seller, floating agent, demo ve proof UI component'leri
 
 src/app
-  Next.js App Router pages and API routes
+  Next.js App Router page ve API route'ları
 ```
 
-## Agent And LLM Boundaries
+## Agent ve LLM Sınırları
 
-The LLM does not directly mutate cart or seller listing state.
+LLM, cart veya seller listing state'ini doğrudan değiştirmez.
 
-Buyer flow:
+Buyer akışı:
 
-1. User writes a shopping request.
-2. Deterministic smart-cart workflow creates catalog-bound candidates.
-3. LLM may explain, rank, and phrase the recommendation.
-4. Validator removes invalid product ids and unsupported catalog references.
-5. User chooses append or replace.
-6. Client applies the validated cart mutation to local cart state.
+1. Kullanıcı alışveriş isteğini yazar.
+2. Deterministik smart-cart workflow katalogla sınırlı adayları üretir.
+3. LLM öneriyi açıklayabilir, sıralayabilir ve cümleleştirebilir.
+4. Validator geçersiz product id'leri ve desteklenmeyen katalog referanslarını temizler.
+5. Kullanıcı append veya replace seçer.
+6. Client doğrulanmış cart mutation'ını local cart state'e uygular.
 
-Seller flow:
+Seller akışı:
 
-1. User asks for seller operations help.
-2. Deterministic seller workflows compute product/action candidates.
-3. LLM may choose focus, rank findings, and draft listing text.
-4. Validator checks product ids, action ids, and mutation shape.
-5. User reviews before/after listing preview.
-6. Approved mutation writes to local listing override and audit store.
-7. Rollback is available for applied local audit entries.
+1. Kullanıcı seller operation yardımı ister.
+2. Deterministik seller workflow'ları ürün/aksiyon adaylarını hesaplar.
+3. LLM focus seçebilir, bulguları sıralayabilir ve listing text draft'ı üretebilir.
+4. Validator product id, action id ve mutation shape'i kontrol eder.
+5. Kullanıcı before/after listing preview'i inceler.
+6. Onaylanan mutation local listing override ve audit store'a yazılır.
+7. Uygulanan local audit entry'leri için rollback yapılabilir.
 
 Floating Agent:
 
-- Uses route context from the current buyer/seller page.
-- Keeps each panel opening fresh; stored chat history is not sent back to the API.
-- Blocks buyer prompts from running seller operations and seller prompts from running buyer cart actions.
-- Can perform the same approved cart/listing operations as the full agent pages.
+- Mevcut buyer/seller route context'ini kullanır.
+- Her panel açılışı temiz başlar; stored chat history API'ye geri gönderilmez.
+- Buyer prompt'larının seller operation çalıştırmasını, seller prompt'larının buyer cart action çalıştırmasını engeller.
+- Full agent sayfalarıyla aynı onaylı cart/listing operation boundary'lerini kullanır.
 
-## Guardrails
+## Guardrail'ler
 
-CommercePilot currently protects these behaviors:
+CommercePilot şu davranışları korur:
 
-- Buyer Agent only recommends products from the existing CommercePilot catalog.
-- Unsupported catalog prompts such as phones, consoles, TVs, white goods, or shoes return a boundary response instead of fake recommendations.
-- Seller Agent cannot apply listing, price, campaign, stock, or description changes without approval.
-- LLM JSON is parsed and validated before entering route contracts or UI state.
-- Stale or contradictory LLM action prompts are overridden by the current explicit user prompt.
-- Review intelligence only uses allowed review ids and allowed theme labels.
-- Buyer product warnings are derived from profile preferences, previous complaints, and product review/metric risk signals.
+- Buyer Agent yalnızca mevcut CommercePilot katalog ürünlerini önerir.
+- Telefon, konsol, TV, beyaz eşya veya ayakkabı gibi desteklenmeyen katalog prompt'ları sahte öneri yerine boundary response döndürür.
+- Seller Agent listing, price, campaign, stock veya description değişikliklerini onay olmadan uygulayamaz.
+- LLM JSON route contract veya UI state'e girmeden önce parse ve validate edilir.
+- Stale veya çelişkili LLM action prompt'ları mevcut açık kullanıcı prompt'u ile override edilir.
+- Review intelligence yalnızca izinli review id'leri ve izinli theme label'ları kullanır.
+- Buyer product warning'leri profil tercihleri, önceki şikayetler ve ürün review/metric risk sinyallerinden türetilir.
 
-## Quality And Verification
+## Kalite ve Doğrulama
 
-Main local check:
+Ana lokal kontrol:
 
 ```bash
 npm run check
 ```
 
-This runs:
+Bu komut şunları çalıştırır:
 
 - ESLint.
 - TypeScript typecheck.
 - `scripts/validate-workflows.js`.
-- Vitest component tests for commerce components.
+- Commerce component'leri için Vitest testleri.
 
-Additional production check:
+Ek üretim derleme kontrolü:
 
 ```bash
 npm run build
 ```
 
-The technical audit document records the latest route/API/component smoke coverage:
+Son route/API/component smoke kapsamı teknik audit dokümanında kayıtlıdır:
 
 - `TECHNICAL_AUDIT_COMPONENT_MOCKS.md`
 
-The validation script checks mock data integrity, scoring, workflows, API contracts, agent runtime, LLM provider behavior, guardrails, demo contracts, and extracted component contracts:
+Validation script'i mock data bütünlüğünü, scoring, workflow, API contract, agent runtime, LLM provider davranışı, guardrail, demo contract ve ayrıştırılmış component contract'larını kontrol eder:
 
 - `scripts/validate-workflows.js`
-- [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) records the expected high-signal validator output.
+- [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) beklenen yüksek sinyalli validator çıktısını kaydeder.
 
-## Getting Started
+## Kurulum
 
-Prerequisites used during development:
+Geliştirme sırasında kullanılan ön koşullar:
 
 - Node.js 22.22.1
 - npm 10.9.4
 
-Install dependencies:
+Bağımlılıkları kurun:
 
 ```bash
 npm install
 ```
 
-Run the development server:
+Geliştirme server'ını çalıştırın:
 
 ```bash
 npm run dev
 ```
 
-Open:
+Açın:
 
 ```text
 http://localhost:3000
 ```
 
-Build and run production locally:
+Üretim build'i ve lokal üretim çalıştırması:
 
 ```bash
 npm run build
 npm run start
 ```
 
-## Scripts
+## Komutlar
 
-- `npm run dev` - start the local development server.
-- `npm run build` - create a production build.
-- `npm run start` - run the production build.
-- `npm run lint` - run ESLint.
-- `npm run typecheck` - run TypeScript without emit.
-- `npm run validate:workflows` - validate data, workflows, API contracts, LLM/agent guardrails, and demo contracts.
-- `npm run test:components` - run Vitest component tests under `src/components/commerce`.
-- `npm run check` - run lint, typecheck, workflow validation, and component tests.
+- `npm run dev` - lokal development server'ı başlatır.
+- `npm run build` - production build üretir.
+- `npm run start` - production build'i çalıştırır.
+- `npm run lint` - ESLint çalıştırır.
+- `npm run typecheck` - TypeScript'i emit olmadan kontrol eder.
+- `npm run validate:workflows` - data, workflow, API contract, LLM/agent guardrail ve demo contract'larını doğrular.
+- `npm run test:components` - `src/components/commerce` altındaki Vitest component testlerini çalıştırır.
+- `npm run check` - lint, typecheck, workflow validation ve component testlerini çalıştırır.
 
-## Environment
+## Ortam Değişkenleri
 
-Copy `.env.example` to `.env.local` for LLM-backed local runs.
+LLM destekli lokal çalıştırma için `.env.example` dosyasını `.env.local` olarak kopyalayın:
 
 ```bash
 cp .env.example .env.local
 ```
 
-Supported environment variable names:
+Desteklenen ortam değişkeni isimleri:
 
 ```text
 LLM_PROVIDER
@@ -252,66 +266,66 @@ GEMINI_MODEL
 GEMINI_API_KEY
 ```
 
-Notes:
+Notlar:
 
-- `LLM_PROVIDER=openai` uses the OpenAI adapter.
-- `LLM_PROVIDER=gemini` uses the Gemini OpenAI-compatible adapter.
-- Missing keys or provider failures fall back to deterministic behavior where supported.
-- Never commit real API keys.
+- `LLM_PROVIDER=gemini`, Gemini OpenAI-compatible adapter'ını kullanır.
+- `LLM_PROVIDER=openai`, OpenAI adapter'ını kullanır.
+- Eksik key veya provider hatası durumunda desteklenen akışlar deterministik fallback'e döner.
+- Gerçek API key asla commitlenmemelidir.
 
-## Tech Stack
+## Teknoloji Yığını
 
 - Next.js App Router 16
 - React 19
 - TypeScript
 - Tailwind CSS
-- GSAP and `@gsap/react` for UI motion
+- UI motion için GSAP ve `@gsap/react`
 - Phosphor Icons
-- Vitest, jsdom, React Testing Library, and User Event
-- Provider-neutral LLM adapter layer for OpenAI, Gemini, and deterministic fallback
+- Vitest, jsdom, React Testing Library ve User Event
+- OpenAI, Gemini ve deterministic fallback için provider bağımsız LLM adapter katmanı
 
-## Important Documents
+## Önemli Dokümanlar
 
-- [docs/README.md](docs/README.md) - reviewer-facing index for the documentation set.
-- [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - append-only project memory, decisions, milestones, conventions, and current state.
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - detailed system architecture, agent boundaries, LLM provider layer, guardrails, persistence, and verification model.
-- [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) - guided reviewer and jury demo script with routes, prompts, expected results, and proof points.
-- [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) - environment, reviewer route order, verification commands, deterministic claims, and known non-reproducible parts.
-- [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) - expected `npm run validate:workflows` output and what it proves.
-- [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - technical audit, smoke results, component extraction status, mock/local inventory, and priorities.
-- [LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md](LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md) - provider-independent LLM and agent implementation plan.
-- [COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md](COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md) - product and milestone roadmap.
+- [docs/README.md](docs/README.md) - dokümantasyon seti için teknik inceleyici odaklı indeks.
+- [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - append-only proje hafızası, kararlar, milestone'lar, konvansiyonlar ve güncel durum.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - sistem mimarisi, agent boundary'leri, LLM provider katmanı, guardrail'ler, persistence ve verification modeli.
+- [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) - rota, prompt, beklenen sonuç ve kanıt noktaları içeren jüri/teknik inceleyici demo script'i.
+- [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) - ortam, teknik inceleyici rota sırası, doğrulama komutları, deterministik iddialar ve MVP dışında kalan kısımlar.
+- [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) - beklenen `npm run validate:workflows` çıktısı ve neyi kanıtladığı.
+- [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - teknik denetim, smoke sonuçları, component extraction durumu, mock/lokal envanter ve öncelikler.
+- [LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md](LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md) - provider bağımsız LLM ve agent uygulama planı.
+- [COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md](COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md) - ürün ve milestone roadmap'i.
 
-## Known Technical Debt
+## Bilinen Teknik Borçlar
 
-The core agent architecture is coherent for a hackathon MVP. The main remaining engineering risks are:
+Core agent mimarisi hackathon MVP için tutarlı. Kalan ana mühendislik riskleri:
 
-- Large workspace components still need more extraction, especially seller profile, seller agent, seller products, and seller actions.
-- Browser smoke is currently documented but should become a committed repeatable script.
-- Local storage persistence should eventually move behind server persistence boundaries.
-- Hardcoded demo identities should become a typed auth/session abstraction before production.
-- LLM latency and telemetry should be measured more explicitly.
+- Büyük workspace component'leri hâlâ daha fazla ayrıştırılmalı; özellikle seller profile, seller agent, seller products ve seller actions.
+- Browser smoke dokümante edildi ama committed repeatable script haline getirilmeli.
+- Local storage persistence ileride server persistence boundary'leri arkasına taşınmalı.
+- Sabit demo kimlikleri production öncesi typed auth/session abstraction'a dönüşmeli.
+- LLM latency ve telemetry daha açık ölçülmeli.
 
-## Known MVP Limits
+## Bilinen MVP Sınırları
 
-These are intentional scope boundaries for the hackathon submission:
+Bunlar hackathon teslimi için bilinçli scope sınırlarıdır:
 
-| Area | Current MVP behavior | Production direction |
+| Alan | Mevcut MVP davranışı | Production yönü |
 |---|---|---|
-| Data | Curated mock commerce data in `src/data/mock`. | Real database and ingestion layer. |
-| Identity | Hardcoded demo buyer/seller identities. | Auth, session and role model. |
-| Persistence | Cart, profile and audit state use `localStorage`. | Server-backed persistence with user/account ownership. |
-| Payments | Checkout is a mock surface. | Payment/order creation integration. |
-| Inventory | Stock and fulfillment are simulated. | Reservation, fulfillment and shipment integrations. |
-| Media | Product imagery uses a controlled sprite asset. | Product-specific media pipeline. |
-| LLM reliability | Provider-neutral adapter with deterministic fallback. | Latency budgets, retries, telemetry and provider monitoring. |
+| Veri | `src/data/mock` içinde curated mock commerce verisi. | Gerçek veritabanı ve veri alma katmanı. |
+| Kimlik | Sabit demo buyer/seller kimlikleri. | Auth, session ve role model. |
+| Persistence | Cart, profile ve audit state `localStorage` kullanır. | Kullanıcı/account sahipliği olan server-backed persistence. |
+| Ödeme | Checkout mock yüzeydir. | Payment/order creation entegrasyonu. |
+| Stok | Stock ve fulfillment simüle edilir. | Reservation, fulfillment ve shipment entegrasyonları. |
+| Medya | Ürün görselleri kontrollü sprite asset kullanır. | Ürüne özel medya pipeline'ı. |
+| LLM güvenilirliği | Provider bağımsız adapter ve deterministik fallback. | Latency budget, retry, telemetry ve provider monitoring. |
 
-## Repository State For Reviewers
+## Teknik İnceleyici İçin Repo Durumu
 
-If you are reviewing the code, start here:
+Kodu inceliyorsanız buradan başlayın:
 
-1. Run `npm run check`.
-2. Run `npm run build`.
-3. Open `/demo`.
-4. Inspect `src/lib/agents`, `src/lib/api`, `src/lib/workflows`, and `scripts/validate-workflows.js`.
-5. Read `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` for current smoke coverage and known limits.
+1. `npm run check` çalıştırın.
+2. `npm run build` çalıştırın.
+3. `/demo` rotasını açın.
+4. `src/lib/agents`, `src/lib/api`, `src/lib/workflows` ve `scripts/validate-workflows.js` dosyalarını inceleyin.
+5. Güncel smoke kapsamı ve bilinen limitler için `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` dosyasını okuyun.

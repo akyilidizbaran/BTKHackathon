@@ -1,14 +1,14 @@
-# Validation Output Reference
+# Validation Çıktısı Referansı
 
-This file records the expected high-signal output of the deterministic workflow validator.
+Bu dosya, deterministik workflow validator için beklenen yüksek sinyalli çıktıyı kaydeder.
 
-Run:
+Çalıştırın:
 
 ```bash
 npm run validate:workflows
 ```
 
-Current expected output:
+Güncel beklenen çıktı:
 
 ```text
 Workflow validation passed.
@@ -32,9 +32,9 @@ Buyer API examples: 5
 Buyer prompts: 7
 ```
 
-The validator is intentionally more than a smoke command. It checks that the core demo stories still line up across mock data, scoring, workflows, API contracts, agent runtime, guardrails, and extracted UI contracts.
+Validator yalnızca smoke komutu değildir. Core demo hikayelerinin mock data, scoring, workflow, API contract, agent runtime, guardrail ve ayrıştırılmış UI contract'ları boyunca hâlâ tutarlı kaldığını kontrol eder.
 
-Important source:
+Önemli kaynak:
 
 ```text
 scripts/validate-workflows.js
