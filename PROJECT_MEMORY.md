@@ -5,9 +5,9 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * README, mimari, demo, reproducibility ve teknik audit dokümanları Supabase P1 sonrası gerçek durumu anlatacak şekilde tutarlı hale getiriliyor.
+  * GitHub About metadata dolduruldu: açıklama ve reviewer/deploy odaklı topic'ler eklendi; deploy URL olmadığı için homepage şimdilik boş bırakıldı.
 * Bir sonraki net adım ne?
-  * Vercel env değerleri girilecek; ardından uygulama read layer'ı `DATA_SOURCE=database` desteğiyle kademeli olarak Supabase'den okumaya taşınacak.
+  * Vercel env değerleri girilecek ve deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1612,6 +1612,14 @@
 * Not:
   * Bu değişiklik runtime davranışını değiştirmez; sadece repo/dokümantasyon tutarlılığı sağlar.
 
+### 2026-05-19 GitHub About Metadata
+
+* Kapsam:
+  * `akyilidizbaran/BTKHackathon` public repo About description alanı CommercePilot'un approval-bound buyer/seller commerce intelligence MVP olduğunu anlatacak şekilde dolduruldu.
+  * Topic'ler eklendi: `nextjs`, `react`, `typescript`, `supabase`, `prisma`, `gemini`, `ai-agent`, `ecommerce`, `hackathon`, `vercel`.
+* Not:
+  * Homepage/deploy URL alanı deploy yapılana kadar boş bırakıldı; yanlış veya placeholder URL koyulmayacak.
+
 ### Güncelleme Kaydı
 
-* Son güncelleme: 2026-05-18
+* Son güncelleme: 2026-05-19
