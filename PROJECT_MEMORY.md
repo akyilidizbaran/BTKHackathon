@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Gerçek DB öncesi clickable UI audit'teki P1 ve P2 kalite işleri kapatıldı.
+  * GitHub teknik görünürlüğünü güçlendirme adımlarının ilki olan README yenilemesi yapıldı.
 * Son değişiklik neydi?
-  * `/seller/products` üst ritmi daha sıkı hale geldi, P2 metin link/thumbnail/toggle hit-area sorunları kapandı ve seller overview öncelik kuyruğu tekilleştirildi.
+  * README, mevcut agent/LLM mimarisi, guardrail'ler, demo route'ları, doğrulama komutları ve mock/real sınırlarını anlatacak şekilde yeniden yazıldı.
 * Bir sonraki net adım ne?
-  * Final teslim öncesi gerekirse responsive smoke ve demo akış ekran görüntüleri alınacak.
+  * GitHub görünürlüğü için sıradaki adım: CI workflow eklemek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1454,6 +1454,17 @@
   * Puppeteer DOM probe: `/seller/actions?focus=slow-movers` thumbnail hedefleri `56x56`, `scopedTiny: []`, `overflowX: 0`.
   * Puppeteer DOM probe: `/seller/profile` alert toggle hedefleri `64x40`, affected product linkleri yaklaşık `149x40`, `scopedTiny: []`, `overflowX: 0`.
   * Puppeteer DOM probe: `/seller` priority queue'da duplicate title/href yok; ekran görüntüleri `p2-seller-products-final`, `p2-seller-actions`, `p2-seller-profile`, `p2-seller-overview-final`.
+
+### 2026-05-18 GitHub Technical Presentation Step 1
+
+* Kapsam:
+  * README artık proje durumunu `Milestone 0` gibi eski bir seviyede göstermiyor.
+  * İlk ekran anlatısı CommercePilot'u çift taraflı commerce intelligence MVP'si olarak konumlandırıyor.
+  * Demo route'ları, mimari dizin haritası, Agent/LLM boundary, guardrail listesi, kalite/doğrulama komutları, ortam değişkenleri, mock/real sınırı ve teknik borçlar README içinde görünür hale geldi.
+* Karar:
+  * README dili İngilizce ve ASCII tutuldu; GitHub teknik incelemesinde daha geniş erişilebilirlik hedefleniyor.
+* Sıradaki adım:
+  * GitHub Actions CI workflow'u eklenerek `npm run check` ve `npm run build` GitHub üzerinde görünür hale getirilecek.
 
 ### Güncelleme Kaydı
 
