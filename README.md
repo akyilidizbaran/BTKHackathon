@@ -60,6 +60,8 @@ Use these routes to review the product quickly:
 
 ## Architecture Map
 
+For a fuller technical walkthrough, read [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ```text
 src/data/mock
   curated demo products, sellers, buyers, orders, reviews, inventory, relations
@@ -241,10 +243,11 @@ Notes:
 
 ## Important Documents
 
-- `PROJECT_MEMORY.md` - append-only project memory, decisions, milestones, conventions, and current state.
-- `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` - technical audit, smoke results, component extraction status, mock/local inventory, and priorities.
-- `LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md` - provider-independent LLM and agent implementation plan.
-- `COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md` - product and milestone roadmap.
+- [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - append-only project memory, decisions, milestones, conventions, and current state.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - detailed system architecture, agent boundaries, LLM provider layer, guardrails, persistence, and verification model.
+- [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - technical audit, smoke results, component extraction status, mock/local inventory, and priorities.
+- [LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md](LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md) - provider-independent LLM and agent implementation plan.
+- [COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md](COMMERCEPILOT_AGENT_MARKETPLACE_ROADMAP.md) - product and milestone roadmap.
 
 ## Known Technical Debt
 

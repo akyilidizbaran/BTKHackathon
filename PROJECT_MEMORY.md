@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * GitHub teknik görünürlüğünü güçlendirme adımlarından CI workflow ekleme işi yapıldı.
+  * GitHub teknik görünürlüğünü güçlendirme adımlarından mimari dokümantasyon eklendi.
 * Son değişiklik neydi?
-  * `.github/workflows/ci.yml` eklendi; GitHub üzerinde `npm ci`, `npm run check` ve `npm run build` çalışacak. README'ye CI badge eklendi.
+  * `docs/ARCHITECTURE.md` eklendi; README mimari dokümana link veriyor.
 * Bir sonraki net adım ne?
-  * GitHub görünürlüğü için sıradaki adım: `docs/ARCHITECTURE.md` eklemek.
+  * GitHub görünürlüğü için sıradaki adım: demo akış dokümanı eklemek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1477,6 +1477,17 @@
   * Workflow tek job ile başlatıldı; bu MVP için görünür kalite sinyali ve hızlı feedback yeterli.
 * Sıradaki adım:
   * `docs/ARCHITECTURE.md` ile agent/LLM/veri akışı GitHub reviewer için ayrı teknik dokümana taşınacak.
+
+### 2026-05-18 GitHub Technical Presentation Step 3
+
+* Kapsam:
+  * `docs/ARCHITECTURE.md` eklendi.
+  * Doküman sistem akışı, layer map, data/scoring/workflow yapısı, API contract pattern, LLM provider layer, Agent runtime, Buyer/Seller/Floating Agent akışları, review intelligence, UI yapısı, persistence modeli, verification ve teknik borçları açıklar.
+  * README `Architecture Map` ve `Important Documents` bölümlerinden mimari dokümana link verir.
+* Karar:
+  * Mimari doküman README'den daha teknik tutuldu; GitHub reviewer'ın kod klasörlerini okuma sırası ve boundary'leri hızlı görmesi hedefleniyor.
+* Sıradaki adım:
+  * `docs/DEMO_SCRIPT.md` ile jüri/reviewer demo akışı netleştirilecek.
 
 ### Güncelleme Kaydı
 
