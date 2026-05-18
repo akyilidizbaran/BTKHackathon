@@ -162,6 +162,12 @@
   * OPENAI_API_KEY
   * GEMINI_MODEL
   * GEMINI_API_KEY
+  * DATA_SOURCE
+  * NEXT_PUBLIC_SUPABASE_URL
+  * NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  * NEXT_PUBLIC_SUPABASE_ANON_KEY
+  * DATABASE_URL
+  * DIRECT_URL
 * Lokal geliştirme notları:
   * İlk LLM geliştirme OpenAI ile yapılabilir; final hackathon hedefi Gemini'ye geçiştir.
   * `.env.local` commitlenmez; `.env.example` sadece değişken isimlerini tutar.
@@ -1588,6 +1594,8 @@
   * `codex mcp login supabase` OAuth akışı tamamlandı.
 * Doğrulama:
   * `codex mcp list` içinde `supabase` server `enabled` ve `Auth=OAuth` görünüyor.
+  * Supabase MCP ile project URL, publishable key ve legacy anon key okunabiliyor.
+  * Database password ve pooled `DATABASE_URL` MCP ile geri döndürülemiyor; Supabase dashboard/DB password gerekiyor.
 * Not:
   * MCP OAuth token ve Supabase secret'ları repo içinde tutulmaz; `.env.local` git tarafından ignore edilir.
 

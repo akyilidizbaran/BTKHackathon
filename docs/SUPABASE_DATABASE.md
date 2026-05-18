@@ -31,12 +31,16 @@ DIRECT_URL   = direct / session mode bağlantı
 
 ```bash
 DATA_SOURCE=mock
+NEXT_PUBLIC_SUPABASE_URL="https://[PROJECT-REF].supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="sb_publishable_..."
+NEXT_PUBLIC_SUPABASE_ANON_KEY="ey..."
 DATABASE_URL="postgres://postgres.[PROJECT-REF]:[DB-PASSWORD]@[REGION].pooler.supabase.com:6543/postgres?pgbouncer=true&connection_limit=1"
 DIRECT_URL="postgres://postgres.[PROJECT-REF]:[DB-PASSWORD]@[REGION].pooler.supabase.com:5432/postgres"
 ```
 
 Notlar:
 
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` ve legacy `NEXT_PUBLIC_SUPABASE_ANON_KEY` Supabase MCP ile okunabilir public client değerleridir.
 - `DATA_SOURCE=mock` şimdilik bilinçli. DB seed edilecek ama uygulama okuma katmanı sonraki fazda taşınacak.
 - Supabase dashboard Prisma için hazır connection string veriyorsa onu kullan.
 - Secret değerleri chat'e veya GitHub'a yazma.
