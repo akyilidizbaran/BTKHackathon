@@ -5,9 +5,9 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * Public marka adı `Alışveriş Arkadaşım` olarak değiştirildi; kullanıcıya/reviewer'a görünen metinler, README/docs, Supabase seed çıktısı ve GitHub About açıklaması yeni isme taşındı.
+  * `Mini Sepet Arkadaşı` asset seti üretildi, 6 ayrı transparent PNG olarak public asset klasörüne taşındı ve Floating Agent widget'ına state bazlı bağlandı.
 * Bir sonraki net adım ne?
-  * Mini Sepet Arkadaşı figürü üretilecek; ardından Vercel env değerleri girilip deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
+  * Vercel env değerleri girilip deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -1639,6 +1639,22 @@
   * `npm run db:seed` Supabase dataset'ini yeni seller adı ve `AA-` SKU prefix'iyle yeniden seed etti.
 * Sıradaki adım:
   * Sağ alttaki Agent görseli için `Mini Sepet Arkadaşı` figürü üretilecek.
+
+### 2026-05-19 Mini Sepet Arkadaşı Floating Agent Assets
+
+* Karar:
+  * Sağ alt Floating Agent artık Phosphor robot ikonu yerine özgün `Mini Sepet Arkadaşı` maskotunu kullanır.
+* Kapsam:
+  * 6 ayrı transparent PNG asset eklendi: `idle`, `thinking`, `recommendation`, `approved`, `warning`, `muted`.
+  * Asset yolu: `public/agent/mini-cart/mini-cart-*.png`.
+  * `FloatingAgentPanel` içinde state bazlı pose seçimi eklendi: loading -> thinking, result -> recommendation, applied -> approved, error/profile warning -> warning, muted -> muted, default -> idle.
+  * Kapalı widget, kompakt/expanded proactive cue ve açık panel header'ı maskotu kullanır.
+  * `globals.css` içinde hafif CSS motion eklendi; `prefers-reduced-motion` için animasyonlar kapanır.
+* Doğrulama:
+  * `npm run check` ve `npm run build` geçti.
+  * Puppeteer QA: `/buyer/products` desktop açık/kapalı widget, mobil açık/kapalı widget ekranlarında taşma ve okunabilirlik kontrol edildi.
+* Not:
+  * Orijinal generated sheet gerçek alpha içermediği için public'e sadece temizlenmiş ve ayrılmış final PNG asset'ler alındı; source sheet runtime'a eklenmedi.
 
 ### Güncelleme Kaydı
 

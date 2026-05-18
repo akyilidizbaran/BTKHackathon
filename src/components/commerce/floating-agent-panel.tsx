@@ -1,11 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import {
   PaperPlaneTilt,
-  Robot,
-  Sparkle,
   WarningCircle,
   X,
 } from "@phosphor-icons/react";
@@ -57,10 +56,20 @@ type FloatingSessionTurn = {
   id: string;
   role: "assistant" | "user";
 };
+type MiniCartMascotVariant = "approved" | "idle" | "muted" | "recommendation" | "thinking" | "warning";
 
 interface FloatingAgentPanelProps {
   role: "buyer" | "seller";
 }
+
+const miniCartMascotAssets: Record<MiniCartMascotVariant, string> = {
+  approved: "/agent/mini-cart/mini-cart-approved.png",
+  idle: "/agent/mini-cart/mini-cart-idle.png",
+  muted: "/agent/mini-cart/mini-cart-muted.png",
+  recommendation: "/agent/mini-cart/mini-cart-recommendation.png",
+  thinking: "/agent/mini-cart/mini-cart-thinking.png",
+  warning: "/agent/mini-cart/mini-cart-warning.png",
+};
 
 function isDenseFloatingSurface(role: FloatingAgentPanelProps["role"], pathname: string): boolean {
   if (role === "seller") {
@@ -115,12 +124,20 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
     ? "bottom-4"
     : shouldUseSideDock
       ? "bottom-4 sm:bottom-auto sm:top-[58dvh] sm:-translate-y-1/2"
-      : shouldShowCompactWarning
-        ? "bottom-24"
-        : "bottom-4";
+        : shouldShowCompactWarning
+          ? "bottom-24"
+          : "bottom-4";
   const history = sessionTurns.slice(-6);
   const isLoading = requestState === "loading";
   const prompt = promptDraft.contextKey === contextKey ? promptDraft.value : "";
+  const mascotVariant = getMiniCartMascotVariant({
+    applyStatus: applyState.status,
+    hasResult: Boolean(buyerData || sellerData),
+    isLoading,
+    isMuted,
+    isProfileWarning,
+    requestState,
+  });
 
   useEffect(() => {
     const syncStore = () => setStore(readFloatingAgentStore());
@@ -382,9 +399,10 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
           }`}
         >
           <span className="flex items-start gap-3">
-            <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-white ${isProfileWarning ? "bg-amber-500" : "bg-slate-950"}`}>
-              {isProfileWarning ? <WarningCircle size={18} weight="duotone" /> : <Sparkle size={17} weight="duotone" />}
-            </span>
+            <MiniCartMascot
+              className="h-12 w-12 shrink-0"
+              variant={isProfileWarning ? "warning" : "recommendation"}
+            />
             <span>
               <span className="block text-sm font-semibold text-slate-950">{context.panelTitle}</span>
               <span className="mt-1 block text-xs leading-5 text-slate-500">{context.proactiveMessage}</span>
@@ -400,9 +418,7 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
           onClick={openFreshSession}
           className="pointer-events-auto mb-2 ml-auto flex max-w-[232px] items-center gap-2 rounded-full border border-amber-200 bg-white/95 px-3 py-2 text-left shadow-[0_18px_44px_-30px_rgba(15,23,42,0.88)] backdrop-blur-xl transition hover:-translate-y-0.5 hover:border-amber-300"
         >
-          <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-amber-500 text-white">
-            <WarningCircle size={15} weight="duotone" />
-          </span>
+          <MiniCartMascot className="h-9 w-9 shrink-0" variant="warning" />
           <span className="min-w-0 truncate text-xs font-semibold text-slate-800">Profil uyarısı</span>
         </button>
       ) : null}
@@ -415,10 +431,13 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
         >
           <div className="border-b border-slate-200 bg-white p-4">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-orange-600">{context.routeLabel}</p>
-                <h2 className="mt-1 truncate text-xl font-semibold text-slate-950">Alışveriş Arkadaşım Agent</h2>
-                <p className="mt-2 text-xs leading-5 text-slate-500">{context.panelTitle}</p>
+              <div className="flex min-w-0 items-start gap-3">
+                <MiniCartMascot className="h-14 w-14 shrink-0" variant={mascotVariant} priority />
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-orange-600">{context.routeLabel}</p>
+                  <h2 className="mt-1 truncate text-xl font-semibold text-slate-950">Alışveriş Arkadaşım Agent</h2>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">{context.panelTitle}</p>
+                </div>
               </div>
               <button
                 type="button"
@@ -528,10 +547,10 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
           type="button"
           aria-label="Alışveriş Arkadaşım Agent panelini aç"
           onClick={openFreshSession}
-          className="pointer-events-auto ml-auto grid h-16 w-16 place-items-center rounded-[1.35rem] bg-slate-950 text-white shadow-[0_24px_60px_-28px_rgba(15,23,42,0.95)] ring-1 ring-white/20 transition hover:-translate-y-1 hover:bg-slate-900 active:translate-y-0"
+          className="pointer-events-auto ml-auto grid h-[76px] w-[76px] place-items-center rounded-[1.45rem] border border-orange-100 bg-white/95 text-slate-950 shadow-[0_24px_64px_-30px_rgba(15,23,42,0.9)] ring-1 ring-white/70 backdrop-blur-xl transition hover:-translate-y-1 hover:border-orange-200 hover:bg-orange-50/70 active:translate-y-0"
         >
-          <span className="relative grid h-11 w-11 place-items-center rounded-2xl bg-white/10">
-            <Robot size={25} weight="duotone" />
+          <span className="relative grid h-[68px] w-[68px] place-items-center">
+            <MiniCartMascot className="h-[68px] w-[68px]" variant={mascotVariant} priority />
             {shouldShowIconBadge ? (
               <span className={`absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full px-1 text-[10px] font-bold text-white ${isProfileWarning ? "bg-amber-500" : "bg-orange-500"}`}>
                 !
@@ -541,5 +560,70 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
         </button>
       )}
     </div>
+  );
+}
+
+function getMiniCartMascotVariant({
+  applyStatus,
+  hasResult,
+  isLoading,
+  isMuted,
+  isProfileWarning,
+  requestState,
+}: {
+  applyStatus: FloatingApplyState["status"];
+  hasResult: boolean;
+  isLoading: boolean;
+  isMuted: boolean;
+  isProfileWarning: boolean;
+  requestState: FloatingRequestState;
+}): MiniCartMascotVariant {
+  if (isMuted) {
+    return "muted";
+  }
+
+  if (isProfileWarning || requestState === "error" || applyStatus === "error") {
+    return "warning";
+  }
+
+  if (applyStatus === "applied" || applyStatus === "rolled-back") {
+    return "approved";
+  }
+
+  if (isLoading || applyStatus === "loading") {
+    return "thinking";
+  }
+
+  if (hasResult) {
+    return "recommendation";
+  }
+
+  return "idle";
+}
+
+function MiniCartMascot({
+  className,
+  priority = false,
+  variant,
+}: {
+  className?: string;
+  priority?: boolean;
+  variant: MiniCartMascotVariant;
+}) {
+  return (
+    <span
+      aria-hidden="true"
+      className={`mini-cart-mascot mini-cart-mascot--${variant} relative block overflow-visible ${className ?? ""}`}
+    >
+      <Image
+        src={miniCartMascotAssets[variant]}
+        alt=""
+        width={512}
+        height={512}
+        priority={priority}
+        sizes="80px"
+        className="h-full w-full object-contain drop-shadow-[0_16px_22px_rgba(15,23,42,0.18)]"
+      />
+    </span>
   );
 }
