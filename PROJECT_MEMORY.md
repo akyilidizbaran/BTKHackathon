@@ -5,9 +5,9 @@
 * Şu an ne yapıyoruz?
   * Production Vercel deploy alındı: `https://btk-hackathon-red.vercel.app`.
 * Son değişiklik neydi?
-  * Vercel production env'leri eklendi, CLI production deploy tamamlandı ve canlı smoke testleri geçti.
+  * Vercel GitHub bağlantısı doğrulandı; canlı URL ve Gemini buyer agent smoke testleri tekrar geçti.
 * Bir sonraki net adım ne?
-  * Vercel panelinden GitHub repo bağlantısı kurulacak ve gerekirse custom domain ayarlanacak.
+  * Gerekirse custom domain ayarlanacak ve yarışma teslim linkleri canlı URL ile güncellenecek.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -91,6 +91,7 @@
 * 2026-05-19 — Karar: Canlı LLM kontrolü default CI'a değil opt-in workflow'a alınacak. | Gerekçe: Ana CI secretsız ve stabil kalmalı; gerçek provider response shape/auth/model kırılmaları manuel tetiklenen smoke ile görülebilmeli. | Etki: `npm run smoke:llm` ve `.github/workflows/llm-smoke.yml` eklendi.
 * 2026-05-19 — Karar: Audit moderate bulguları için Next/Prisma downgrade yerine transitive override kullanılacak. | Gerekçe: Direct paketler latest sürümdeydi; `npm audit fix --force` kırıcı downgrade öneriyordu. | Etki: `postcss` 8.5.15 ve `@hono/node-server` 2.0.3 override edildi; audit sıfırlandı. | Alternatifler: Force downgrade veya audit bulgularını deploy sonrası izlemek.
 * 2026-05-19 — Karar: İlk production deploy Vercel CLI ile alınacak. | Gerekçe: Vercel GitHub bağlantısı CLI sırasında otomatik kurulamadı, fakat production deploy env'leri hazırdı. | Etki: Canlı URL üretildi; otomatik GitHub deploy için Vercel panelinde repo bağlantısı ayrıca kurulmalı.
+* 2026-05-19 — Karar: Vercel GitHub entegrasyonu main branch için kullanılacak. | Gerekçe: Bundan sonraki deploy'lar Git push ile izlenebilir ve tekrarlanabilir olmalı. | Etki: `akyilidizbaran/BTKHackathon` repo bağlantısı doğrulandı; sonraki push otomatik Vercel deployment tetiklemeli.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -99,6 +100,7 @@
 * 2026-05-19 — Milestone: External review hardening. | Sonuç: Buyer malformed preferences ve Seller excessive price route repro'ları 400/422 dönecek şekilde kapatıldı; `npm run check`, `npm run build`, `npm run smoke:llm` geçti.
 * 2026-05-19 — Milestone: Audit hardening. | Sonuç: `npm audit --audit-level=moderate` 0 vulnerability döndü; check/build/Gemini smoke tekrar geçti.
 * 2026-05-19 — Milestone: Vercel production deploy. | Sonuç: `https://btk-hackathon-red.vercel.app` READY; canlı `/`, `/demo`, `/buyer/products`, `/seller`, `/seller/agent`, catalog API, Gemini buyer agent ve guardrail repro smoke testleri geçti.
+* 2026-05-19 — Milestone: Vercel GitHub integration verified. | Sonuç: `vercel git connect` repo bağlantısını doğruladı; canlı buyer agent üç ardışık çağrıda Gemini `generated` döndü.
 
 ## 8) Yapılanlar
 
@@ -117,7 +119,7 @@
 * [x] `npm run check` ve `npm run build` çalıştır.
 * [x] Değişiklikleri commit ve push et.
 * [x] Vercel env değerlerini Gemini/Supabase değişkenlerine göre girip deploy et.
-* [ ] Vercel GitHub integration bağlantısını panelden tamamla.
+* [x] Vercel GitHub integration bağlantısını panelden tamamla.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
 
