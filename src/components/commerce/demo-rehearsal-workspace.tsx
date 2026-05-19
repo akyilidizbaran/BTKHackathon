@@ -32,6 +32,11 @@ import type {
 gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const brandMascotAsset = "/agent/mini-cart/mini-cart-idle.png";
+const runbookMediaByLane = {
+  buyer: "/demo/buyer-demo-bg.png",
+  floating: "/demo/floating-agent-demo-bg.png",
+  seller: "/demo/seller-demo-bg.png",
+} satisfies Record<DemoRunbookLane["id"], string>;
 
 interface DemoRehearsalWorkspaceProps {
   data: DemoRehearsalData;
@@ -299,9 +304,10 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
                 }`}
               >
                 <div
-                  className="absolute inset-0 bg-cover bg-center opacity-24 grayscale transition duration-700 group-hover:scale-105 group-hover:opacity-32"
-                  style={{ backgroundImage: `url(https://picsum.photos/seed/alisveris-arkadasim-${lane.id}/900/900)` }}
+                  className="absolute inset-0 bg-cover bg-center opacity-50 saturate-[1.1] transition duration-700 group-hover:scale-105 group-hover:opacity-60"
+                  style={{ backgroundImage: `url(${runbookMediaByLane[lane.id]})` }}
                 />
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-950/76 via-slate-950/48 to-slate-950/70" />
                 <div className="relative flex h-full min-h-[360px] flex-col justify-between">
                   <div>
                     <span className="grid h-11 w-11 place-items-center rounded-full bg-white/14 text-sm font-bold ring-1 ring-white/18">
@@ -401,7 +407,7 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
                 <div
                   data-demo-media
                   className="absolute inset-0 bg-cover bg-center opacity-28 grayscale contrast-125"
-                  style={{ backgroundImage: "url(https://picsum.photos/seed/alisveris-arkadasim-terminal/1200/900)" }}
+                  style={{ backgroundImage: "url(/demo/qa-demo-bg.png)" }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-950/80 to-slate-950/40" />
                 <div className="relative flex h-full flex-col justify-between">

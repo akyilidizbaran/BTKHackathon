@@ -3,9 +3,9 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * `/demo` hero metni yarışma sunumu için sadeleştirildi; push sonrası Vercel otomatik deploy bekleniyor.
+  * `/demo` prova kartları için konuyla alakalı local görsel arka planlar eklendi; push sonrası Vercel otomatik deploy bekleniyor.
 * Son değişiklik neydi?
-  * Demo hero üstündeki teknik 8R etiketi kaldırıldı ve başlık içindeki inline dış görsel temizlendi.
+  * Buyer, seller, floating Agent ve QA demo arka planları rastgele dış görsel yerine local `/public/demo` asset'lerine bağlandı.
 * Bir sonraki net adım ne?
   * Commit/push sonrası canlı URL'de `/demo` tekrar kontrol edilecek.
 
@@ -93,6 +93,7 @@
 * 2026-05-19 — Karar: İlk production deploy Vercel CLI ile alınacak. | Gerekçe: Vercel GitHub bağlantısı CLI sırasında otomatik kurulamadı, fakat production deploy env'leri hazırdı. | Etki: Canlı URL üretildi; otomatik GitHub deploy için Vercel panelinde repo bağlantısı ayrıca kurulmalı.
 * 2026-05-19 — Karar: Vercel GitHub entegrasyonu main branch için kullanılacak. | Gerekçe: Bundan sonraki deploy'lar Git push ile izlenebilir ve tekrarlanabilir olmalı. | Etki: `akyilidizbaran/BTKHackathon` repo bağlantısı doğrulandı; sonraki push otomatik Vercel deployment tetiklemeli.
 * 2026-05-19 — Karar: Demo hero teknik milestone dili yerine kullanıcıya dönük metin kullanacak. | Gerekçe: Jüri/sunum ekranında 8R gibi iç faz kodları ve başlık içi dekoratif görseller dikkat dağıtıyordu. | Etki: `/demo` hero etiketi `Demo akışı` oldu; başlık contract metninden düz render edilir. | Alternatifler: Teknik etiketi alt bölümde tutmak.
+* 2026-05-19 — Karar: Demo kart arka planları local ve konuya bağlı asset'lerden beslenecek. | Gerekçe: Rastgele dış görsel servisi doğa fotoğrafları üretiyor ve demo anlatısıyla çelişiyordu. | Etki: `/public/demo/*-demo-bg.png` asset'leri eklendi; `/demo` kartları buyer catalog, seller audit ve floating agent bağlamını gösterir. | Alternatifler: Harici stock fotoğraf URL'leri kullanmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -103,6 +104,7 @@
 * 2026-05-19 — Milestone: Vercel production deploy. | Sonuç: `https://btk-hackathon-red.vercel.app` READY; canlı `/`, `/demo`, `/buyer/products`, `/seller`, `/seller/agent`, catalog API, Gemini buyer agent ve guardrail repro smoke testleri geçti.
 * 2026-05-19 — Milestone: Vercel GitHub integration verified. | Sonuç: `vercel git connect` repo bağlantısını doğruladı; canlı buyer agent üç ardışık çağrıda Gemini `generated` döndü.
 * 2026-05-19 — Milestone: Demo hero cleanup. | Sonuç: Lokal `/demo` render'ında eski teknik etiket ve H1 içi inline görsel kaldırıldı; check/build geçti.
+* 2026-05-19 — Milestone: Demo card media cleanup. | Sonuç: Lokal `/demo` render'ında prova kartları local konu görsellerini kullanıyor; `picsum.photos` DOM'da yok; check/build geçti.
 
 ## 8) Yapılanlar
 
@@ -115,6 +117,7 @@
 * [x] Audit moderate bulguları minimal dependency override ile sıfırlandı.
 * [x] Vercel production deploy alındı ve canlı smoke doğrulandı.
 * [x] Demo hero teknik 8R etiketi ve başlık içi dış görsel temizlendi.
+* [x] Demo prova kartlarındaki rastgele doğa arka planları local konu görselleriyle değiştirildi.
 
 ## 9) Yapılacaklar (Next)
 
