@@ -426,7 +426,7 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
       {isOpen ? (
         <section
           data-floating-agent-reveal
-          aria-label="Alışveriş Arkadaşım floating agent"
+          aria-label="Alışveriş Arkadaşım paneli"
           className="pointer-events-auto ml-auto max-h-[76dvh] w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_28px_90px_-42px_rgba(15,23,42,0.95)] sm:w-[410px]"
         >
           <div className="border-b border-slate-200 bg-white p-4">
@@ -435,7 +435,7 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
                 <MiniCartMascot className="h-14 w-14 shrink-0" variant={mascotVariant} priority />
                 <div className="min-w-0">
                   <p className="text-xs font-semibold text-orange-600">{context.routeLabel}</p>
-                  <h2 className="mt-1 truncate text-xl font-semibold text-slate-950">Alışveriş Arkadaşım Agent</h2>
+                  <h2 className="mt-1 truncate text-xl font-semibold text-slate-950">Alışveriş Arkadaşım</h2>
                   <p className="mt-2 text-xs leading-5 text-slate-500">{context.panelTitle}</p>
                 </div>
               </div>
@@ -545,7 +545,7 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
       ) : shouldShowCompactWarning ? null : (
         <button
           type="button"
-          aria-label="Alışveriş Arkadaşım Agent panelini aç"
+          aria-label="Alışveriş Arkadaşım panelini aç"
           onClick={openFreshSession}
           className="pointer-events-auto ml-auto grid h-[76px] w-[76px] place-items-center rounded-[1.45rem] border border-orange-100 bg-white/95 text-slate-950 shadow-[0_24px_64px_-30px_rgba(15,23,42,0.9)] ring-1 ring-white/70 backdrop-blur-xl transition hover:-translate-y-1 hover:border-orange-200 hover:bg-orange-50/70 active:translate-y-0"
         >

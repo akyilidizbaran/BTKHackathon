@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * `Mini Sepet Arkadaşı` PNG asset'leri yeniden temizlendi; checkerboard kaynaklı alpha delikleri ve koyu zeminde siyah görünen gövde/yüz boşlukları kapatıldı.
+  * Header marka işareti `AA` yazısından `Mini Sepet Arkadaşı` figürüne taşındı; Floating Agent panel başlığı sadece `Alışveriş Arkadaşım` olarak sadeleştirildi.
 * Bir sonraki net adım ne?
   * Vercel env değerleri girilip deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
 
@@ -1669,6 +1669,17 @@
   * Koyu ve açık zemin preview'larında siyah/delik görünümü ve checkerboard kalıntısı kontrol edildi.
 * Not:
   * Bu adım asset-only düzeltmedir; `FloatingAgentPanel` state mapping'i ve CSS motion davranışı değişmedi.
+
+### 2026-05-19 Marka Maskotu Header Kullanımı
+
+* Karar:
+  * Header ve demo/gateway marka işareti artık `AA` harf rozeti yerine `Mini Sepet Arkadaşı` figürünü kullanır.
+* Kapsam:
+  * `WorkspaceShell`, `RoleGateway` ve `DemoRehearsalWorkspace` sol üst logo alanına `mini-cart-idle.png` bağlandı.
+  * Floating panel başlığı `Alışveriş Arkadaşım Agent` yerine yalnızca `Alışveriş Arkadaşım` olarak değiştirildi.
+  * `commerce-brand-mascot` CSS animasyonu eklendi; küçük hover dışı nefes/salınım hareketi `prefers-reduced-motion` altında kapanır.
+* Not:
+  * Agent nav ve aksiyon metinleri korunur; değişiklik yalnızca marka/panel başlığı ve logo temsilidir.
 
 ### Güncelleme Kaydı
 

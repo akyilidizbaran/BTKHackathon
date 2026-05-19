@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 import {
@@ -29,6 +30,8 @@ import type {
 } from "@/lib/demo/rehearsal";
 
 gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+const brandMascotAsset = "/agent/mini-cart/mini-cart-idle.png";
 
 interface DemoRehearsalWorkspaceProps {
   data: DemoRehearsalData;
@@ -141,8 +144,16 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
           className="sticky top-4 z-40 mx-auto flex max-w-[1180px] items-center justify-between gap-3 rounded-full border border-white/70 bg-white/82 px-4 py-3 shadow-[0_24px_80px_-58px_rgba(15,23,42,0.9)] backdrop-blur-2xl"
         >
           <Link href="/" className="inline-flex min-w-0 items-center gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-orange-500 text-sm font-bold text-white">
-              AA
+            <span className="commerce-brand-mascot grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-orange-100 bg-white shadow-[0_14px_32px_-22px_rgba(15,23,42,0.72)] ring-1 ring-white">
+              <Image
+                src={brandMascotAsset}
+                alt=""
+                width={512}
+                height={512}
+                priority
+                sizes="44px"
+                className="h-10 w-10 object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,0.16)]"
+              />
             </span>
             <span className="hidden sm:block">
               <span className="block text-sm font-semibold tracking-tight">Alışveriş Arkadaşım</span>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
@@ -20,6 +21,8 @@ import { useGSAP } from "@gsap/react";
 import { FloatingAgentPanel } from "@/components/commerce/floating-agent-panel";
 
 gsap.registerPlugin(useGSAP);
+
+const brandMascotAsset = "/agent/mini-cart/mini-cart-idle.png";
 
 type WorkspaceRole = "seller" | "buyer";
 
@@ -99,8 +102,16 @@ export function WorkspaceShell({ role, children }: WorkspaceShellProps) {
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3 px-4 py-3 lg:px-5">
           <div className="flex items-center gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3 rounded-2xl py-1 pr-2 transition hover:bg-slate-50">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-[0_12px_30px_-18px_rgba(249,115,22,0.8)]">
-                AA
+              <span className="commerce-brand-mascot grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-orange-100 bg-white shadow-[0_14px_32px_-22px_rgba(15,23,42,0.72)] ring-1 ring-white">
+                <Image
+                  src={brandMascotAsset}
+                  alt=""
+                  width={512}
+                  height={512}
+                  priority
+                  sizes="44px"
+                  className="h-10 w-10 object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,0.16)]"
+                />
               </span>
               <span className="hidden sm:block">
                 <span className="block text-sm font-semibold tracking-tight text-slate-950">Alışveriş Arkadaşım</span>

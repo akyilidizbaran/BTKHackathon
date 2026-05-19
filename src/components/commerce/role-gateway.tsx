@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRef } from "react";
 import { ArrowRight, ChartLineUp, MagnifyingGlass, ShoppingBagOpen, Storefront } from "@phosphor-icons/react";
@@ -7,6 +8,8 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
 gsap.registerPlugin(useGSAP);
+
+const brandMascotAsset = "/agent/mini-cart/mini-cart-idle.png";
 
 const roles = [
   {
@@ -64,8 +67,16 @@ export function RoleGateway() {
           aria-label="Ana navigasyon"
         >
           <Link href="/" className="group inline-flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-[0_12px_30px_-18px_rgba(249,115,22,0.8)]">
-              AA
+            <span className="commerce-brand-mascot grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-orange-100 bg-white shadow-[0_14px_32px_-22px_rgba(15,23,42,0.72)] ring-1 ring-white">
+              <Image
+                src={brandMascotAsset}
+                alt=""
+                width={512}
+                height={512}
+                priority
+                sizes="44px"
+                className="h-10 w-10 object-contain drop-shadow-[0_8px_12px_rgba(15,23,42,0.16)]"
+              />
             </span>
             <span>
               <span className="block text-sm font-semibold tracking-tight text-slate-950">Alışveriş Arkadaşım</span>
