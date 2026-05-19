@@ -2,7 +2,35 @@
 
 [![CI](https://github.com/akyilidizbaran/alisveris-arkadasim/actions/workflows/ci.yml/badge.svg)](https://github.com/akyilidizbaran/alisveris-arkadasim/actions/workflows/ci.yml)
 
+<p align="center">
+  <a href="https://alisveris-arkadasim.vercel.app">
+    <img alt="Canlı Demo" src="https://img.shields.io/badge/Canli%20Demo-alisveris--arkadasim.vercel.app-ff5a00?style=for-the-badge" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://alisveris-arkadasim.vercel.app/demo"><strong>Jüri demo akışı</strong></a>
+  ·
+  <a href="https://alisveris-arkadasim.vercel.app/buyer/products">Buyer catalog</a>
+  ·
+  <a href="https://alisveris-arkadasim.vercel.app/seller">Seller panel</a>
+  ·
+  <a href="https://alisveris-arkadasim.vercel.app/seller/agent">Seller agent</a>
+</p>
+
 Alışveriş Arkadaşım, hackathon MVP'si olarak geliştirilmiş çift taraflı bir ticaret zekası platformudur. Alıcı tarafında tanıdık bir marketplace deneyimi, satıcı tarafında operasyon paneli ve iki tarafın üzerinde çalışan context-aware bir commerce agent bulunur. Agent; açıklama yapabilir, ürün önerebilir, satıcı aksiyonlarını önizleyebilir ve yalnızca kullanıcı onayı sonrası geçerli aksiyonları uygulayabilir.
+
+## Canlı Demo
+
+Ana paylaşım URL'si: [https://alisveris-arkadasim.vercel.app](https://alisveris-arkadasim.vercel.app)
+
+| Yüzey | Link | Ne gösterir? |
+| --- | --- | --- |
+| Demo akışı | [`/demo`](https://alisveris-arkadasim.vercel.app/demo) | Jüri için buyer, seller, floating agent ve QA kanıtlarını tek akışta toplar. |
+| Buyer catalog | [`/buyer/products`](https://alisveris-arkadasim.vercel.app/buyer/products) | Marketplace katalog, filtreleme, ürün detayına geçiş ve sepet başlangıcını gösterir. |
+| Buyer agent | [`/buyer/agent`](https://alisveris-arkadasim.vercel.app/buyer/agent) | Katalog sınırı içinde sepet önerisi ve onaylı cart mutation akışını gösterir. |
+| Seller panel | [`/seller`](https://alisveris-arkadasim.vercel.app/seller) | Satıcı overview, riskler ve öncelik kuyruğu yüzeyidir. |
+| Seller agent | [`/seller/agent`](https://alisveris-arkadasim.vercel.app/seller/agent) | Listing draft preview, guardrail, onay ve rollback akışını gösterir. |
 
 Çekirdek teknik fikir:
 

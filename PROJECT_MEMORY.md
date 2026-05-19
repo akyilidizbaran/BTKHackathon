@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı; public marka adı `Alışveriş Arkadaşım`.
 * Son değişiklik neydi?
-  * Vercel alias `https://alisveris-arkadasim.vercel.app` public çalışır hale getirildi; GitHub repo `akyilidizbaran/alisveris-arkadasim` oldu.
+  * README ilk ekranına canlı demo CTA'sı ve hızlı rota linkleri eklendi.
 * Bir sonraki net adım ne?
   * Yarışma paylaşımı için yeni GitHub ve Vercel URL'leri kullanılacak.
 
@@ -97,6 +97,7 @@
 * 2026-05-19 — Karar: Demo kart arka planları local ve konuya bağlı asset'lerden beslenecek. | Gerekçe: Rastgele dış görsel servisi doğa fotoğrafları üretiyor ve demo anlatısıyla çelişiyordu. | Etki: `/public/demo/*-demo-bg.png` asset'leri eklendi; `/demo` kartları buyer catalog, seller audit ve floating agent bağlamını gösterir. | Alternatifler: Harici stock fotoğraf URL'leri kullanmak.
 * 2026-05-19 — Karar: Paylaşım adı `Alışveriş Arkadaşım`, teknik slug `alisveris-arkadasim` olacak. | Gerekçe: GitHub/Vercel URL'leri için boşluksuz ASCII slug güvenli; marka adı Türkçe olarak README, açıklama ve site içinde korunur. | Etki: GitHub repo, Vercel project, package metadata ve public alias yeni sluga taşındı; eski GitHub URL redirect eder. | Alternatifler: Eski `btk-hackathon` slug'ını korumak veya özel domain almak.
 * 2026-05-19 — Karar: Vercel SSO deployment protection paylaşım için kapatıldı, Git fork protection açık kaldı. | Gerekçe: Yeni slug'lı Vercel domainleri 401 dönüyordu; yarışma paylaşım linki public olmalı. | Etki: `https://alisveris-arkadasim.vercel.app` ve slug'lı deployment URL'leri 200 döner. | Alternatifler: Özel domain almak veya eski public domainle kalmak.
+* 2026-05-19 — Karar: README ilk ekranında canlı demo URL'si görünür olacak. | Gerekçe: Jüri veya inceleyici repo'yu açınca deploy linkini aramamalı. | Etki: Badge, ana URL ve hızlı rota tablosu README başına eklendi. | Alternatifler: URL'yi sadece GitHub homepage alanında bırakmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -109,6 +110,7 @@
 * 2026-05-19 — Milestone: Demo hero cleanup. | Sonuç: Lokal `/demo` render'ında eski teknik etiket ve H1 içi inline görsel kaldırıldı; check/build geçti.
 * 2026-05-19 — Milestone: Demo card media cleanup. | Sonuç: Lokal `/demo` render'ında prova kartları local konu görsellerini kullanıyor; `picsum.photos` DOM'da yok; check/build geçti.
 * 2026-05-19 — Milestone: Project rename. | Sonuç: GitHub repo `akyilidizbaran/alisveris-arkadasim`, Vercel project `alisveris-arkadasim`, public URL `https://alisveris-arkadasim.vercel.app`.
+* 2026-05-19 — Milestone: README live demo polish. | Sonuç: README başında canlı demo badge'i, ana URL ve buyer/seller/agent hızlı linkleri görünür.
 
 ## 8) Yapılanlar
 
@@ -123,6 +125,7 @@
 * [x] Demo hero teknik 8R etiketi ve başlık içi dış görsel temizlendi.
 * [x] Demo prova kartlarındaki rastgele doğa arka planları local konu görselleriyle değiştirildi.
 * [x] GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı.
+* [x] README canlı demo URL ve hızlı rota linkleriyle güncellendi.
 
 ## 9) Yapılacaklar (Next)
 
