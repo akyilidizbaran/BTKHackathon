@@ -116,8 +116,7 @@ export function FloatingAgentPanel({ role }: FloatingAgentPanelProps) {
   const shouldShowIconBadge = shouldShowProactiveCue && (isProfileWarning || !isDenseSurface);
   const shouldUseSideDock =
     !isOpen &&
-    (role === "seller" ||
-      normalizedPathname.startsWith("/buyer/products/") ||
+    (normalizedPathname.startsWith("/buyer/products/") ||
       normalizedPathname === "/buyer/agent" ||
       normalizedPathname === "/buyer/profile");
   const dockPositionClass = isOpen

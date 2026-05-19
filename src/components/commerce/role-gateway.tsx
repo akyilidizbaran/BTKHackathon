@@ -117,7 +117,7 @@ export function RoleGateway() {
               href="/demo"
               className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-full bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-orange-500 active:translate-y-px"
             >
-              8R demo provasını aç
+              Demo Provasını aç
               <ArrowRight size={16} weight="bold" />
             </Link>
           </div>
