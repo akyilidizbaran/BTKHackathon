@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Vercel deploy öncesi runtime ve dokümantasyon snapshot'ı Gemini-only hale getirildi.
+  * Production Vercel deploy alındı: `https://btk-hackathon-red.vercel.app`.
 * Son değişiklik neydi?
-  * Audit moderate bulguları minimal-risk dependency override ile sıfırlandı; `npm audit`, `npm run check`, `npm run build`, `npm run smoke:llm` geçti.
+  * Vercel production env'leri eklendi, CLI production deploy tamamlandı ve canlı smoke testleri geçti.
 * Bir sonraki net adım ne?
-  * Vercel env değerleri girilip deploy alınacak.
+  * Vercel panelinden GitHub repo bağlantısı kurulacak ve gerekirse custom domain ayarlanacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -90,6 +90,7 @@
 * 2026-05-19 — Karar: Deploy öncesi dış review bulgularındaki contract bug'ları kod seviyesinde kapatılacak. | Gerekçe: Buyer malformed nested preferences 500'e, Seller apply aşırı fiyat mutation'ına düşebiliyordu. | Etki: Buyer validation nested array/enum/number shape'lerini 400'e çevirir; Seller apply server-side fiyat aralığı ve before snapshot tutarlılığı doğrular. | Alternatifler: Sadece UI/LLM draft guard'ına güvenmek.
 * 2026-05-19 — Karar: Canlı LLM kontrolü default CI'a değil opt-in workflow'a alınacak. | Gerekçe: Ana CI secretsız ve stabil kalmalı; gerçek provider response shape/auth/model kırılmaları manuel tetiklenen smoke ile görülebilmeli. | Etki: `npm run smoke:llm` ve `.github/workflows/llm-smoke.yml` eklendi.
 * 2026-05-19 — Karar: Audit moderate bulguları için Next/Prisma downgrade yerine transitive override kullanılacak. | Gerekçe: Direct paketler latest sürümdeydi; `npm audit fix --force` kırıcı downgrade öneriyordu. | Etki: `postcss` 8.5.15 ve `@hono/node-server` 2.0.3 override edildi; audit sıfırlandı. | Alternatifler: Force downgrade veya audit bulgularını deploy sonrası izlemek.
+* 2026-05-19 — Karar: İlk production deploy Vercel CLI ile alınacak. | Gerekçe: Vercel GitHub bağlantısı CLI sırasında otomatik kurulamadı, fakat production deploy env'leri hazırdı. | Etki: Canlı URL üretildi; otomatik GitHub deploy için Vercel panelinde repo bağlantısı ayrıca kurulmalı.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -97,6 +98,7 @@
 * 2026-05-19 — Milestone: Deploy öncesi temiz HEAD doğrulandı. | Sonuç: `npm run check`, `npm run build`, canlı `/api/buyer/agent` smoke ve GitHub CI run `26097249110` başarılı; current tree trace taraması temiz.
 * 2026-05-19 — Milestone: External review hardening. | Sonuç: Buyer malformed preferences ve Seller excessive price route repro'ları 400/422 dönecek şekilde kapatıldı; `npm run check`, `npm run build`, `npm run smoke:llm` geçti.
 * 2026-05-19 — Milestone: Audit hardening. | Sonuç: `npm audit --audit-level=moderate` 0 vulnerability döndü; check/build/Gemini smoke tekrar geçti.
+* 2026-05-19 — Milestone: Vercel production deploy. | Sonuç: `https://btk-hackathon-red.vercel.app` READY; canlı `/`, `/demo`, `/buyer/products`, `/seller`, `/seller/agent`, catalog API, Gemini buyer agent ve guardrail repro smoke testleri geçti.
 
 ## 8) Yapılanlar
 
@@ -107,13 +109,15 @@
 * [x] Floating Agent route-aware mini panel olarak eklendi.
 * [x] External review bulgularındaki buyer validation ve seller apply policy açıkları kapatıldı.
 * [x] Audit moderate bulguları minimal dependency override ile sıfırlandı.
+* [x] Vercel production deploy alındı ve canlı smoke doğrulandı.
 
 ## 9) Yapılacaklar (Next)
 
 * [x] Trace taramasını current tracked snapshot için sıfır sonuçla doğrula.
 * [x] `npm run check` ve `npm run build` çalıştır.
 * [x] Değişiklikleri commit ve push et.
-* [ ] Vercel env değerlerini Gemini/Supabase değişkenlerine göre girip deploy et.
+* [x] Vercel env değerlerini Gemini/Supabase değişkenlerine göre girip deploy et.
+* [ ] Vercel GitHub integration bağlantısını panelden tamamla.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
 
@@ -130,6 +134,7 @@
 * Canlı Gemini entegrasyonu için `npm run smoke:llm` lokal/Vercel secret ortamında çalışır; GitHub'da manuel `LLM Smoke` workflow'u `GEMINI_API_KEY` secret'ı ister.
 * Local storage state'leri deploy öncesi üretim persistence sanılmamalı.
 * Secret değerleri yalnızca local/Vercel env içinde tutulmalı.
+* Production env'ler Vercel'e eklendi; preview/development env'leri gerekirse panelden ayrıca eklenmeli.
 
 ### Güncelleme Kaydı
 
