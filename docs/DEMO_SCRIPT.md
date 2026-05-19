@@ -71,7 +71,7 @@ Faydalı kanıt dosyaları:
 - [docs/ARCHITECTURE.md](ARCHITECTURE.md)
 - [docs/REPRODUCIBILITY.md](REPRODUCIBILITY.md)
 - [docs/VALIDATION_OUTPUT.md](VALIDATION_OUTPUT.md)
-- [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](../TECHNICAL_AUDIT_COMPONENT_MOCKS.md)
+- [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md)
 - [scripts/validate-workflows.js](../scripts/validate-workflows.js)
 
 ## 3. 7 Dakikalık Jüri Modu

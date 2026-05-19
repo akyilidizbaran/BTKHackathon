@@ -230,7 +230,7 @@ npm run build
 
 Son route/API/component smoke kapsamı teknik audit dokümanında kayıtlıdır:
 
-- `TECHNICAL_AUDIT_COMPONENT_MOCKS.md`
+- [docs/TECHNICAL_AUDIT_COMPONENT_MOCKS.md](docs/TECHNICAL_AUDIT_COMPONENT_MOCKS.md)
 
 Validation script'i mock data bütünlüğünü, scoring, workflow, API contract, agent runtime, LLM provider davranışı, guardrail, demo contract ve ayrıştırılmış component contract'larını kontrol eder:
 
@@ -335,8 +335,8 @@ Notlar:
 - [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) - ortam, teknik inceleyici rota sırası, doğrulama komutları, deterministik iddialar ve MVP dışında kalan kısımlar.
 - [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) - beklenen `npm run validate:workflows` çıktısı ve neyi kanıtladığı.
 - [docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md) - Supabase Postgres kurulumu, Prisma migration ve mock dataset seed adımları.
-- [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - teknik denetim, smoke sonuçları, component extraction durumu, mock/lokal envanter ve öncelikler.
-- [ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md](ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md) - ürün ve milestone roadmap'i.
+- [docs/TECHNICAL_AUDIT_COMPONENT_MOCKS.md](docs/TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - teknik denetim, smoke sonuçları, component extraction durumu, mock/lokal envanter ve öncelikler.
+- [docs/ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md](docs/ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md) - ürün ve milestone roadmap'i.
 
 ## Bilinen Teknik Borçlar
 
@@ -370,4 +370,4 @@ Kodu inceliyorsanız buradan başlayın:
 2. `npm run build` çalıştırın.
 3. `/demo` rotasını açın.
 4. `src/lib/agents`, `src/lib/api`, `src/lib/workflows` ve `scripts/validate-workflows.js` dosyalarını inceleyin.
-5. Güncel smoke kapsamı ve bilinen limitler için `TECHNICAL_AUDIT_COMPONENT_MOCKS.md` dosyasını okuyun.
+5. Güncel smoke kapsamı ve bilinen limitler için `docs/TECHNICAL_AUDIT_COMPONENT_MOCKS.md` dosyasını okuyun.

@@ -5,9 +5,9 @@
 * Şu an ne yapıyoruz?
   * GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı; public marka adı `Alışveriş Arkadaşım`.
 * Son değişiklik neydi?
-  * Favicon ve app icon dosyaları Alışveriş Arkadaşım mini-cart figürüyle değiştirildi.
+  * Public repo temizliği için agent talimat dosyaları ve kullanılmayan starter SVG asset'leri kaldırıldı; roadmap/audit notları `docs/` altına taşındı.
 * Bir sonraki net adım ne?
-  * Vercel deploy sonrası `/favicon.ico`, `/icon.png` ve `/apple-icon.png` canlıda doğrulanacak.
+  * README/docs linkleriyle birlikte temizlik commit'i doğrulanıp pushlanacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -101,6 +101,7 @@
 * 2026-05-19 — Karar: Final UI metinleri iç faz dili taşımayacak. | Gerekçe: Teslim ekranı prototip geçişi değil, final ürün algısı vermeli. | Etki: Ana sayfa etiketi ürün hazır diline taşındı. | Alternatifler: İç milestone dilini korumak.
 * 2026-05-19 — Karar: Buyer bütçe örnekleri gerçek seçki toplamını aşmayacak. | Gerekçe: Guardrail iddiası ile demo prompt'u aynı yönde olmalı. | Etki: Ev ofis örneği 3.400 TL bütçeye çekildi; buyer agent placeholder'ı katalogla uyumlu 2.000 TL masa aksesuarı örneği oldu. | Alternatifler: %5 tolerans metnine güvenmek.
 * 2026-05-19 — Karar: Favicon/app icon marka figürüyle paketlenecek. | Gerekçe: Vercel ve tarayıcı yüzeylerinde default ikon yerine Alışveriş Arkadaşım figürü görünmeli; koyu zeminlerde figür kaybolmamalı. | Etki: `src/app/favicon.ico`, `src/app/icon.png`, `src/app/apple-icon.png` mini-cart figüründen krem zemin ve turuncu çerçeveyle üretildi. | Alternatifler: Sadece favicon'u değiştirmek veya transparan figür kullanmak.
+* 2026-05-19 — Karar: Public repo kökü final teslim için sadeleştirilecek. | Gerekçe: Agent talimat dosyaları ve unused starter asset'ler ürün/jüri sunumu için görüntü kirliliği oluşturuyor. | Etki: `AGENTS.md`, `CLAUDE.md` ve unused `public/*.svg` starter asset'leri kaldırılır; roadmap/audit notları `docs/` altına taşınır; `PROJECT_MEMORY.md` korunur. | Alternatifler: Tüm iç notları kökte bırakmak veya tamamen silmek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -116,6 +117,7 @@
 * 2026-05-19 — Milestone: README live demo polish. | Sonuç: README başında canlı demo badge'i, ana URL ve buyer/seller/agent hızlı linkleri görünür.
 * 2026-05-19 — Milestone: Final copy and buyer budget polish. | Sonuç: Ana sayfa iç faz dili kaldırıldı; buyer örnek prompt'ları bütçe içinde deterministik sonuç döndürür.
 * 2026-05-19 — Milestone: Branded app icons. | Sonuç: Favicon, app icon ve apple touch icon mini-cart figürüyle değiştirildi; icon dosyaları koyu header/tab zeminlerinde okunur olacak şekilde paketlendi.
+* 2026-05-19 — Milestone: Public repo cleanup. | Sonuç: Agent talimat dosyaları ve unused starter SVG asset'leri kaldırıldı; roadmap/audit dokümanları `docs/` altına taşındı.
 
 ## 8) Yapılanlar
 
@@ -133,6 +135,7 @@
 * [x] README canlı demo URL ve hızlı rota linkleriyle güncellendi.
 * [x] Ana sayfa final ürün dili ve buyer bütçe örnekleri polish edildi.
 * [x] Favicon/app icon görselleri marka figürüyle değiştirildi.
+* [x] Public repo kökü sadeleştirildi; iç roadmap/audit dosyaları `docs/` altına taşındı.
 
 ## 9) Yapılacaklar (Next)
 
