@@ -1,8 +1,8 @@
 import type { LlmGenerationError, LlmProvider, LlmTextGenerationResult, RuntimeLlmProvider } from "@/lib/llm/types";
 
-export const defaultLlmProvider: RuntimeLlmProvider = "openai";
+export const defaultLlmProvider: RuntimeLlmProvider = "gemini";
 export const defaultOpenAiModel = "gpt-4o-mini";
-export const defaultGeminiModel = "gemini-3-flash-preview";
+export const defaultGeminiModel = "gemini-2.5-flash";
 export const defaultMaxOutputTokens = 700;
 export const defaultTemperature = 0.2;
 

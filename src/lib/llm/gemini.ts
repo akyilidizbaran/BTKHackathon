@@ -31,6 +31,7 @@ export function getGeminiModel(): string {
 export async function generateGeminiText(input: GenerateTextInput): Promise<LlmTextGenerationResult> {
   const model = getGeminiModel();
   const apiKey = process.env.GEMINI_API_KEY?.trim();
+  const reasoningEffort = getGeminiReasoningEffort(model);
 
   if (!apiKey) {
     return createFallbackResult(
@@ -59,6 +60,7 @@ export async function generateGeminiText(input: GenerateTextInput): Promise<LlmT
           },
         ],
         model,
+        ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
         temperature: input.temperature ?? defaultTemperature,
       }),
       headers: {
@@ -99,6 +101,11 @@ export async function generateGeminiText(input: GenerateTextInput): Promise<LlmT
       message: error instanceof Error ? error.message : "Gemini isteği tamamlanamadı.",
     });
   }
+}
+
+function getGeminiReasoningEffort(model: string): "none" | undefined {
+  // Gemini 2.5 Flash enables thinking by default; JSON contracts need the token budget for the response body.
+  return /^gemini-2\.5-flash(?:-|$)/.test(model) ? "none" : undefined;
 }
 
 function extractGeminiOutputText(body: GeminiChatCompletionsResponseBody): string {

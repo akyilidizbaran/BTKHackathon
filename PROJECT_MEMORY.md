@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * Header marka işareti `AA` yazısından `Mini Sepet Arkadaşı` figürüne taşındı; Floating Agent panel başlığı sadece `Alışveriş Arkadaşım` olarak sadeleştirildi.
+  * LLM runtime varsayılanı Gemini'ye taşındı; local `.env.local` içinde `LLM_PROVIDER=gemini` ve `GEMINI_API_KEY` ayarlandı.
 * Bir sonraki net adım ne?
   * Vercel env değerleri girilip deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
 
@@ -50,7 +50,7 @@
 * Floating Agent için `Gizle`, `Sessize al`, `Bu sayfada uyarma` kontrolleri zorunludur.
 * Floating Agent ilk fazda web/desktop odaklıdır; mobil davranış bu adımda kapsam dışıdır.
 * İlk floating avatar Codex pet benzeri teknik/sevimli avatar olabilir ve sonra değiştirilebilir.
-* UI içinde Gemini çalışıyormuş gibi sahte davranılmayacak; OpenAI geçici provider olarak kalacak, Gemini final provider swap sonraya bırakılacak.
+* UI içinde Gemini çalışıyormuş gibi sahte davranılmayacak; runtime varsayılan provider Gemini'dir, provider/status rozetleri gerçek LLM sonucunu veya fallback'i göstermelidir.
 * LLM/Agent hedef mimarisi provider bağımsızdır: deterministic commerce data + scoring -> LLM intent/ranking/explanation/draft -> typed validation + guardrails -> user approval -> deterministic apply function.
 
 ## 3) Mimari Özet
@@ -280,6 +280,7 @@
 * 2026-05-18 — Karar: Public/reviewer-facing dokümantasyon Türkçe tutulacak; route, env, komut, dosya ve kod identifier'ları çevrilmeyecek. | Gerekçe: Jüri Türkçe okuyacak, ancak teknik doğrulanabilirlik için executable identifier'lar birebir kalmalı. | Etki: README ve `docs/*` ana inceleme dosyaları Türkçeye taşındı; Vercel deploy öncesi repo vitrini Türkçe olacak. | Alternatifler: İngilizce README'i korumak veya tüm kod identifier'larını çevirerek kırılma riski almak.
 * 2026-05-18 — Karar: Database geçişi Supabase Postgres + Prisma ile fazlara bölünecek. | Gerekçe: Jüri/reviewer için gerçek database sinyali güçlenmeli, ancak tüm app data access ve mutation state aynı anda taşınırsa demo riski artar. | Etki: P1'de schema/migration/seed hazırlandı ve uygulama varsayılan olarak `DATA_SOURCE=mock` ile çalışmaya devam eder; P2'de `src/lib/data/*`, cart/profile/audit persistence DB okuma-yazma katmanına taşınacak. | Alternatifler: Tüm localStorage/mock katmanını tek adımda DB'ye geçirmek veya DB geçişini deploy sonrasına bırakmak.
 * 2026-05-18 — Karar: Supabase seed temizleme adımı transaction yerine sıralı `deleteMany` çağrılarıyla yapılacak. | Gerekçe: Supabase pooler üzerinde başlangıç transaction'ı `P2028 Unable to start a transaction` hatası verebildi; seed idempotency için atomiklikten çok tekrar çalıştırılabilirlik önemli. | Etki: `prisma/seed.ts` önce ilişkili tabloları sırayla temizler, sonra aynı mock commerce datasını tekrar yazar. | Alternatifler: Transaction timeout değerini artırmak veya seed'i yalnızca boş DB'de çalıştırmak.
+* 2026-05-19 — Karar: Deploy öncesi runtime LLM varsayılanı Gemini'ye taşınacak ve Gemini model default'u `gemini-2.5-flash` olacak. | Gerekçe: Hackathon final provider hedefi Gemini; preview model app-level JSON route'larında timeout riski gösterdiği için stable Flash model demo açısından daha güvenli. | Etki: `src/lib/llm/common.ts`, `src/lib/llm/gemini.ts`, `.env.example`, `scripts/validate-workflows.js`, local `.env.local` ve Vercel env beklentileri Gemini'ye göre güncellendi. | Alternatifler: OpenAI varsayılanını korumak veya `gemini-3-flash-preview` ile devam etmek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -1692,6 +1693,20 @@
   * `/api/seller/actions` evidence label uniqueness kontrolü geçti.
   * `/seller/actions` Puppeteer kontrolünde Next duplicate key overlay metni görünmedi.
   * `npm run check` ve `npm run build` geçti.
+
+### 2026-05-19 LLM Provider Gemini Switch
+
+* Karar:
+  * Runtime LLM provider varsayılanı OpenAI yerine Gemini oldu.
+* Kapsam:
+  * `src/lib/llm/common.ts` içinde `defaultLlmProvider` `gemini` olarak değişti.
+  * `defaultGeminiModel` ve `.env.example` içindeki `GEMINI_MODEL` deploy kararlılığı için `gemini-2.5-flash` oldu.
+  * `src/lib/llm/gemini.ts` Gemini 2.5 Flash için `reasoning_effort: none` gönderir; aksi halde düşünme tokenları kısa JSON contract yanıtlarını kesebiliyor.
+  * `.env.example` varsayılanı `LLM_PROVIDER=gemini` oldu.
+  * `scripts/validate-workflows.js` default model contract beklentileri Gemini default'una taşındı.
+  * Local `.env.local` içinde `LLM_PROVIDER=gemini` ve `GEMINI_API_KEY` ayarlandı; secret repo'ya commitlenmez.
+* Deploy notu:
+  * Vercel environment içinde `LLM_PROVIDER=gemini`, `GEMINI_MODEL=gemini-2.5-flash` ve `GEMINI_API_KEY` ayrıca tanımlanmalıdır.
 
 ### Güncelleme Kaydı
 
