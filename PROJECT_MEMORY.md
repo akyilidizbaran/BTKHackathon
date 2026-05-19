@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * `/demo` prova kartları için konuyla alakalı local görsel arka planlar eklendi; push sonrası Vercel otomatik deploy bekleniyor.
+  * GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı; public marka adı `Alışveriş Arkadaşım`.
 * Son değişiklik neydi?
-  * Buyer, seller, floating Agent ve QA demo arka planları rastgele dış görsel yerine local `/public/demo` asset'lerine bağlandı.
+  * Vercel alias `https://alisveris-arkadasim.vercel.app` eklendi; GitHub repo `akyilidizbaran/alisveris-arkadasim` oldu.
 * Bir sonraki net adım ne?
-  * Commit/push sonrası canlı URL'de `/demo` tekrar kontrol edilecek.
+  * Rename sonrası README/package metadata commitlenip yeni remote'a pushlanacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -52,7 +52,8 @@
   * UI motion için `gsap` + `@gsap/react`, ikonlar için `@phosphor-icons/react`.
   * Ana kontroller: `npm run lint`, `npm run typecheck`, `npm run validate:workflows`, `npm run test:components`, `npm run check`, `npm run build`.
 * Branch/commit yaklaşımı:
-  * Tamamlanan deploy öncesi değişiklikler commitlenip `main` branch'ine pushlanır.
+  * Tamamlanan değişiklikler commitlenip `main` branch'ine pushlanır.
+  * GitHub remote: `https://github.com/akyilidizbaran/alisveris-arkadasim.git`.
 * İsimlendirme/klasör düzeni:
   * Agent mantığı UI içine gömülmez; workflow/API/agent katmanlarında tutulur.
   * Mutable local state helper'ları `src/lib/agents/*-client.ts` ve profile/cart storage dosyalarında merkezileşir.
@@ -94,6 +95,7 @@
 * 2026-05-19 — Karar: Vercel GitHub entegrasyonu main branch için kullanılacak. | Gerekçe: Bundan sonraki deploy'lar Git push ile izlenebilir ve tekrarlanabilir olmalı. | Etki: `akyilidizbaran/BTKHackathon` repo bağlantısı doğrulandı; sonraki push otomatik Vercel deployment tetiklemeli.
 * 2026-05-19 — Karar: Demo hero teknik milestone dili yerine kullanıcıya dönük metin kullanacak. | Gerekçe: Jüri/sunum ekranında 8R gibi iç faz kodları ve başlık içi dekoratif görseller dikkat dağıtıyordu. | Etki: `/demo` hero etiketi `Demo akışı` oldu; başlık contract metninden düz render edilir. | Alternatifler: Teknik etiketi alt bölümde tutmak.
 * 2026-05-19 — Karar: Demo kart arka planları local ve konuya bağlı asset'lerden beslenecek. | Gerekçe: Rastgele dış görsel servisi doğa fotoğrafları üretiyor ve demo anlatısıyla çelişiyordu. | Etki: `/public/demo/*-demo-bg.png` asset'leri eklendi; `/demo` kartları buyer catalog, seller audit ve floating agent bağlamını gösterir. | Alternatifler: Harici stock fotoğraf URL'leri kullanmak.
+* 2026-05-19 — Karar: Paylaşım adı `Alışveriş Arkadaşım`, teknik slug `alisveris-arkadasim` olacak. | Gerekçe: GitHub/Vercel URL'leri için boşluksuz ASCII slug güvenli; marka adı Türkçe olarak README, açıklama ve site içinde korunur. | Etki: GitHub repo, Vercel project, package metadata ve public alias yeni sluga taşındı; eski GitHub URL redirect eder. | Alternatifler: Eski `btk-hackathon` slug'ını korumak veya özel domain almak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -105,6 +107,7 @@
 * 2026-05-19 — Milestone: Vercel GitHub integration verified. | Sonuç: `vercel git connect` repo bağlantısını doğruladı; canlı buyer agent üç ardışık çağrıda Gemini `generated` döndü.
 * 2026-05-19 — Milestone: Demo hero cleanup. | Sonuç: Lokal `/demo` render'ında eski teknik etiket ve H1 içi inline görsel kaldırıldı; check/build geçti.
 * 2026-05-19 — Milestone: Demo card media cleanup. | Sonuç: Lokal `/demo` render'ında prova kartları local konu görsellerini kullanıyor; `picsum.photos` DOM'da yok; check/build geçti.
+* 2026-05-19 — Milestone: Project rename. | Sonuç: GitHub repo `akyilidizbaran/alisveris-arkadasim`, Vercel project `alisveris-arkadasim`, public URL `https://alisveris-arkadasim.vercel.app`.
 
 ## 8) Yapılanlar
 
@@ -118,6 +121,7 @@
 * [x] Vercel production deploy alındı ve canlı smoke doğrulandı.
 * [x] Demo hero teknik 8R etiketi ve başlık içi dış görsel temizlendi.
 * [x] Demo prova kartlarındaki rastgele doğa arka planları local konu görselleriyle değiştirildi.
+* [x] GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -143,6 +147,7 @@
 * Local storage state'leri deploy öncesi üretim persistence sanılmamalı.
 * Secret değerleri yalnızca local/Vercel env içinde tutulmalı.
 * Production env'ler Vercel'e eklendi; preview/development env'leri gerekirse panelden ayrıca eklenmeli.
+* Eski GitHub repo URL'si GitHub redirect'iyle çalışır; local remote yeni URL'ye güncellendi.
 
 ### Güncelleme Kaydı
 

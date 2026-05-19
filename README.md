@@ -1,6 +1,6 @@
 # Alışveriş Arkadaşım
 
-[![CI](https://github.com/akyilidizbaran/BTKHackathon/actions/workflows/ci.yml/badge.svg)](https://github.com/akyilidizbaran/BTKHackathon/actions/workflows/ci.yml)
+[![CI](https://github.com/akyilidizbaran/alisveris-arkadasim/actions/workflows/ci.yml/badge.svg)](https://github.com/akyilidizbaran/alisveris-arkadasim/actions/workflows/ci.yml)
 
 Alışveriş Arkadaşım, hackathon MVP'si olarak geliştirilmiş çift taraflı bir ticaret zekası platformudur. Alıcı tarafında tanıdık bir marketplace deneyimi, satıcı tarafında operasyon paneli ve iki tarafın üzerinde çalışan context-aware bir commerce agent bulunur. Agent; açıklama yapabilir, ürün önerebilir, satıcı aksiyonlarını önizleyebilir ve yalnızca kullanıcı onayı sonrası geçerli aksiyonları uygulayabilir.
 
