@@ -237,7 +237,7 @@ async function validateLlmProviderContracts() {
     assert(deterministic.text === "fallback-ok", "deterministic fallback text yanlış");
 
     process.env.LLM_PROVIDER = "gemini";
-    process.env.GEMINI_MODEL = "gemini-2.5-flash";
+    process.env.GEMINI_MODEL = "gemini-3-flash-preview";
     delete process.env.GEMINI_API_KEY;
 
     const missingGeminiKey = await generateLlmText({
@@ -248,7 +248,7 @@ async function validateLlmProviderContracts() {
 
     assert(missingGeminiKey.status === "fallback", "Gemini key yokken fallback dönmeli");
     assert(missingGeminiKey.provider === "deterministic", "Gemini key yokken deterministic provider dönmeli");
-    assert(missingGeminiKey.model === "gemini-2.5-flash", "Gemini fallback model contract yanlış");
+    assert(missingGeminiKey.model === "gemini-3-flash-preview", "Gemini fallback model contract yanlış");
     assert(missingGeminiKey.error?.code === "GEMINI_API_KEY_MISSING", "Gemini missing key code yanlış");
 
     process.env.LLM_PROVIDER = "unsupported-provider";

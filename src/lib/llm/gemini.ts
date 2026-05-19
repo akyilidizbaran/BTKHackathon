@@ -104,8 +104,10 @@ export async function generateGeminiText(input: GenerateTextInput): Promise<LlmT
 }
 
 function getGeminiReasoningEffort(model: string): "none" | undefined {
-  // Gemini 2.5 Flash enables thinking by default; JSON contracts need the token budget for the response body.
-  return /^gemini-2\.5-flash(?:-|$)/.test(model) ? "none" : undefined;
+  // Gemini Flash reasoning can consume the short response budget; JSON contracts need tokens for the body.
+  return /^gemini-2\.5-flash(?:-|$)/.test(model) || model === "gemini-3-flash-preview"
+    ? "none"
+    : undefined;
 }
 
 function extractGeminiOutputText(body: GeminiChatCompletionsResponseBody): string {
