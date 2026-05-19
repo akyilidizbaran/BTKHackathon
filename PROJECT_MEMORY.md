@@ -5,9 +5,9 @@
 * Şu an ne yapıyoruz?
   * GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı; public marka adı `Alışveriş Arkadaşım`.
 * Son değişiklik neydi?
-  * Ana sayfadaki iç faz dili final ürün diline çevrildi; buyer bütçe örnekleri bütçeyi aşmayacak şekilde güncellendi.
+  * Favicon ve app icon dosyaları Alışveriş Arkadaşım mini-cart figürüyle değiştirildi.
 * Bir sonraki net adım ne?
-  * Yarışma paylaşımı için yeni GitHub ve Vercel URL'leri kullanılacak.
+  * Vercel deploy sonrası `/favicon.ico`, `/icon.png` ve `/apple-icon.png` canlıda doğrulanacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -100,6 +100,7 @@
 * 2026-05-19 — Karar: README ilk ekranında canlı demo URL'si görünür olacak. | Gerekçe: Jüri veya inceleyici repo'yu açınca deploy linkini aramamalı. | Etki: Badge, ana URL ve hızlı rota tablosu README başına eklendi. | Alternatifler: URL'yi sadece GitHub homepage alanında bırakmak.
 * 2026-05-19 — Karar: Final UI metinleri iç faz dili taşımayacak. | Gerekçe: Teslim ekranı prototip geçişi değil, final ürün algısı vermeli. | Etki: Ana sayfa etiketi ürün hazır diline taşındı. | Alternatifler: İç milestone dilini korumak.
 * 2026-05-19 — Karar: Buyer bütçe örnekleri gerçek seçki toplamını aşmayacak. | Gerekçe: Guardrail iddiası ile demo prompt'u aynı yönde olmalı. | Etki: Ev ofis örneği 3.400 TL bütçeye çekildi; buyer agent placeholder'ı katalogla uyumlu 2.000 TL masa aksesuarı örneği oldu. | Alternatifler: %5 tolerans metnine güvenmek.
+* 2026-05-19 — Karar: Favicon/app icon marka figürüyle paketlenecek. | Gerekçe: Vercel ve tarayıcı yüzeylerinde default ikon yerine Alışveriş Arkadaşım figürü görünmeli; koyu zeminlerde figür kaybolmamalı. | Etki: `src/app/favicon.ico`, `src/app/icon.png`, `src/app/apple-icon.png` mini-cart figüründen krem zemin ve turuncu çerçeveyle üretildi. | Alternatifler: Sadece favicon'u değiştirmek veya transparan figür kullanmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -114,6 +115,7 @@
 * 2026-05-19 — Milestone: Project rename. | Sonuç: GitHub repo `akyilidizbaran/alisveris-arkadasim`, Vercel project `alisveris-arkadasim`, public URL `https://alisveris-arkadasim.vercel.app`.
 * 2026-05-19 — Milestone: README live demo polish. | Sonuç: README başında canlı demo badge'i, ana URL ve buyer/seller/agent hızlı linkleri görünür.
 * 2026-05-19 — Milestone: Final copy and buyer budget polish. | Sonuç: Ana sayfa iç faz dili kaldırıldı; buyer örnek prompt'ları bütçe içinde deterministik sonuç döndürür.
+* 2026-05-19 — Milestone: Branded app icons. | Sonuç: Favicon, app icon ve apple touch icon mini-cart figürüyle değiştirildi; icon dosyaları koyu header/tab zeminlerinde okunur olacak şekilde paketlendi.
 
 ## 8) Yapılanlar
 
@@ -130,6 +132,7 @@
 * [x] GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı.
 * [x] README canlı demo URL ve hızlı rota linkleriyle güncellendi.
 * [x] Ana sayfa final ürün dili ve buyer bütçe örnekleri polish edildi.
+* [x] Favicon/app icon görselleri marka figürüyle değiştirildi.
 
 ## 9) Yapılacaklar (Next)
 
