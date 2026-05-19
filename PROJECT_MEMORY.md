@@ -3,11 +3,11 @@
 ## 0) TL;DR (En güncel durum)
 
 * Şu an ne yapıyoruz?
-  * Vercel deploy öncesi runtime ve dokümantasyon snapshot'ı Gemini-only hale getiriliyor.
+  * Vercel deploy öncesi runtime ve dokümantasyon snapshot'ı Gemini-only hale getirildi.
 * Son değişiklik neydi?
-  * LLM varsayılanı `gemini-2.5-flash`; transient 429/5xx Gemini hataları için retry eklendi.
+  * Native Gemini adapter, temiz trace taraması, `npm run check`, `npm run build`, canlı buyer-agent smoke ve GitHub CI doğrulandı.
 * Bir sonraki net adım ne?
-  * Temiz trace taraması, `npm run check`, `npm run build`, commit, push ve deploy.
+  * Vercel env değerleri girilip deploy alınacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -91,6 +91,7 @@
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
 * 2026-05-19 — Milestone: Gemini deploy readiness. | Sonuç: Current snapshot Gemini/deterministic LLM hattına indirildi; check/build ve trace taraması deploy öncesi doğrulama olarak çalıştırılacak.
+* 2026-05-19 — Milestone: Deploy öncesi temiz HEAD doğrulandı. | Sonuç: `npm run check`, `npm run build`, canlı `/api/buyer/agent` smoke ve GitHub CI run `26097249110` başarılı; current tree trace taraması temiz.
 
 ## 8) Yapılanlar
 
@@ -102,9 +103,9 @@
 
 ## 9) Yapılacaklar (Next)
 
-* [ ] Trace taramasını current tracked snapshot için sıfır sonuçla doğrula.
-* [ ] `npm run check` ve `npm run build` çalıştır.
-* [ ] Değişiklikleri commit ve push et.
+* [x] Trace taramasını current tracked snapshot için sıfır sonuçla doğrula.
+* [x] `npm run check` ve `npm run build` çalıştır.
+* [x] Değişiklikleri commit ve push et.
 * [ ] Vercel env değerlerini Gemini/Supabase değişkenlerine göre girip deploy et.
 
 ## 10) Bilinen Sorunlar / Teknik Borç / Riskler
