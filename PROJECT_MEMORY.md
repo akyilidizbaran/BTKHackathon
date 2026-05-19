@@ -5,9 +5,9 @@
 * Şu an ne yapıyoruz?
   * GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı; public marka adı `Alışveriş Arkadaşım`.
 * Son değişiklik neydi?
-  * README ilk ekranına ürün preview görseli ve kısa "Neden farklı?" anlatısı eklendi; roadmap dokümanı kaldırıldı; `PROJECT_MEMORY.md` linki README'den çıkarıldı.
+  * Buyer katalog guardrail'i koltuk takımı/oturma grubu gibi katalog dışı büyük mobilya prompt'larını öneri üretmeden kesecek şekilde genişletildi.
 * Bir sonraki net adım ne?
-  * README polish commit'i doğrulanıp pushlanacak.
+  * Guardrail düzeltmesi check/build ile doğrulanıp pushlanacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -103,6 +103,7 @@
 * 2026-05-19 — Karar: Favicon/app icon marka figürüyle paketlenecek. | Gerekçe: Vercel ve tarayıcı yüzeylerinde default ikon yerine Alışveriş Arkadaşım figürü görünmeli; koyu zeminlerde figür kaybolmamalı. | Etki: `src/app/favicon.ico`, `src/app/icon.png`, `src/app/apple-icon.png` mini-cart figüründen krem zemin ve turuncu çerçeveyle üretildi. | Alternatifler: Sadece favicon'u değiştirmek veya transparan figür kullanmak.
 * 2026-05-19 — Karar: Public repo kökü final teslim için sadeleştirilecek. | Gerekçe: Agent talimat dosyaları ve unused starter asset'ler ürün/jüri sunumu için görüntü kirliliği oluşturuyor. | Etki: `AGENTS.md`, `CLAUDE.md` ve unused `public/*.svg` starter asset'leri kaldırılır; roadmap/audit notları `docs/` altına taşınır; `PROJECT_MEMORY.md` korunur. | Alternatifler: Tüm iç notları kökte bırakmak veya tamamen silmek.
 * 2026-05-19 — Karar: README jüri ilk bakışına göre görselleştirilecek ve iç çalışma notları linklenmeyecek. | Gerekçe: GitHub ilk ekranı ürün değerini hızlı anlatmalı; iç roadmap/proje hafızası linkleri final ürün algısını zayıflatabilir. | Etki: `docs/assets/readme-demo.png` eklendi, "Neden Farklı?" bölümü yazıldı, roadmap dosyası kaldırıldı, `PROJECT_MEMORY.md` README/docs indekslerinden çıkarıldı. | Alternatifler: README'yi yalnızca metinsel bırakmak.
+* 2026-05-19 — Karar: Buyer Agent katalog dışı büyük mobilya isteklerini ürün önerisine çevirmeyecek. | Gerekçe: `koltuk takımı` prompt'u katalogda ürün yokken alakasız aksesuar önerileri üretebiliyordu. | Etki: `src/lib/agents/buyer-catalog-guardrails.ts` koltuk takımı, oturma grubu, kanepe, sofa, çekyat ve berjer terimlerini unsupported catalog boundary'ye alır; route 422, floating chat boundary döner. | Alternatifler: Benzer ürün önermek veya katalog dataset'ine koltuk ürünleri eklemek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -120,6 +121,7 @@
 * 2026-05-19 — Milestone: Branded app icons. | Sonuç: Favicon, app icon ve apple touch icon mini-cart figürüyle değiştirildi; icon dosyaları koyu header/tab zeminlerinde okunur olacak şekilde paketlendi.
 * 2026-05-19 — Milestone: Public repo cleanup. | Sonuç: Agent talimat dosyaları ve unused starter SVG asset'leri kaldırıldı; roadmap/audit dokümanları `docs/` altına taşındı.
 * 2026-05-19 — Milestone: README jury polish. | Sonuç: README ilk ekranına ürün preview görseli ve üç maddelik farklılaşma anlatısı eklendi; iç roadmap/proje hafızası linkleri kaldırıldı.
+* 2026-05-19 — Milestone: Buyer furniture guardrail. | Sonuç: Koltuk takımı gibi katalog dışı mobilya prompt'ları alakasız ürün önerisi yerine katalog boundary mesajına düşer.
 
 ## 8) Yapılanlar
 
@@ -139,6 +141,7 @@
 * [x] Favicon/app icon görselleri marka figürüyle değiştirildi.
 * [x] Public repo kökü sadeleştirildi; iç roadmap/audit dosyaları `docs/` altına taşındı.
 * [x] README ilk ekranı görsel ve net farklılaşma anlatısıyla güçlendirildi.
+* [x] Buyer Agent koltuk takımı prompt'u için katalog dışı boundary düzeltildi.
 
 ## 9) Yapılacaklar (Next)
 

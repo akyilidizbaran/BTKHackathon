@@ -1142,6 +1142,10 @@ async function validateBuyerAgentApiContracts() {
     buyerId: "buyer-aylin",
     prompt: "2000 TL altında PlayStation 5 öner.",
   });
+  const unsupportedFurniturePrompt = validateBuyerAgentRequest({
+    buyerId: "buyer-aylin",
+    prompt: "Salonum için koltuk takımı önerir misin?",
+  });
   const unsupportedNarrativeOverride = await getBuyerAgentApiData(
     {
       buyerId: "buyer-aylin",
@@ -1235,6 +1239,10 @@ async function validateBuyerAgentApiContracts() {
   assert(
     !unsupportedPrompt.ok && unsupportedPrompt.code === "BUYER_CATALOG_UNSUPPORTED_PROMPT",
     "buyer agent unsupported katalog prompt'u route validation'da engellenmeli",
+  );
+  assert(
+    !unsupportedFurniturePrompt.ok && unsupportedFurniturePrompt.code === "BUYER_CATALOG_UNSUPPORTED_PROMPT",
+    "buyer agent koltuk takımı gibi katalog dışı mobilya prompt'unu route validation'da engellemeli",
   );
   assert(
     !unsupportedNarrativeOverride.message.content.toLocaleLowerCase("tr-TR").includes("iphone") &&

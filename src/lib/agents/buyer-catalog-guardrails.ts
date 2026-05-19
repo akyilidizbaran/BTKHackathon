@@ -36,6 +36,14 @@ const unsupportedCatalogDetectors: Array<{
   { label: "buzdolabı", match: (prompt) => /\bbuzdolab/u.test(prompt) },
   { label: "çamaşır makinesi", match: (prompt) => /\b(?:çamaşır|camasir)\b/u.test(prompt) },
   { label: "bulaşık makinesi", match: (prompt) => /\b(?:bulaşık|bulasik)\b/u.test(prompt) },
+  {
+    label: "koltuk takımı",
+    match: (prompt) =>
+      /\b(?:koltuk\s*takımı|koltuk\s*takimi|oturma\s*grubu|salon\s*koltuğu|salon\s*koltugu|kanepe|sofa|çekyat|cekyat|berjer)\b/u.test(
+        prompt,
+      ) ||
+      (/\bkoltuk\b/u.test(prompt) && !includesAny(prompt, ["ofis", "çalışma", "calisma", "masa", "ergonom"])),
+  },
   { label: "ayakkabı", match: (prompt) => /\b(?:ayakkabı|ayakkabi|sneaker|bot)\b/u.test(prompt) },
   { label: "mont", match: (prompt) => /\b(?:mont|ceket|kaban)\b/u.test(prompt) },
   { label: "parfüm", match: (prompt) => /\b(?:parfüm|parfum)\b/u.test(prompt) },
