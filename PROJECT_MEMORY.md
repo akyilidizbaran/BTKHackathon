@@ -5,9 +5,9 @@
 * Şu an ne yapıyoruz?
   * GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı; public marka adı `Alışveriş Arkadaşım`.
 * Son değişiklik neydi?
-  * Vercel alias `https://alisveris-arkadasim.vercel.app` eklendi; GitHub repo `akyilidizbaran/alisveris-arkadasim` oldu.
+  * Vercel alias `https://alisveris-arkadasim.vercel.app` public çalışır hale getirildi; GitHub repo `akyilidizbaran/alisveris-arkadasim` oldu.
 * Bir sonraki net adım ne?
-  * Rename sonrası README/package metadata commitlenip yeni remote'a pushlanacak.
+  * Yarışma paylaşımı için yeni GitHub ve Vercel URL'leri kullanılacak.
 
 ## 1) Proje Amacı ve Kapsam
 
@@ -96,6 +96,7 @@
 * 2026-05-19 — Karar: Demo hero teknik milestone dili yerine kullanıcıya dönük metin kullanacak. | Gerekçe: Jüri/sunum ekranında 8R gibi iç faz kodları ve başlık içi dekoratif görseller dikkat dağıtıyordu. | Etki: `/demo` hero etiketi `Demo akışı` oldu; başlık contract metninden düz render edilir. | Alternatifler: Teknik etiketi alt bölümde tutmak.
 * 2026-05-19 — Karar: Demo kart arka planları local ve konuya bağlı asset'lerden beslenecek. | Gerekçe: Rastgele dış görsel servisi doğa fotoğrafları üretiyor ve demo anlatısıyla çelişiyordu. | Etki: `/public/demo/*-demo-bg.png` asset'leri eklendi; `/demo` kartları buyer catalog, seller audit ve floating agent bağlamını gösterir. | Alternatifler: Harici stock fotoğraf URL'leri kullanmak.
 * 2026-05-19 — Karar: Paylaşım adı `Alışveriş Arkadaşım`, teknik slug `alisveris-arkadasim` olacak. | Gerekçe: GitHub/Vercel URL'leri için boşluksuz ASCII slug güvenli; marka adı Türkçe olarak README, açıklama ve site içinde korunur. | Etki: GitHub repo, Vercel project, package metadata ve public alias yeni sluga taşındı; eski GitHub URL redirect eder. | Alternatifler: Eski `btk-hackathon` slug'ını korumak veya özel domain almak.
+* 2026-05-19 — Karar: Vercel SSO deployment protection paylaşım için kapatıldı, Git fork protection açık kaldı. | Gerekçe: Yeni slug'lı Vercel domainleri 401 dönüyordu; yarışma paylaşım linki public olmalı. | Etki: `https://alisveris-arkadasim.vercel.app` ve slug'lı deployment URL'leri 200 döner. | Alternatifler: Özel domain almak veya eski public domainle kalmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -148,6 +149,7 @@
 * Secret değerleri yalnızca local/Vercel env içinde tutulmalı.
 * Production env'ler Vercel'e eklendi; preview/development env'leri gerekirse panelden ayrıca eklenmeli.
 * Eski GitHub repo URL'si GitHub redirect'iyle çalışır; local remote yeni URL'ye güncellendi.
+* Vercel project protection durumunda SSO kapalı, Git fork protection açık.
 
 ### Güncelleme Kaydı
 
