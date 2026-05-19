@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * Gemini runtime varsayılanı tekrar `gemini-2.5-flash` oldu; CI validation provider'a duyarlı hale getirildi.
+  * Gemini runtime varsayılanı `gemini-2.5-flash`; transient 429/5xx Gemini hataları için adapter retry eklendi.
 * Bir sonraki net adım ne?
   * Vercel env değerleri girilip deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
 
@@ -284,6 +284,7 @@
 * 2026-05-19 — Karar: Paid plan doğrulaması sonrası Gemini 3 Flash için çalışan model kodu `gemini-3-flash-preview` kullanılacak. | Gerekçe: `gemini-3.0-flash` OpenAI-compatible endpoint'te 404 döndü; Google model listesi ve canlı smoke `gemini-3-flash-preview` kodunu doğruladı. | Etki: `defaultGeminiModel`, `.env.example`, local `.env.local`, validation contract'ı ve Vercel env notları `gemini-3-flash-preview` olarak güncellendi. | Alternatifler: `gemini-2.5-flash` ile kalmak veya geçersiz `gemini-3.0-flash` alias'ını kullanmak.
 * 2026-05-19 — Karar: GitHub CI maili sonrası runtime default model `gemini-2.5-flash` olarak kalacak; CI validation configured provider modelini bekleyecek. | Gerekçe: CI workflow güvenli şekilde `LLM_PROVIDER=deterministic` ile çalışıyor; validation'ın forced fallback testlerinde Gemini modelini zorlaması iki assertion'ı kırdı. | Etki: `.env.example`, `defaultGeminiModel`, local `.env.local` ve Gemini missing-key testleri `gemini-2.5-flash`; action/buyer explanation forced fallback assertion'ları `getConfiguredLlmModel()` ile provider'a duyarlı. | Alternatifler: CI env'ini Gemini yapmak veya validation'ı local `.env.local` varsayımına bağlı bırakmak.
 * 2026-05-19 — Karar: GitHub Actions workflow dependency action'ları `actions/checkout@v5` ve `actions/setup-node@v5` olacak. | Gerekçe: CI yeşile döndükten sonra GitHub annotation'ı v4 action'ların Node.js 20 runtime deprecation uyarısı verdi; v5 sürümleri Node.js 24 runtime'a geçiyor. | Etki: `.github/workflows/ci.yml` güncellendi; CI warning annotation'ı azaltılacak. | Alternatifler: Uyarıyı kabul etmek veya env ile geçici opt-in/opt-out yapmak.
+* 2026-05-19 — Karar: Gemini adapter transient HTTP 429/5xx ve request hatalarında kısa retry yapacak. | Gerekçe: LLM QA sırasında bazı görünür agent akışlarında ilk Gemini çağrısı `GEMINI_HTTP_503` ile deterministik fallback'e düştü; kullanıcıya canlı LLM çıktısı göstermeyi tercih ediyoruz. | Etki: `src/lib/llm/gemini.ts` 3 denemeye kadar backoff uygular; tüm nihai failure yolları deterministik fallback contract'ını korur. | Alternatifler: Tek denemeyle fallback'e devam etmek veya her endpoint içinde ayrı retry yazmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 

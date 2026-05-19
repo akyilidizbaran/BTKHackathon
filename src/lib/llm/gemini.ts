@@ -7,6 +7,8 @@ import {
 import type { GenerateTextInput, LlmTextGenerationResult } from "@/lib/llm/types";
 
 const geminiOpenAiCompatibleChatEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const geminiMaxAttempts = 3;
+const geminiRetryBaseDelayMs = 500;
 
 interface GeminiChatCompletionsResponseBody {
   choices?: Array<{
@@ -45,62 +47,87 @@ export async function generateGeminiText(input: GenerateTextInput): Promise<LlmT
     );
   }
 
-  try {
-    const response = await fetch(geminiOpenAiCompatibleChatEndpoint, {
-      body: JSON.stringify({
-        max_tokens: input.maxOutputTokens ?? defaultMaxOutputTokens,
-        messages: [
-          {
-            content: input.instructions,
-            role: "system",
-          },
-          {
-            content: input.input,
-            role: "user",
-          },
-        ],
+  let lastRequestError: NonNullable<LlmTextGenerationResult["error"]> | undefined;
+
+  for (let attempt = 1; attempt <= geminiMaxAttempts; attempt += 1) {
+    try {
+      const response = await fetch(geminiOpenAiCompatibleChatEndpoint, {
+        body: JSON.stringify({
+          max_tokens: input.maxOutputTokens ?? defaultMaxOutputTokens,
+          messages: [
+            {
+              content: input.instructions,
+              role: "system",
+            },
+            {
+              content: input.input,
+              role: "user",
+            },
+          ],
+          model,
+          ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
+          temperature: input.temperature ?? defaultTemperature,
+        }),
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json",
+        },
+        method: "POST",
+        signal: AbortSignal.timeout(25000),
+      });
+      const body = (await response.json()) as GeminiChatCompletionsResponseBody;
+
+      if (!response.ok) {
+        lastRequestError = {
+          code: body.error?.code || body.error?.status || `GEMINI_HTTP_${response.status}`,
+          message: body.error?.message || "Gemini API isteği başarısız oldu; deterministik fallback kullanıldı.",
+        };
+
+        if (isRetryableGeminiHttpStatus(response.status) && attempt < geminiMaxAttempts) {
+          await waitBeforeGeminiRetry(attempt);
+          continue;
+        }
+
+        return createFallbackResult(model, input.fallbackText, lastRequestError);
+      }
+
+      const text = extractGeminiOutputText(body).trim();
+
+      if (!text) {
+        return createFallbackResult(model, input.fallbackText, {
+          code: "GEMINI_EMPTY_OUTPUT",
+          message: "Gemini boş çıktı döndürdü; deterministik fallback kullanıldı.",
+        });
+      }
+
+      return {
+        generatedAt: new Date().toISOString(),
         model,
-        ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
-        temperature: input.temperature ?? defaultTemperature,
-      }),
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      method: "POST",
-      signal: AbortSignal.timeout(25000),
-    });
-    const body = (await response.json()) as GeminiChatCompletionsResponseBody;
+        provider: "gemini",
+        status: "generated",
+        text,
+      };
+    } catch (error) {
+      lastRequestError = {
+        code: "GEMINI_REQUEST_FAILED",
+        message: error instanceof Error ? error.message : "Gemini isteği tamamlanamadı.",
+      };
 
-    if (!response.ok) {
-      return createFallbackResult(model, input.fallbackText, {
-        code: body.error?.code || body.error?.status || `GEMINI_HTTP_${response.status}`,
-        message: body.error?.message || "Gemini API isteği başarısız oldu; deterministik fallback kullanıldı.",
-      });
+      if (attempt < geminiMaxAttempts) {
+        await waitBeforeGeminiRetry(attempt);
+        continue;
+      }
     }
-
-    const text = extractGeminiOutputText(body).trim();
-
-    if (!text) {
-      return createFallbackResult(model, input.fallbackText, {
-        code: "GEMINI_EMPTY_OUTPUT",
-        message: "Gemini boş çıktı döndürdü; deterministik fallback kullanıldı.",
-      });
-    }
-
-    return {
-      generatedAt: new Date().toISOString(),
-      model,
-      provider: "gemini",
-      status: "generated",
-      text,
-    };
-  } catch (error) {
-    return createFallbackResult(model, input.fallbackText, {
-      code: "GEMINI_REQUEST_FAILED",
-      message: error instanceof Error ? error.message : "Gemini isteği tamamlanamadı.",
-    });
   }
+
+  return createFallbackResult(
+    model,
+    input.fallbackText,
+    lastRequestError ?? {
+      code: "GEMINI_REQUEST_FAILED",
+      message: "Gemini isteği tamamlanamadı.",
+    },
+  );
 }
 
 function getGeminiReasoningEffort(model: string): "none" | undefined {
@@ -108,6 +135,16 @@ function getGeminiReasoningEffort(model: string): "none" | undefined {
   return /^gemini-2\.5-flash(?:-|$)/.test(model) || model === "gemini-3-flash-preview"
     ? "none"
     : undefined;
+}
+
+function isRetryableGeminiHttpStatus(status: number): boolean {
+  return status === 429 || status === 500 || status === 502 || status === 503 || status === 504;
+}
+
+async function waitBeforeGeminiRetry(attempt: number): Promise<void> {
+  await new Promise((resolve) => {
+    setTimeout(resolve, geminiRetryBaseDelayMs * attempt);
+  });
 }
 
 function extractGeminiOutputText(body: GeminiChatCompletionsResponseBody): string {
