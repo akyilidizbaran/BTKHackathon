@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * LLM runtime Gemini 3 Flash model kodu `gemini-3-flash-preview` kullanacak şekilde güncellendi.
+  * Gemini runtime varsayılanı tekrar `gemini-2.5-flash` oldu; CI validation provider'a duyarlı hale getirildi.
 * Bir sonraki net adım ne?
   * Vercel env değerleri girilip deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
 
@@ -282,6 +282,7 @@
 * 2026-05-18 — Karar: Supabase seed temizleme adımı transaction yerine sıralı `deleteMany` çağrılarıyla yapılacak. | Gerekçe: Supabase pooler üzerinde başlangıç transaction'ı `P2028 Unable to start a transaction` hatası verebildi; seed idempotency için atomiklikten çok tekrar çalıştırılabilirlik önemli. | Etki: `prisma/seed.ts` önce ilişkili tabloları sırayla temizler, sonra aynı mock commerce datasını tekrar yazar. | Alternatifler: Transaction timeout değerini artırmak veya seed'i yalnızca boş DB'de çalıştırmak.
 * 2026-05-19 — Karar: Deploy öncesi runtime LLM varsayılanı Gemini'ye taşınacak ve Gemini model default'u `gemini-2.5-flash` olacak. | Gerekçe: Hackathon final provider hedefi Gemini; preview model app-level JSON route'larında timeout riski gösterdiği için stable Flash model demo açısından daha güvenli. | Etki: `src/lib/llm/common.ts`, `src/lib/llm/gemini.ts`, `.env.example`, `scripts/validate-workflows.js`, local `.env.local` ve Vercel env beklentileri Gemini'ye göre güncellendi. | Alternatifler: OpenAI varsayılanını korumak veya `gemini-3-flash-preview` ile devam etmek.
 * 2026-05-19 — Karar: Paid plan doğrulaması sonrası Gemini 3 Flash için çalışan model kodu `gemini-3-flash-preview` kullanılacak. | Gerekçe: `gemini-3.0-flash` OpenAI-compatible endpoint'te 404 döndü; Google model listesi ve canlı smoke `gemini-3-flash-preview` kodunu doğruladı. | Etki: `defaultGeminiModel`, `.env.example`, local `.env.local`, validation contract'ı ve Vercel env notları `gemini-3-flash-preview` olarak güncellendi. | Alternatifler: `gemini-2.5-flash` ile kalmak veya geçersiz `gemini-3.0-flash` alias'ını kullanmak.
+* 2026-05-19 — Karar: GitHub CI maili sonrası runtime default model `gemini-2.5-flash` olarak kalacak; CI validation configured provider modelini bekleyecek. | Gerekçe: CI workflow güvenli şekilde `LLM_PROVIDER=deterministic` ile çalışıyor; validation'ın forced fallback testlerinde Gemini modelini zorlaması iki assertion'ı kırdı. | Etki: `.env.example`, `defaultGeminiModel`, local `.env.local` ve Gemini missing-key testleri `gemini-2.5-flash`; action/buyer explanation forced fallback assertion'ları `getConfiguredLlmModel()` ile provider'a duyarlı. | Alternatifler: CI env'ini Gemini yapmak veya validation'ı local `.env.local` varsayımına bağlı bırakmak.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -1701,13 +1702,13 @@
   * Runtime LLM provider varsayılanı OpenAI yerine Gemini oldu.
 * Kapsam:
   * `src/lib/llm/common.ts` içinde `defaultLlmProvider` `gemini` olarak değişti.
-  * `defaultGeminiModel` ve `.env.example` içindeki `GEMINI_MODEL` paid plan doğrulaması sonrası `gemini-3-flash-preview` oldu.
+  * `defaultGeminiModel` ve `.env.example` içindeki `GEMINI_MODEL` CI maili sonrası tekrar `gemini-2.5-flash` oldu.
   * `src/lib/llm/gemini.ts` Gemini Flash JSON contract çağrılarında `reasoning_effort: none` gönderir; aksi halde düşünme tokenları kısa JSON contract yanıtlarını kesebiliyor.
   * `.env.example` varsayılanı `LLM_PROVIDER=gemini` oldu.
-  * `scripts/validate-workflows.js` default model contract beklentileri Gemini default'una taşındı.
+  * `scripts/validate-workflows.js` missing-key Gemini contract'ını `gemini-2.5-flash` ile doğrular; forced fallback model assertion'ları CI'daki configured provider'a göre çalışır.
   * Local `.env.local` içinde `LLM_PROVIDER=gemini` ve `GEMINI_API_KEY` ayarlandı; secret repo'ya commitlenmez.
 * Deploy notu:
-  * Vercel environment içinde `LLM_PROVIDER=gemini`, `GEMINI_MODEL=gemini-3-flash-preview` ve `GEMINI_API_KEY` ayrıca tanımlanmalıdır.
+  * Vercel environment içinde `LLM_PROVIDER=gemini`, `GEMINI_MODEL=gemini-2.5-flash` ve `GEMINI_API_KEY` ayrıca tanımlanmalıdır.
 
 ### Güncelleme Kaydı
 

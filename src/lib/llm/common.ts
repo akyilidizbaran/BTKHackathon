@@ -2,7 +2,7 @@ import type { LlmGenerationError, LlmProvider, LlmTextGenerationResult, RuntimeL
 
 export const defaultLlmProvider: RuntimeLlmProvider = "gemini";
 export const defaultOpenAiModel = "gpt-4o-mini";
-export const defaultGeminiModel = "gemini-3-flash-preview";
+export const defaultGeminiModel = "gemini-2.5-flash";
 export const defaultMaxOutputTokens = 700;
 export const defaultTemperature = 0.2;
 

@@ -237,7 +237,7 @@ async function validateLlmProviderContracts() {
     assert(deterministic.text === "fallback-ok", "deterministic fallback text yanlış");
 
     process.env.LLM_PROVIDER = "gemini";
-    process.env.GEMINI_MODEL = "gemini-3-flash-preview";
+    process.env.GEMINI_MODEL = "gemini-2.5-flash";
     delete process.env.GEMINI_API_KEY;
 
     const missingGeminiKey = await generateLlmText({
@@ -248,7 +248,7 @@ async function validateLlmProviderContracts() {
 
     assert(missingGeminiKey.status === "fallback", "Gemini key yokken fallback dönmeli");
     assert(missingGeminiKey.provider === "deterministic", "Gemini key yokken deterministic provider dönmeli");
-    assert(missingGeminiKey.model === "gemini-3-flash-preview", "Gemini fallback model contract yanlış");
+    assert(missingGeminiKey.model === "gemini-2.5-flash", "Gemini fallback model contract yanlış");
     assert(missingGeminiKey.error?.code === "GEMINI_API_KEY_MISSING", "Gemini missing key code yanlış");
 
     process.env.LLM_PROVIDER = "unsupported-provider";
@@ -892,8 +892,8 @@ async function validateSellerActionExplanationApiContracts() {
   assert(restockExplanation.explanation.status === "fallback", "forced action explanation fallback dönmeli");
   assert(restockExplanation.explanation.provider === "deterministic", "forced action explanation provider deterministic olmalı");
   assert(
-    restockExplanation.explanation.model === getLlmModelForProvider("gemini"),
-    "action explanation default model gemini olmalı",
+    restockExplanation.explanation.model === getConfiguredLlmModel(),
+    "action explanation configured model contract yanlış",
   );
   assert(restockExplanation.explanation.headline.length > 0, "action explanation headline eksik");
   assert(restockExplanation.explanation.summary.length > 0, "action explanation summary eksik");
@@ -2058,8 +2058,8 @@ async function validateBuyerSmartCartExplanationApiContracts() {
   assert(explanation.explanation.status === "fallback", "forced buyer explanation fallback dönmeli");
   assert(explanation.explanation.provider === "deterministic", "forced buyer explanation provider deterministic olmalı");
   assert(
-    explanation.explanation.model === getLlmModelForProvider("gemini"),
-    "buyer explanation default model gemini olmalı",
+    explanation.explanation.model === getConfiguredLlmModel(),
+    "buyer explanation configured model contract yanlış",
   );
   assert(explanation.explanation.headline.length > 0, "buyer explanation headline eksik");
   assert(explanation.explanation.summary.length > 0, "buyer explanation summary eksik");
