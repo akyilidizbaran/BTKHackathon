@@ -212,17 +212,15 @@ async function validateLlmProviderContracts() {
   const previousEnv = snapshotLlmEnv();
 
   try {
-    assert(normalizeLlmProvider("openai") === "openai", "LLM provider openai normalize edilemedi");
     assert(normalizeLlmProvider("Gemini") === "gemini", "LLM provider gemini normalize edilemedi");
     assert(normalizeLlmProvider("deterministic") === "deterministic", "LLM provider deterministic normalize edilemedi");
     assert(!normalizeLlmProvider("anthropic"), "unsupported LLM provider normalize edilmemeli");
     assert(
-      getLlmModelForProvider("openai") === (process.env.OPENAI_MODEL?.trim() || "gpt-4o-mini"),
-      "OpenAI default model contract yanlış",
+      getLlmModelForProvider("gemini") === (process.env.GEMINI_MODEL?.trim() || "gemini-2.5-flash"),
+      "Gemini default model contract yanlış",
     );
 
     process.env.LLM_PROVIDER = "deterministic";
-    delete process.env.OPENAI_API_KEY;
     delete process.env.GEMINI_API_KEY;
 
     const deterministic = await generateLlmText({
@@ -323,8 +321,6 @@ function snapshotLlmEnv() {
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
     GEMINI_MODEL: process.env.GEMINI_MODEL,
     LLM_PROVIDER: process.env.LLM_PROVIDER,
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    OPENAI_MODEL: process.env.OPENAI_MODEL,
   };
 }
 

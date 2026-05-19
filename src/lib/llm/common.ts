@@ -1,7 +1,6 @@
 import type { LlmGenerationError, LlmProvider, LlmTextGenerationResult, RuntimeLlmProvider } from "@/lib/llm/types";
 
 export const defaultLlmProvider: RuntimeLlmProvider = "gemini";
-export const defaultOpenAiModel = "gpt-4o-mini";
 export const defaultGeminiModel = "gemini-2.5-flash";
 export const defaultMaxOutputTokens = 700;
 export const defaultTemperature = 0.2;
@@ -9,7 +8,7 @@ export const defaultTemperature = 0.2;
 export function normalizeLlmProvider(value: string | undefined): LlmProvider | undefined {
   const normalized = value?.trim().toLowerCase();
 
-  if (normalized === "openai" || normalized === "gemini" || normalized === "deterministic") {
+  if (normalized === "gemini" || normalized === "deterministic") {
     return normalized;
   }
 
@@ -28,10 +27,8 @@ export function getLlmModelForProvider(provider: LlmProvider): string {
   switch (provider) {
     case "gemini":
       return process.env.GEMINI_MODEL?.trim() || defaultGeminiModel;
-    case "openai":
-      return process.env.OPENAI_MODEL?.trim() || defaultOpenAiModel;
     case "deterministic":
-      return process.env.OPENAI_MODEL?.trim() || defaultOpenAiModel;
+      return process.env.GEMINI_MODEL?.trim() || defaultGeminiModel;
   }
 }
 

@@ -1,4 +1,4 @@
-export type LlmProvider = "openai" | "gemini" | "deterministic";
+export type LlmProvider = "gemini" | "deterministic";
 export type RuntimeLlmProvider = Exclude<LlmProvider, "deterministic">;
 
 export interface LlmGenerationError {

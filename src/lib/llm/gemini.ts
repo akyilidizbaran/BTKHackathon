@@ -6,21 +6,35 @@ import {
 } from "@/lib/llm/common";
 import type { GenerateTextInput, LlmTextGenerationResult } from "@/lib/llm/types";
 
-const geminiOpenAiCompatibleChatEndpoint = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const geminiGenerateContentBaseUrl = "https://generativelanguage.googleapis.com/v1beta/models";
 const geminiMaxAttempts = 3;
 const geminiRetryBaseDelayMs = 500;
 
-interface GeminiChatCompletionsResponseBody {
-  choices?: Array<{
-    message?: {
-      content?: string | Array<{
+interface GeminiGenerateContentRequestBody {
+  contents: Array<{
+    parts: Array<{
+      text: string;
+    }>;
+  }>;
+  generationConfig: {
+    maxOutputTokens: number;
+    temperature: number;
+    thinkingConfig?: {
+      thinkingBudget: number;
+    };
+  };
+}
+
+interface GeminiGenerateContentResponseBody {
+  candidates?: Array<{
+    content?: {
+      parts?: Array<{
         text?: string;
-        type?: string;
       }>;
     };
   }>;
   error?: {
-    code?: string;
+    code?: number | string;
     message?: string;
     status?: string;
   };
@@ -33,7 +47,7 @@ export function getGeminiModel(): string {
 export async function generateGeminiText(input: GenerateTextInput): Promise<LlmTextGenerationResult> {
   const model = getGeminiModel();
   const apiKey = process.env.GEMINI_API_KEY?.trim();
-  const reasoningEffort = getGeminiReasoningEffort(model);
+  const endpoint = getGeminiGenerateContentEndpoint(model);
 
   if (!apiKey) {
     return createFallbackResult(
@@ -51,35 +65,20 @@ export async function generateGeminiText(input: GenerateTextInput): Promise<LlmT
 
   for (let attempt = 1; attempt <= geminiMaxAttempts; attempt += 1) {
     try {
-      const response = await fetch(geminiOpenAiCompatibleChatEndpoint, {
-        body: JSON.stringify({
-          max_tokens: input.maxOutputTokens ?? defaultMaxOutputTokens,
-          messages: [
-            {
-              content: input.instructions,
-              role: "system",
-            },
-            {
-              content: input.input,
-              role: "user",
-            },
-          ],
-          model,
-          ...(reasoningEffort ? { reasoning_effort: reasoningEffort } : {}),
-          temperature: input.temperature ?? defaultTemperature,
-        }),
+      const response = await fetch(endpoint, {
+        body: JSON.stringify(createGeminiGenerateContentBody(input, model)),
         headers: {
-          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
+          "x-goog-api-key": apiKey,
         },
         method: "POST",
         signal: AbortSignal.timeout(25000),
       });
-      const body = (await response.json()) as GeminiChatCompletionsResponseBody;
+      const body = (await response.json()) as GeminiGenerateContentResponseBody;
 
       if (!response.ok) {
         lastRequestError = {
-          code: body.error?.code || body.error?.status || `GEMINI_HTTP_${response.status}`,
+          code: String(body.error?.code || body.error?.status || `GEMINI_HTTP_${response.status}`),
           message: body.error?.message || "Gemini API isteği başarısız oldu; deterministik fallback kullanıldı.",
         };
 
@@ -130,11 +129,35 @@ export async function generateGeminiText(input: GenerateTextInput): Promise<LlmT
   );
 }
 
-function getGeminiReasoningEffort(model: string): "none" | undefined {
-  // Gemini Flash reasoning can consume the short response budget; JSON contracts need tokens for the body.
-  return /^gemini-2\.5-flash(?:-|$)/.test(model) || model === "gemini-3-flash-preview"
-    ? "none"
-    : undefined;
+function getGeminiGenerateContentEndpoint(model: string): string {
+  return `${geminiGenerateContentBaseUrl}/${encodeURIComponent(model)}:generateContent`;
+}
+
+function createGeminiGenerateContentBody(input: GenerateTextInput, model: string): GeminiGenerateContentRequestBody {
+  return {
+    contents: [
+      {
+        parts: [
+          {
+            text: `${input.instructions.trim()}\n\n${input.input.trim()}`,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      maxOutputTokens: input.maxOutputTokens ?? defaultMaxOutputTokens,
+      temperature: input.temperature ?? defaultTemperature,
+      ...getGeminiThinkingConfig(model),
+    },
+  };
+}
+
+function getGeminiThinkingConfig(model: string): Pick<
+  GeminiGenerateContentRequestBody["generationConfig"],
+  "thinkingConfig"
+> {
+  // Short JSON contracts need the output budget reserved for the response body.
+  return /^gemini-2\.5-flash(?:-|$)/.test(model) ? { thinkingConfig: { thinkingBudget: 0 } } : {};
 }
 
 function isRetryableGeminiHttpStatus(status: number): boolean {
@@ -147,16 +170,10 @@ async function waitBeforeGeminiRetry(attempt: number): Promise<void> {
   });
 }
 
-function extractGeminiOutputText(body: GeminiChatCompletionsResponseBody): string {
-  const content = body.choices?.[0]?.message?.content;
-
-  if (typeof content === "string") {
-    return content;
-  }
-
+function extractGeminiOutputText(body: GeminiGenerateContentResponseBody): string {
   return (
-    content
-      ?.map((item) => item.text)
+    body.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text)
       .filter((text): text is string => Boolean(text))
       .join("\n") ?? ""
   );

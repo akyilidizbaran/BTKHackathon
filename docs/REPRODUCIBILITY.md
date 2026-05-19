@@ -28,15 +28,11 @@ Desteklenen ortam değişkeni isimleri:
 
 ```text
 LLM_PROVIDER
-OPENAI_MODEL
-OPENAI_API_KEY
 GEMINI_MODEL
 GEMINI_API_KEY
 ```
 
 Repo API key olmadan da incelenebilir. Provider eksikse veya erişilemiyorsa desteklenen akışlar deterministik fallback davranışına döner.
-
-Hackathon teslimi için hedef demo yolu Gemini veya deterministik fallback ile anlatılmalıdır. OpenAI adapter'ı, provider bağımsız mimariyi göstermek ve lokal geliştirme esnekliği sağlamak için kodda durur; final sunumun ana iddiası OpenAI bağımlılığı değildir.
 
 ## 2. Tek Komutla Doğrulama
 
@@ -136,7 +132,6 @@ src/lib/llm
 
 Desteklenen modlar:
 
-- `openai`
 - `gemini`
 - `deterministic`
 

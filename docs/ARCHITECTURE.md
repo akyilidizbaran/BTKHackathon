@@ -58,7 +58,7 @@ src/lib/api
   App Router page'leri ve API route'ları tarafından paylaşılan typed contract builder'lar.
 
 src/lib/llm
-  Provider-neutral text/JSON generation, OpenAI adapter, Gemini adapter,
+  Provider-neutral text/JSON generation, native Gemini adapter,
   deterministic fallback, JSON extraction ve normalization helper'ları.
 
 src/lib/agents
@@ -139,14 +139,12 @@ LLM katmanı provider bağımsız tasarlanmıştır.
 
 - `src/lib/llm/index.ts`
 - `src/lib/llm/common.ts`
-- `src/lib/llm/openai.ts`
 - `src/lib/llm/gemini.ts`
 - `src/lib/llm/json.ts`
 - `src/lib/llm/types.ts`
 
 Desteklenen sağlayıcı modları:
 
-- `openai`
 - `gemini`
 - `deterministic`
 
@@ -154,13 +152,9 @@ Ortam değişkeni isimleri:
 
 ```text
 LLM_PROVIDER
-OPENAI_MODEL
-OPENAI_API_KEY
 GEMINI_MODEL
 GEMINI_API_KEY
 ```
-
-Hackathon sunumunda ana pozisyon Gemini veya deterministik fallback olmalıdır. OpenAI adapter'ı provider abstraction kanıtı ve lokal geliştirme esnekliği için bulunur.
 
 Structured generation `generateLlmJson<T>()` üzerinden yapılır. Bu helper JSON çıkarır, string/array normalize eder, caller-provided validator çalıştırır ve parsing/validation başarısız olursa deterministik fallback'e döner.
 

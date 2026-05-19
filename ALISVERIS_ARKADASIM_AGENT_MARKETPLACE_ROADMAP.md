@@ -61,7 +61,7 @@
   * `Kozmetik`
   * `Spor`
   * `Aksesuar`
-* Buyer Agent ChatGPT benzeri bir sohbet alanı olacak.
+* Buyer Agent sohbet tabanlı bir alışveriş alanı olacak.
   * Kullanıcı örnek komut: `3000 TL altı limitli old-money kazak ve pantolon getir`.
   * Agent yalnızca katalogdaki mevcut ürünlerden seçim yapacak; katalogda yoksa ürün uydurmayacak.
   * Eksik kategori/ürün ihtiyacı varsa katalog Milestone 8E veya sonrasında büyütülecek.
@@ -127,7 +127,7 @@
   * Ürün yoksa kısa empty state.
   * Ürün varsa satır satır ürünler, toplam, adet kontrolleri ve checkout mock.
 * `/buyer/agent`
-  * ChatGPT benzeri alıcı agent sohbeti.
+  * Sohbet tabanlı alıcı agent deneyimi.
   * Ürün kartları chat içinde görselleşir.
   * Onay sonrası sepet mutation yapar.
 * `/buyer/profile`
@@ -321,11 +321,9 @@
   * 8E'de kontrollü mock/generated ürün görsel seti tek sprite olarak başlatıldı.
   * Ürün görselleri marketplace hissi için kritik kabul edilir; sprite yeterli kalmazsa ürün bazlı görsel seti sonraki milestone'larda genişletilebilir.
 * Provider:
-  * Şimdilik OpenAI kalacak.
+  * Final runtime sağlayıcısı Gemini'dir.
   * `LLM_PROVIDER` provider seçim noktası olarak korunacak.
-  * Gemini final provider swap Milestone 9A kapsamına alınacak.
-  * `LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md` OpenAI ile geliştirilip Gemini'ye taşınacak 7 aşamalı LLM/Agent planının ana kaynağıdır.
-  * 2026-05-16 itibarıyla adım 1 tamamlandı: `generateLlmText` provider-neutral hale geldi, Gemini OpenAI-compatible adapter eklendi ve `GEMINI_MODEL` env contract'ı tanımlandı.
+  * 2026-05-16 itibarıyla adım 1 tamamlandı: `generateLlmText` provider-neutral hale geldi, Gemini adapter'ı eklendi ve `GEMINI_MODEL` env contract'ı tanımlandı.
   * 2026-05-16 itibarıyla adım 2 tamamlandı: `generateLlmJson<T>()`, shared JSON parser/normalizer ve validation fallback contract'ı kuruldu.
   * 2026-05-16 itibarıyla adım 3 tamamlandı: Buyer Agent POST akışı LLM destekli message/ranking/reason/risk/strategy orchestration üretir; initial render deterministic kalır.
   * 2026-05-16 itibarıyla adım 4 tamamlandı: Seller Agent POST akışı LLM destekli activeFocus/product ranking/action ranking/reason/draft orchestration üretir; initial render deterministic kalır ve listing mutation onay/apply contract'ı korunur.
@@ -341,7 +339,7 @@
 | 8D | IA ve navigasyon reset | Buyer/seller header/sidebar tekrarını kaldırmak, endpoint haritasını uygulamaya hazırlamak | Buyer header `Ürünler/Sepet/Agent/Profil`; seller header sade; sidebar tekrarı yok |
 | 8E | Buyer catalog data + ürün grid | Çok ürünlü klasik e-ticaret ürünler ekranı kurmak | Tamamlandı: 7 görselli kategori, kampanya chip'leri, `GET /api/buyer/catalog`, 48 fotoğraflı ürün kartı ve görünür sepete ekle aksiyonu |
 | 8F | Buyer product detail + cart state | Ürün satış detay penceresi ve sepeti gerçek etkileşimli hale getirmek | Tamamlandı: `/buyer/products/[slug]` detail, ürün ekle/sil/adet/toplam, checkout mock ve `localStorage` sepet state'i çalışır |
-| 8G | Buyer agent page | ChatGPT benzeri alıcı agent sayfasını kurmak | Tamamlandı: Prompt -> görselli ürün önerisi -> onay sorusu -> sepete ekle/değiştir akışı çalışır |
+| 8G | Buyer agent page | Sohbet tabanlı alıcı agent sayfasını kurmak | Tamamlandı: Prompt -> görselli ürün önerisi -> onay sorusu -> sepete ekle/değiştir akışı çalışır |
 | 8H | Buyer profile | Agent kişiselleştirme ve kullanıcı yorumları sayfasını kurmak | Tamamlandı: Profil notu, tercih checkbox'ları, bütçe/renk kontrolleri, yorum geçmişi, learned signals ve `localStorage` taslak persistence çalışır |
 | 8I | Seller IA + overview endpoints | Satıcı ana sayfayı kısa uyarı kartları ve endpoint linkleriyle kurmak | Tamamlandı: 4 alert card, priority queue, route/API hedefleri, ürün görselleri ve validation kontrolleri çalışır |
 | 8J | Seller products | Fotoğraflı satıcı ürün yönetimi ekranı | Tamamlandı: Fotoğraflı ürün listesi, segment/search/sort filtreleri, focus query, risk sinyalleri, linked action ve validation kontrolleri çalışır |
@@ -353,7 +351,7 @@
 | 8P | Seller mock mutations + audit | Satıcı agent'ın onaylı listing mutation yapması | Tamamlandı: `/seller/agent` before/after listing preview gösterir; `/api/seller/agent/apply` shared mutation/audit contract'ı döndürür; route UI `applySellerListingMutation` ve `rollbackSellerListingMutation` ile localStorage mock state, audit log ve rollback çalıştırır |
 | 8Q | Floating Agent mini panel + proactive signals | Route agent oturduktan sonra sağ alt Agent deneyimini eklemek | Tamamlandı: tüm buyer/seller sayfalarında Codex pet benzeri ikon görünür; panel `8Q.1` runtime, shared history/control state, buyer cart apply, seller listing apply/rollback, context-aware badge/balon ve `Gizle`/`Sessize al`/`Bu sayfada uyarma` kontrolleriyle çalışır |
 | 8R | End-to-end demo hardening | Buyer ve seller demo akışlarını parlatmak | Tamamlandı: `/demo` rehearsal command center, typed runbook contract, QA checklist, gateway demo link'i, browser QA, check/build ve validation çalışır |
-| 9A | Gemini/provider finalization | OpenAI geçici provider'dan final Gemini/provider yapısına geçmek | Buyer/seller/agent contract'ları Gemini ile generated döner |
+| 9A | Gemini/provider finalization | Final Gemini/provider yapısını doğrulamak | Buyer/seller/agent contract'ları Gemini ile generated döner |
 
 ## 8) Demo Senaryoları
 

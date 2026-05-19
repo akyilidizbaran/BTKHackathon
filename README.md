@@ -55,8 +55,6 @@ http://localhost:3000
 
 Uygulama API key olmadan da incelenebilir. LLM key yoksa desteklenen akışlar deterministik fallback davranışına döner.
 
-Hackathon tesliminde demo anlatısı Gemini veya deterministik fallback üzerinden kurulmalıdır. OpenAI adapter'ı provider bağımsız mimariyi göstermek ve lokal geliştirme esnekliği sağlamak için kodda durur; final sunumun ana iddiası OpenAI bağımlılığı değildir.
-
 ## Güncel Durum
 
 Alışveriş Arkadaşım, teslim edilebilir hackathon MVP seviyesindedir.
@@ -66,7 +64,7 @@ Bilinçli olarak gerçek olan kısımlar:
 - Buyer ve seller uygulama yüzeyleri Next.js App Router, React, TypeScript ve Tailwind CSS ile geliştirildi.
 - Product health, stock risk, review risk, return risk, profitability, listing quality ve promotion readiness için deterministik commerce scoring katmanı var.
 - Buyer Agent ve Seller Agent API contract'ları LLM destekli orchestration ile çalışır.
-- OpenAI, Gemini ve deterministic fallback destekleyen provider bağımsız LLM katmanı var.
+- Gemini ve deterministic fallback destekleyen provider bağımsız LLM katmanı var.
 - LLM çıktıları UI veya apply contract'larına girmeden önce structured JSON parsing ve validation'dan geçer.
 - Catalog hallucination, role mismatch, stale LLM action prompt ve onaysız mutation davranışlarını engelleyen guardrail'ler var.
 - Buyer cart apply ve seller listing apply akışları açık kullanıcı onayı ister.
@@ -125,7 +123,7 @@ src/lib/api
   UI ve route handler'ların kullandığı typed API contract builder'ları
 
 src/lib/llm
-  provider bağımsız LLM adapter'ları, structured JSON generation, parsing, fallback
+  Gemini adapter'ı, structured JSON generation, parsing ve fallback
 
 src/lib/agents
   runtime registry, guardrail'ler, apply contract'ları, local apply helper'ları, floating context
@@ -269,8 +267,6 @@ Desteklenen ortam değişkeni isimleri:
 
 ```text
 LLM_PROVIDER
-OPENAI_MODEL
-OPENAI_API_KEY
 GEMINI_MODEL
 GEMINI_API_KEY
 DATA_SOURCE
@@ -283,8 +279,8 @@ DIRECT_URL
 
 Notlar:
 
-- `LLM_PROVIDER=gemini`, Gemini OpenAI-compatible adapter'ını kullanır.
-- `LLM_PROVIDER=openai`, OpenAI adapter'ını kullanır.
+- `LLM_PROVIDER=gemini`, native Gemini adapter'ını kullanır.
+- `LLM_PROVIDER=deterministic`, harici servis çağırmadan fallback contract'larını kullanır.
 - Eksik key veya provider hatası durumunda desteklenen akışlar deterministik fallback'e döner.
 - Gerçek API key asla commitlenmemelidir.
 - Supabase Postgres kurulumu için [docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md) dosyasındaki adımları izleyin.
@@ -298,7 +294,7 @@ Notlar:
 - UI motion için GSAP ve `@gsap/react`
 - Phosphor Icons
 - Vitest, jsdom, React Testing Library ve User Event
-- OpenAI, Gemini ve deterministic fallback için provider bağımsız LLM adapter katmanı
+- Gemini ve deterministic fallback için provider bağımsız LLM adapter katmanı
 
 ## Önemli Dokümanlar
 
@@ -310,7 +306,6 @@ Notlar:
 - [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) - beklenen `npm run validate:workflows` çıktısı ve neyi kanıtladığı.
 - [docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md) - Supabase Postgres kurulumu, Prisma migration ve mock dataset seed adımları.
 - [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - teknik denetim, smoke sonuçları, component extraction durumu, mock/lokal envanter ve öncelikler.
-- [LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md](LLM_AGENT_PROVIDER_INDEPENDENT_PLAN.md) - provider bağımsız LLM ve agent uygulama planı.
 - [ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md](ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md) - ürün ve milestone roadmap'i.
 
 ## Bilinen Teknik Borçlar

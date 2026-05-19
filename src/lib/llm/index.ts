@@ -12,7 +12,6 @@ import {
   normalizeLlmStringArray,
   parseLlmJsonObject,
 } from "@/lib/llm/json";
-import { generateOpenAiText } from "@/lib/llm/openai";
 import type {
   GenerateJsonInput,
   GenerateTextInput,
@@ -49,8 +48,6 @@ export async function generateLlmText(input: GenerateTextInput): Promise<LlmText
   const provider = normalizeLlmProvider(requestedProvider);
 
   switch (provider) {
-    case "openai":
-      return generateOpenAiText(input);
     case "gemini":
       return generateGeminiText(input);
     case "deterministic":
@@ -119,7 +116,7 @@ async function getJsonTextGenerationResult<T>(
     return {
       generatedAt: new Date().toISOString(),
       model: getConfiguredLlmModel(),
-      provider: input.modelTextOverrideProvider ?? "openai",
+      provider: input.modelTextOverrideProvider ?? "gemini",
       status: "generated",
       text: input.modelTextOverride,
     };

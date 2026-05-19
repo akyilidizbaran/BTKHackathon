@@ -49,8 +49,6 @@ API key yoksa desteklenen akışlar deterministik fallback'e döner. CI şu modd
 LLM_PROVIDER=deterministic
 ```
 
-Not: OpenAI adapter'ı provider bağımsızlığı göstermek ve lokal geliştirme için tutulur. Jüri sunumunda ana hikaye Gemini veya deterministic fallback olmalıdır.
-
 ## 2. Demo Öncesi Kontroller
 
 Sunumdan önce çalıştırın:

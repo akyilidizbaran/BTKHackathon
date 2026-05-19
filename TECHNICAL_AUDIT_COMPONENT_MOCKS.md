@@ -34,9 +34,9 @@ API smoke testi:
 * `GET /api/buyer/catalog` 48 ürün döndürdü.
 * `POST /api/agent/floating` sohbet sorusunda `mode=chat` döndürdü.
 * `POST /api/agent/floating` buyer aksiyonunda `mode=buyer-agent` döndürdü.
-* `POST /api/buyer/agent` OpenAI tarafından üretilmiş öneriler döndürdü.
-* `POST /api/seller/agent` OpenAI tarafından üretilmiş satıcı bulguları döndürdü.
-* `POST /api/review-intelligence` OpenAI tarafından üretilmiş review intelligence çıktısı döndürdü.
+* `POST /api/buyer/agent` canlı LLM tarafından üretilmiş öneriler döndürdü.
+* `POST /api/seller/agent` canlı LLM tarafından üretilmiş satıcı bulguları döndürdü.
+* `POST /api/review-intelligence` canlı LLM tarafından üretilmiş review intelligence çıktısı döndürdü.
 * `GET /api/seller/products`, `/api/seller/actions`, `/api/seller/profile`, `/api/buyer/profile` başarılı döndü.
 
 Teknik inceleyici kanıt route tablosu:

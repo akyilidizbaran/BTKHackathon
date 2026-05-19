@@ -83,7 +83,6 @@ function formatProvider(provider: string): string {
   const providers: Record<string, string> = {
     deterministic: "Deterministic",
     gemini: "Gemini",
-    openai: "OpenAI",
   };
 
   return providers[provider] ?? provider;
