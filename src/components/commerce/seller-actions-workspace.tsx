@@ -407,8 +407,8 @@ function ActionQueueCard({
 
       <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_158px]">
         <div className="grid gap-2 sm:grid-cols-3">
-          {card.evidence.map((item) => (
-            <ActionEvidenceMetric key={`${card.id}-${item.label}`} item={item} />
+          {card.evidence.map((item, index) => (
+            <ActionEvidenceMetric key={createActionEvidenceMetricKey(card.id, item, index)} item={item} />
           ))}
         </div>
 
@@ -503,6 +503,14 @@ function SelectedActionRail({ card }: { card: SellerActionListItem }) {
       </div>
     </div>
   );
+}
+
+function createActionEvidenceMetricKey(
+  cardId: string,
+  item: SellerActionListItem["evidence"][number],
+  index: number,
+) {
+  return `${cardId}-${item.label}-${item.value}-${item.helper}-${index}`;
 }
 
 function ActionEvidenceMetric({ item }: { item: SellerActionListItem["evidence"][number] }) {

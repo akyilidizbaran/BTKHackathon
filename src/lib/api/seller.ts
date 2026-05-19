@@ -1082,7 +1082,7 @@ function createSellerActionListEvidence(
   const firstMetric = action.metricHighlights[0];
   const secondMetric = action.metricHighlights[1];
 
-  return [
+  const evidence: SellerActionListEvidence[] = [
     {
       helper: firstMetric?.helperText ?? action.timeHorizonLabel,
       label: firstMetric?.label ?? "Öncelik",
@@ -1095,13 +1095,18 @@ function createSellerActionListEvidence(
       tone: productRiskCount > 0 ? "warning" : "calm",
       value: secondMetric?.value ?? String(affectedProducts.length),
     },
-    {
+  ];
+
+  if (!evidence.some((item) => item.label === "Ürün sağlığı")) {
+    evidence.push({
       helper: primaryProduct?.healthLabel ?? "Ürün kanıtı yok",
       label: "Ürün sağlığı",
       tone: primaryProduct && primaryProduct.healthScore < 70 ? "warning" : "good",
       value: primaryProduct ? `${primaryProduct.healthScore}/100` : "Yok",
-    },
-  ];
+    });
+  }
+
+  return evidence;
 }
 
 function filterSellerActionCardsByFocus(

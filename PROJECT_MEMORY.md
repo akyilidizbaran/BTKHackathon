@@ -1681,6 +1681,18 @@
 * Not:
   * Agent nav ve aksiyon metinleri korunur; değişiklik yalnızca marka/panel başlığı ve logo temsilidir.
 
+### 2026-05-19 Seller Actions Duplicate Evidence Key Fix
+
+* Problem:
+  * `/seller/actions` manuel testinde `create_bundle` ve `promote_winner` kartlarında `Ürün sağlığı` evidence etiketi iki kez geldiği için React duplicate key console error üretiyordu.
+* Çözüm:
+  * `createSellerActionListEvidence` artık aksiyonun metric highlight'larında zaten `Ürün sağlığı` varsa üçüncü ürün sağlığı metriğini tekrar eklemez.
+  * `SellerActionsWorkspace` evidence metric key'i label/value/helper/index kombinasyonuyla future-proof hale getirildi.
+* Doğrulama:
+  * `/api/seller/actions` evidence label uniqueness kontrolü geçti.
+  * `/seller/actions` Puppeteer kontrolünde Next duplicate key overlay metni görünmedi.
+  * `npm run check` ve `npm run build` geçti.
+
 ### Güncelleme Kaydı
 
 * Son güncelleme: 2026-05-19
