@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit",
     "test:components": "vitest run src/components/commerce",
     "validate:workflows": "node scripts/validate-workflows.js",
+    "smoke:llm": "node scripts/llm-smoke.js",
     "db:generate": "node scripts/prisma-generate-if-env.mjs",
     "db:validate": "node scripts/prisma-validate-with-placeholder.mjs",
     "db:migrate:deploy": "prisma migrate deploy",

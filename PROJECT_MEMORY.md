@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * Vercel deploy öncesi runtime ve dokümantasyon snapshot'ı Gemini-only hale getirildi.
 * Son değişiklik neydi?
-  * Native Gemini adapter, temiz trace taraması, `npm run check`, `npm run build`, canlı buyer-agent smoke ve GitHub CI doğrulandı.
+  * Buyer malformed manualPreferences 400'e bağlandı; Seller listing apply fiyat/before policy guard'ı eklendi; opt-in Gemini smoke workflow eklendi.
 * Bir sonraki net adım ne?
   * Vercel env değerleri girilip deploy alınacak.
 
@@ -87,11 +87,14 @@
 * 2026-05-19 — Karar: Deploy öncesi current snapshot Gemini-only hale getirilecek. | Gerekçe: Son commit içinde eski sağlayıcı izleri görünmemeli. | Etki: LLM router, env örneği, dokümantasyon ve proje hafızası Gemini/deterministic contract'ına göre temizlenir. | Alternatifler: Eski adapter'ı kodda bırakıp sadece varsayılanı Gemini yapmak.
 * 2026-05-19 — Karar: Gemini adaptörü native `generateContent` endpoint'ini kullanacak. | Gerekçe: Uyumluluk endpoint'i current snapshot içinde istenmeyen sağlayıcı kelimesi taşıyor ve final kodun net Gemini olmasını engelliyor. | Etki: `src/lib/llm/gemini.ts` request/response shape'i native Gemini API'ye taşınır.
 * 2026-05-19 — Karar: Runtime LLM varsayılanı `gemini-2.5-flash` olacak. | Gerekçe: Demo stabilitesi ve JSON contract güvenilirliği. | Etki: `.env.example`, validation ve Vercel env beklentileri aynı model kodunu kullanır.
+* 2026-05-19 — Karar: Deploy öncesi dış review bulgularındaki contract bug'ları kod seviyesinde kapatılacak. | Gerekçe: Buyer malformed nested preferences 500'e, Seller apply aşırı fiyat mutation'ına düşebiliyordu. | Etki: Buyer validation nested array/enum/number shape'lerini 400'e çevirir; Seller apply server-side fiyat aralığı ve before snapshot tutarlılığı doğrular. | Alternatifler: Sadece UI/LLM draft guard'ına güvenmek.
+* 2026-05-19 — Karar: Canlı LLM kontrolü default CI'a değil opt-in workflow'a alınacak. | Gerekçe: Ana CI secretsız ve stabil kalmalı; gerçek provider response shape/auth/model kırılmaları manuel tetiklenen smoke ile görülebilmeli. | Etki: `npm run smoke:llm` ve `.github/workflows/llm-smoke.yml` eklendi.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
 * 2026-05-19 — Milestone: Gemini deploy readiness. | Sonuç: Current snapshot Gemini/deterministic LLM hattına indirildi; check/build ve trace taraması deploy öncesi doğrulama olarak çalıştırılacak.
 * 2026-05-19 — Milestone: Deploy öncesi temiz HEAD doğrulandı. | Sonuç: `npm run check`, `npm run build`, canlı `/api/buyer/agent` smoke ve GitHub CI run `26097249110` başarılı; current tree trace taraması temiz.
+* 2026-05-19 — Milestone: External review hardening. | Sonuç: Buyer malformed preferences ve Seller excessive price route repro'ları 400/422 dönecek şekilde kapatıldı; `npm run check`, `npm run build`, `npm run smoke:llm` geçti.
 
 ## 8) Yapılanlar
 
@@ -100,6 +103,7 @@
 * [x] Gemini LLM adapter'ı, structured JSON validation ve deterministic fallback contract'ı kuruldu.
 * [x] Buyer cart ve seller listing apply boundary'leri kullanıcı onayına bağlandı.
 * [x] Floating Agent route-aware mini panel olarak eklendi.
+* [x] External review bulgularındaki buyer validation ve seller apply policy açıkları kapatıldı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -114,11 +118,13 @@
 * Büyük UI workspace dosyaları daha fazla component extraction isteyebilir.
 * Browser regression script'i dokümante edildi ama committed tekrar çalıştırılabilir script olarak genişletilmedi.
 * Production telemetry, rate limit görünürlüğü ve server-backed persistence sonraki faz.
+* `npm audit` high/critical bulgu göstermiyor; 5 moderate bulgu Next/Prisma zincirinden geliyor ve önerilen otomatik fix kırıcı downgrade olduğu için deploy öncesi uygulanmadı.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 
 * LLM route'larında model çıktısı UI/apply contract'ına girmeden önce mutlaka parse ve validate edilmeli.
 * Gemini key yoksa fallback davranışı hata değil, bilinçli demo-safe moddur.
+* Canlı Gemini entegrasyonu için `npm run smoke:llm` lokal/Vercel secret ortamında çalışır; GitHub'da manuel `LLM Smoke` workflow'u `GEMINI_API_KEY` secret'ı ister.
 * Local storage state'leri deploy öncesi üretim persistence sanılmamalı.
 * Secret değerleri yalnızca local/Vercel env içinde tutulmalı.
 

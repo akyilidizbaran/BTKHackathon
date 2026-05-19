@@ -1030,6 +1030,23 @@ function validateBuyerApiContracts() {
   });
   const emptyValidation = validateBuyerSmartCartRequest({ prompt: "" });
   const longValidation = validateBuyerSmartCartRequest({ prompt: "x".repeat(281) });
+  const malformedManualPreferences = validateBuyerSmartCartRequest({
+    manualPreferences: {
+      preferredUseCases: {
+        bad: true,
+      },
+    },
+    prompt: "Toplantı için kamera öner.",
+  });
+  const validManualPreferences = validateBuyerSmartCartRequest({
+    manualPreferences: {
+      maxDeliveryDays: 2,
+      preferredColors: [" beyaz ", "beyaz", "krem"],
+      preferredUseCases: ["toplantı"],
+      sensitivities: ["fast_shipping", "easy_return"],
+    },
+    prompt: "Toplantı için kamera öner.",
+  });
 
   assert(buyerSmartCartExamples.length >= 5, "buyer API örnek prompt sayısı yetersiz");
   assert(defaultData.contract.envelope === "success/data/error", "buyer API envelope contract yanlış");
@@ -1044,6 +1061,16 @@ function validateBuyerApiContracts() {
   assert(meetingData.result.selectedItems.some((item) => item.cartRoleKey === "camera"), "buyer API meeting camera rolü eksik");
   assert(!emptyValidation.ok && emptyValidation.code === "PROMPT_REQUIRED", "buyer API boş prompt validation yanlış");
   assert(!longValidation.ok && longValidation.code === "PROMPT_TOO_LONG", "buyer API uzun prompt validation yanlış");
+  assert(
+    !malformedManualPreferences.ok && malformedManualPreferences.code === "INVALID_MANUAL_PREFERENCES",
+    "buyer API malformed manualPreferences 400 validation'a düşmeli",
+  );
+  assert(
+    validManualPreferences.ok &&
+      validManualPreferences.value.manualPreferences?.preferredColors?.join("|") === "beyaz|krem" &&
+      validManualPreferences.value.manualPreferences.maxDeliveryDays === 2,
+    "buyer API manualPreferences normalize yanlış",
+  );
 }
 
 function validateBuyerCatalogApiContracts() {
@@ -1397,7 +1424,7 @@ async function validateSellerListingMutationApplyContracts() {
       price: -1,
       title: "x",
     },
-    productId: "prod-ergoflex-chair",
+    productId: "prod-ergoflex-calisma-sandalyesi",
   });
 
   assert(Boolean(draftPreview), "seller listing apply için draft preview olmalı");
@@ -1412,11 +1439,33 @@ async function validateSellerListingMutationApplyContracts() {
     sourceRuntimeId: agentData.runtime.runtimeId,
     surface: "route",
   });
+  const excessivePrice = validateSellerListingMutationApplyRequest({
+    ...draftPreview.applyRequest,
+    mutation: {
+      ...draftPreview.applyRequest.mutation,
+      price: 999999999,
+    },
+  });
+  const spoofedBefore = validateSellerListingMutationApplyRequest({
+    ...draftPreview.applyRequest,
+    before: {
+      ...draftPreview.applyRequest.before,
+      price: 1,
+    },
+  });
 
   assert(validRequest.ok, "seller listing apply valid request doğrulanmalı");
   assert(!invalidBody.ok && invalidBody.code === "INVALID_BODY", "seller listing apply invalid body validation yanlış");
   assert(!missingProduct.ok && missingProduct.code === "PRODUCT_REQUIRED", "seller listing apply missing product validation yanlış");
   assert(!invalidMutation.ok && invalidMutation.code === "INVALID_MUTATION", "seller listing apply invalid mutation validation yanlış");
+  assert(
+    !excessivePrice.ok && excessivePrice.code === "PRICE_POLICY_VIOLATION",
+    "seller listing apply aşırı fiyatı policy validation ile reddetmeli",
+  );
+  assert(
+    !spoofedBefore.ok && spoofedBefore.code === "BEFORE_LISTING_MISMATCH",
+    "seller listing apply spoofed before snapshot'ı reddetmeli",
+  );
 
   const applyData = validRequest.ok ? getSellerListingMutationApplyApiData(validRequest.value) : undefined;
 
@@ -1750,10 +1799,12 @@ async function validateFloatingAgentApiContracts() {
     "floating buyer chat cevabı onay sınırını anlatmalı",
   );
   assert(buyerAction.decision.mode === "buyer-agent", "floating buyer action buyer-agent mode dönmeli");
+  assert(buyerAction.orchestration.status === "fallback", "floating buyer action intent router local fallback kullanmalı");
   assert(Boolean(buyerAction.buyerAgent), "floating buyer action buyerAgent data üretmeli");
   assert(!buyerAction.sellerAgent, "floating buyer action sellerAgent üretmemeli");
   assert(buyerAction.decision.actionPrompt?.includes("Anneme"), "floating buyer action prompt korunmalı");
   assert(sellerAction.decision.mode === "seller-agent", "floating seller action seller-agent mode dönmeli");
+  assert(sellerAction.orchestration.status === "fallback", "floating seller action intent router local fallback kullanmalı");
   assert(Boolean(sellerAction.sellerAgent), "floating seller action sellerAgent data üretmeli");
   assert(!sellerAction.buyerAgent, "floating seller action buyerAgent üretmemeli");
   assert(outOfScope.decision.mode === "chat", "floating out-of-scope soru chat boundary dönmeli");

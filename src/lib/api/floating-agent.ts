@@ -176,9 +176,10 @@ export async function getFloatingAgentApiData(
   options: FloatingAgentApiOptions = {},
 ): Promise<FloatingAgentApiData> {
   const fallbackBody = createFallbackFloatingAgentModelBody(request);
+  const routeActionLocally = actionModes.has(fallbackBody.mode);
   const llmResult = await generateLlmJson({
     fallbackValue: fallbackBody,
-    forceFallback: options.forceFallback,
+    forceFallback: options.forceFallback || routeActionLocally,
     input: createFloatingAgentModelInput(request),
     instructions: createFloatingAgentModelInstructions(),
     maxOutputTokens: 520,

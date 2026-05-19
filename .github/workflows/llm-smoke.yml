@@ -1,0 +1,40 @@
+name: LLM Smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: llm-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+  LLM_PROVIDER: gemini
+  GEMINI_MODEL: gemini-2.5-flash
+  GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+  LLM_SMOKE_REQUIRED: "1"
+
+jobs:
+  gemini:
+    name: Gemini generated response smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Gemini smoke
+        run: npm run smoke:llm

@@ -148,6 +148,8 @@ export type SellerListingMutationApplyValidationResult =
   | SellerListingMutationApplyValidationSuccess;
 
 const sharedSurfaces: SellerListingMutationSurface[] = ["route", "floating"];
+const sellerListingPriceLowerRatio = 0.7;
+const sellerListingPriceUpperRatio = 1.15;
 
 export function createSellerListingMutationPreview(input: {
   actionId?: string;
@@ -238,6 +240,18 @@ export function validateSellerListingMutationApplyRequest(
     };
   }
 
+  const sellerId = normalizeString(rawInput.sellerId) ?? demoSellerId;
+  const product = resolveSellerListingMutationProduct(productId, sellerId);
+
+  if (!product) {
+    return {
+      code: "PRODUCT_NOT_FOUND",
+      message: "Uygulanacak ürün satıcı kataloğunda bulunamadı.",
+      ok: false,
+      status: 404,
+    };
+  }
+
   const mutation = normalizeListingValues(rawInput.mutation);
 
   if (!mutation) {
@@ -250,6 +264,15 @@ export function validateSellerListingMutationApplyRequest(
   }
 
   const before = isRecord(rawInput.before) ? normalizePartialListingValues(rawInput.before) : undefined;
+  const policyValidation = validateListingMutationPolicy({
+    before,
+    mutation,
+    product,
+  });
+
+  if (!policyValidation.ok) {
+    return policyValidation;
+  }
 
   return {
     ok: true,
@@ -261,11 +284,56 @@ export function validateSellerListingMutationApplyRequest(
       mutation,
       productId,
       reason: normalizeString(rawInput.reason),
-      sellerId: normalizeString(rawInput.sellerId) ?? demoSellerId,
+      sellerId,
       sourceRuntimeId: normalizeString(rawInput.sourceRuntimeId),
       surface: normalizeSurface(rawInput.surface),
     },
   };
+}
+
+function validateListingMutationPolicy(input: {
+  before: Partial<SellerListingMutationValues> | undefined;
+  mutation: SellerListingMutationValues;
+  product: SellerProductApiRow;
+}): SellerListingMutationApplyValidationResult {
+  const currentListing = createBeforeListing(input.product);
+  const lowerPrice = Math.round(input.product.price * sellerListingPriceLowerRatio);
+  const upperPrice = Math.round(input.product.price * sellerListingPriceUpperRatio);
+
+  if (input.mutation.price < lowerPrice || input.mutation.price > upperPrice) {
+    return {
+      code: "PRICE_POLICY_VIOLATION",
+      message: `Listing fiyatı mevcut ürün fiyatının %70-%115 aralığında olmalı (${lowerPrice}-${upperPrice} TRY).`,
+      ok: false,
+      status: 422,
+    };
+  }
+
+  if (input.before && !isBeforeListingConsistent(input.before, currentListing)) {
+    return {
+      code: "BEFORE_LISTING_MISMATCH",
+      message: "Before listing snapshot mevcut server-side listing ile uyuşmuyor.",
+      ok: false,
+      status: 409,
+    };
+  }
+
+  return {
+    ok: true,
+    value: {
+      mutation: input.mutation,
+      productId: input.product.id,
+    },
+  };
+}
+
+function isBeforeListingConsistent(
+  before: Partial<SellerListingMutationValues>,
+  currentListing: SellerListingMutationValues,
+): boolean {
+  const fields: SellerListingMutationField[] = ["campaignLabel", "description", "price", "title"];
+
+  return fields.every((field) => typeof before[field] === "undefined" || before[field] === currentListing[field]);
 }
 
 export function getSellerListingMutationApplyApiData(
