@@ -127,7 +127,7 @@ export const buyerSmartCartExamples: BuyerSmartCartExample[] = [
     label: "Ev ofis",
     helper: "Bütçe + hızlı kargo",
     buyerId: "buyer-aylin",
-    prompt: "3.000 TL altında hızlı kargolu ev ofis setup kur.",
+    prompt: "3.400 TL altında hızlı kargolu ev ofis setup kur.",
   },
   {
     id: "coffee-starter",

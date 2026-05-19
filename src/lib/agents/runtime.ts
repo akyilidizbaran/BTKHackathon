@@ -149,7 +149,7 @@ export const agentPromptTemplates: AgentPromptTemplate[] = [
     endpoint: buyerAgentEndpoint,
     examplePrompts: [
       "Toplantı için uyumlu kamera mikrofon hub öner.",
-      "3000 TL altı sade stil kazak ve pantolon getir.",
+      "2.000 TL altı sade masa aksesuarları öner.",
       "Spor kulaklıkta ter ve iade riski düşük ürün seç.",
     ],
     id: "buyer-smart-cart-route",

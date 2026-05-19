@@ -100,7 +100,7 @@ export function RoleGateway() {
           <div data-gateway-reveal className="max-w-4xl">
             <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-sm font-medium text-orange-700">
               <Storefront size={18} weight="duotone" />
-              Light marketplace pivotu başladı
+              Marketplace ve agent deneyimi hazır
             </div>
             <h1 className="max-w-5xl text-[clamp(2.65rem,5vw,5.25rem)] font-semibold leading-[0.95] tracking-[-0.055em] text-slate-950">
               Alışveriş Arkadaşım artık tanıdık bir alışveriş yüzeyi.

@@ -4,8 +4,8 @@ export const carts: Cart[] = [
   {
     id: "cart-home-office-fast-shipping",
     buyerId: "buyer-aylin",
-    prompt: "Kargo hızı yüksek olan 3000 TL altında ev ofis setup kur.",
-    budget: 3000,
+    prompt: "Kargo hızı yüksek olan 3.400 TL altında ev ofis setup kur.",
+    budget: 3400,
     items: [
       { productId: "prod-riseup-laptop-standi", quantity: 1 },
       { productId: "prod-flowmate-kablosuz-mouse", quantity: 1 },

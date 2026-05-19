@@ -925,10 +925,10 @@ async function validateSellerActionExplanationApiContracts() {
 function validateBuyerWorkflows() {
   const cases = [
     {
-      prompt: "3.000 TL altında hızlı kargolu ev ofis setup kur.",
+      prompt: "3.400 TL altında hızlı kargolu ev ofis setup kur.",
       buyerId: "buyer-aylin",
       expectedIntent: "home_office_setup",
-      expectedBudget: 3000,
+      expectedBudget: 3400,
       requiredRoles: ["ergonomics", "input_device", "lighting"],
     },
     {

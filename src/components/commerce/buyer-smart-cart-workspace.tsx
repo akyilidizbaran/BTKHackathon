@@ -195,7 +195,7 @@ export function BuyerSmartCartWorkspace({
                   maxLength={280}
                   onChange={(event) => setPrompt(event.target.value)}
                   className="min-h-32 resize-none rounded-[1.35rem] border border-white/10 bg-zinc-950/55 px-4 py-4 text-base leading-7 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] outline-none transition placeholder:text-zinc-600 focus:border-emerald-200/40 focus:bg-zinc-950/70"
-                  placeholder="Örn. 3.000 TL altında hızlı kargolu ev ofis setup kur."
+                  placeholder="Örn. 3.400 TL altında hızlı kargolu ev ofis setup kur."
                 />
               </label>
 

@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı; public marka adı `Alışveriş Arkadaşım`.
 * Son değişiklik neydi?
-  * README ilk ekranına canlı demo CTA'sı ve hızlı rota linkleri eklendi.
+  * Ana sayfadaki iç faz dili final ürün diline çevrildi; buyer bütçe örnekleri bütçeyi aşmayacak şekilde güncellendi.
 * Bir sonraki net adım ne?
   * Yarışma paylaşımı için yeni GitHub ve Vercel URL'leri kullanılacak.
 
@@ -98,6 +98,8 @@
 * 2026-05-19 — Karar: Paylaşım adı `Alışveriş Arkadaşım`, teknik slug `alisveris-arkadasim` olacak. | Gerekçe: GitHub/Vercel URL'leri için boşluksuz ASCII slug güvenli; marka adı Türkçe olarak README, açıklama ve site içinde korunur. | Etki: GitHub repo, Vercel project, package metadata ve public alias yeni sluga taşındı; eski GitHub URL redirect eder. | Alternatifler: Eski `btk-hackathon` slug'ını korumak veya özel domain almak.
 * 2026-05-19 — Karar: Vercel SSO deployment protection paylaşım için kapatıldı, Git fork protection açık kaldı. | Gerekçe: Yeni slug'lı Vercel domainleri 401 dönüyordu; yarışma paylaşım linki public olmalı. | Etki: `https://alisveris-arkadasim.vercel.app` ve slug'lı deployment URL'leri 200 döner. | Alternatifler: Özel domain almak veya eski public domainle kalmak.
 * 2026-05-19 — Karar: README ilk ekranında canlı demo URL'si görünür olacak. | Gerekçe: Jüri veya inceleyici repo'yu açınca deploy linkini aramamalı. | Etki: Badge, ana URL ve hızlı rota tablosu README başına eklendi. | Alternatifler: URL'yi sadece GitHub homepage alanında bırakmak.
+* 2026-05-19 — Karar: Final UI metinleri iç faz dili taşımayacak. | Gerekçe: Teslim ekranı prototip geçişi değil, final ürün algısı vermeli. | Etki: Ana sayfa etiketi ürün hazır diline taşındı. | Alternatifler: İç milestone dilini korumak.
+* 2026-05-19 — Karar: Buyer bütçe örnekleri gerçek seçki toplamını aşmayacak. | Gerekçe: Guardrail iddiası ile demo prompt'u aynı yönde olmalı. | Etki: Ev ofis örneği 3.400 TL bütçeye çekildi; buyer agent placeholder'ı katalogla uyumlu 2.000 TL masa aksesuarı örneği oldu. | Alternatifler: %5 tolerans metnine güvenmek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
@@ -111,6 +113,7 @@
 * 2026-05-19 — Milestone: Demo card media cleanup. | Sonuç: Lokal `/demo` render'ında prova kartları local konu görsellerini kullanıyor; `picsum.photos` DOM'da yok; check/build geçti.
 * 2026-05-19 — Milestone: Project rename. | Sonuç: GitHub repo `akyilidizbaran/alisveris-arkadasim`, Vercel project `alisveris-arkadasim`, public URL `https://alisveris-arkadasim.vercel.app`.
 * 2026-05-19 — Milestone: README live demo polish. | Sonuç: README başında canlı demo badge'i, ana URL ve buyer/seller/agent hızlı linkleri görünür.
+* 2026-05-19 — Milestone: Final copy and buyer budget polish. | Sonuç: Ana sayfa iç faz dili kaldırıldı; buyer örnek prompt'ları bütçe içinde deterministik sonuç döndürür.
 
 ## 8) Yapılanlar
 
@@ -126,6 +129,7 @@
 * [x] Demo prova kartlarındaki rastgele doğa arka planları local konu görselleriyle değiştirildi.
 * [x] GitHub repo ve Vercel proje/paylaşım adı `alisveris-arkadasim` slug'ına taşındı.
 * [x] README canlı demo URL ve hızlı rota linkleriyle güncellendi.
+* [x] Ana sayfa final ürün dili ve buyer bütçe örnekleri polish edildi.
 
 ## 9) Yapılacaklar (Next)
 

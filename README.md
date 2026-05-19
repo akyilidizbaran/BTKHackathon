@@ -18,6 +18,8 @@
   <a href="https://alisveris-arkadasim.vercel.app/seller/agent">Seller agent</a>
 </p>
 
+**Jüri akışı:** [Canlı demo](https://alisveris-arkadasim.vercel.app) -> [`/demo`](https://alisveris-arkadasim.vercel.app/demo) -> [`/buyer/products`](https://alisveris-arkadasim.vercel.app/buyer/products) -> [`/buyer/agent`](https://alisveris-arkadasim.vercel.app/buyer/agent) -> [`/seller`](https://alisveris-arkadasim.vercel.app/seller) -> [`/seller/agent`](https://alisveris-arkadasim.vercel.app/seller/agent)
+
 Alışveriş Arkadaşım, hackathon MVP'si olarak geliştirilmiş çift taraflı bir ticaret zekası platformudur. Alıcı tarafında tanıdık bir marketplace deneyimi, satıcı tarafında operasyon paneli ve iki tarafın üzerinde çalışan context-aware bir commerce agent bulunur. Agent; açıklama yapabilir, ürün önerebilir, satıcı aksiyonlarını önizleyebilir ve yalnızca kullanıcı onayı sonrası geçerli aksiyonları uygulayabilir.
 
 ## Canlı Demo
