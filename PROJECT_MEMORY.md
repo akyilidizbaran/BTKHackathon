@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * Vercel deploy öncesi runtime ve dokümantasyon snapshot'ı Gemini-only hale getirildi.
 * Son değişiklik neydi?
-  * Buyer malformed manualPreferences 400'e bağlandı; Seller listing apply fiyat/before policy guard'ı eklendi; opt-in Gemini smoke workflow eklendi.
+  * Audit moderate bulguları minimal-risk dependency override ile sıfırlandı; `npm audit`, `npm run check`, `npm run build`, `npm run smoke:llm` geçti.
 * Bir sonraki net adım ne?
   * Vercel env değerleri girilip deploy alınacak.
 
@@ -89,12 +89,14 @@
 * 2026-05-19 — Karar: Runtime LLM varsayılanı `gemini-2.5-flash` olacak. | Gerekçe: Demo stabilitesi ve JSON contract güvenilirliği. | Etki: `.env.example`, validation ve Vercel env beklentileri aynı model kodunu kullanır.
 * 2026-05-19 — Karar: Deploy öncesi dış review bulgularındaki contract bug'ları kod seviyesinde kapatılacak. | Gerekçe: Buyer malformed nested preferences 500'e, Seller apply aşırı fiyat mutation'ına düşebiliyordu. | Etki: Buyer validation nested array/enum/number shape'lerini 400'e çevirir; Seller apply server-side fiyat aralığı ve before snapshot tutarlılığı doğrular. | Alternatifler: Sadece UI/LLM draft guard'ına güvenmek.
 * 2026-05-19 — Karar: Canlı LLM kontrolü default CI'a değil opt-in workflow'a alınacak. | Gerekçe: Ana CI secretsız ve stabil kalmalı; gerçek provider response shape/auth/model kırılmaları manuel tetiklenen smoke ile görülebilmeli. | Etki: `npm run smoke:llm` ve `.github/workflows/llm-smoke.yml` eklendi.
+* 2026-05-19 — Karar: Audit moderate bulguları için Next/Prisma downgrade yerine transitive override kullanılacak. | Gerekçe: Direct paketler latest sürümdeydi; `npm audit fix --force` kırıcı downgrade öneriyordu. | Etki: `postcss` 8.5.15 ve `@hono/node-server` 2.0.3 override edildi; audit sıfırlandı. | Alternatifler: Force downgrade veya audit bulgularını deploy sonrası izlemek.
 
 ## 7) Milestones / Dönüm Noktaları (append-only)
 
 * 2026-05-19 — Milestone: Gemini deploy readiness. | Sonuç: Current snapshot Gemini/deterministic LLM hattına indirildi; check/build ve trace taraması deploy öncesi doğrulama olarak çalıştırılacak.
 * 2026-05-19 — Milestone: Deploy öncesi temiz HEAD doğrulandı. | Sonuç: `npm run check`, `npm run build`, canlı `/api/buyer/agent` smoke ve GitHub CI run `26097249110` başarılı; current tree trace taraması temiz.
 * 2026-05-19 — Milestone: External review hardening. | Sonuç: Buyer malformed preferences ve Seller excessive price route repro'ları 400/422 dönecek şekilde kapatıldı; `npm run check`, `npm run build`, `npm run smoke:llm` geçti.
+* 2026-05-19 — Milestone: Audit hardening. | Sonuç: `npm audit --audit-level=moderate` 0 vulnerability döndü; check/build/Gemini smoke tekrar geçti.
 
 ## 8) Yapılanlar
 
@@ -104,6 +106,7 @@
 * [x] Buyer cart ve seller listing apply boundary'leri kullanıcı onayına bağlandı.
 * [x] Floating Agent route-aware mini panel olarak eklendi.
 * [x] External review bulgularındaki buyer validation ve seller apply policy açıkları kapatıldı.
+* [x] Audit moderate bulguları minimal dependency override ile sıfırlandı.
 
 ## 9) Yapılacaklar (Next)
 
@@ -118,7 +121,7 @@
 * Büyük UI workspace dosyaları daha fazla component extraction isteyebilir.
 * Browser regression script'i dokümante edildi ama committed tekrar çalıştırılabilir script olarak genişletilmedi.
 * Production telemetry, rate limit görünürlüğü ve server-backed persistence sonraki faz.
-* `npm audit` high/critical bulgu göstermiyor; 5 moderate bulgu Next/Prisma zincirinden geliyor ve önerilen otomatik fix kırıcı downgrade olduğu için deploy öncesi uygulanmadı.
+* Dependency override'ları future upstream güncellemelerde yeniden değerlendirilmeli; direct Next/Prisma latest kalıyor.
 
 ## 11) Notlar ve Tuzaklar (Pitfalls)
 
