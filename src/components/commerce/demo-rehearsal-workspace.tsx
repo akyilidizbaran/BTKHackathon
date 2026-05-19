@@ -186,20 +186,13 @@ export function DemoRehearsalWorkspace({ data }: DemoRehearsalWorkspaceProps) {
           <div data-demo-reveal className="max-w-6xl">
             <p className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-orange-600">
               <Compass size={18} weight="duotone" />
-              8R demo hardening
+              Demo akışı
             </p>
             <h1
               className="max-w-6xl text-[clamp(3rem,5vw,5.5rem)] font-semibold leading-[0.94] tracking-[-0.065em] text-slate-950"
               style={{ fontFamily: "\"Cabinet Grotesk\", var(--font-geist-sans)" }}
             >
-              Demo akışı{" "}
-              <span
-                aria-hidden="true"
-                data-demo-media
-                className="mx-1 inline-block h-[0.62em] w-[1.45em] translate-y-[0.05em] rounded-full bg-cover bg-center align-baseline grayscale contrast-125"
-                style={{ backgroundImage: "url(https://picsum.photos/seed/alisveris-arkadasim-rehearsal/520/240)" }}
-              />
-              tek nefeste.
+              {data.headline}
             </h1>
             <p className="mt-7 max-w-[64ch] text-lg leading-8 text-slate-600">{data.subheadline}</p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
