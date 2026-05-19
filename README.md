@@ -18,6 +18,10 @@
   <a href="https://alisveris-arkadasim.vercel.app/seller/agent">Seller agent</a>
 </p>
 
+<p align="center">
+  <img src="docs/assets/readme-demo.png" alt="Alışveriş Arkadaşım demo preview" width="100%" />
+</p>
+
 **Jüri akışı:** [Canlı demo](https://alisveris-arkadasim.vercel.app) -> [`/demo`](https://alisveris-arkadasim.vercel.app/demo) -> [`/buyer/products`](https://alisveris-arkadasim.vercel.app/buyer/products) -> [`/buyer/agent`](https://alisveris-arkadasim.vercel.app/buyer/agent) -> [`/seller`](https://alisveris-arkadasim.vercel.app/seller) -> [`/seller/agent`](https://alisveris-arkadasim.vercel.app/seller/agent)
 
 Alışveriş Arkadaşım, hackathon MVP'si olarak geliştirilmiş çift taraflı bir ticaret zekası platformudur. Alıcı tarafında tanıdık bir marketplace deneyimi, satıcı tarafında operasyon paneli ve iki tarafın üzerinde çalışan context-aware bir commerce agent bulunur. Agent; açıklama yapabilir, ürün önerebilir, satıcı aksiyonlarını önizleyebilir ve yalnızca kullanıcı onayı sonrası geçerli aksiyonları uygulayabilir.
@@ -46,6 +50,12 @@ curated commerce verisi
 ```
 
 Bu proje statik bir UI prototipi değildir. Uygulama typed API contract'ları, workflow validation, LLM provider abstraction, katalog/rol guardrail'leri, approval boundary'leri, local mutation/audit store'ları, component testleri ve tekrar çalıştırılabilir validation script'i içerir.
+
+## Neden Farklı?
+
+- Buyer ve seller tarafını tek commerce agent deneyiminde birleştirir; agent aynı katalog, aksiyon ve kanıt sınırları içinde çalışır.
+- LLM doğrudan state mutate etmez; typed validation, guardrail ve açık kullanıcı onayı olmadan cart/listing değişikliği uygulanmaz.
+- Demo UI'dan ibaret değildir; API contract, workflow validation, CI, component testleri ve canlı deploy ile doğrulanabilir bir akış sunar.
 
 ## Jüri Hızlı Akış
 
@@ -329,14 +339,12 @@ Notlar:
 ## Önemli Dokümanlar
 
 - [docs/README.md](docs/README.md) - dokümantasyon seti için teknik inceleyici odaklı indeks.
-- [PROJECT_MEMORY.md](PROJECT_MEMORY.md) - append-only proje hafızası, kararlar, milestone'lar, konvansiyonlar ve güncel durum.
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) - sistem mimarisi, agent boundary'leri, LLM provider katmanı, guardrail'ler, persistence ve verification modeli.
 - [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) - rota, prompt, beklenen sonuç ve kanıt noktaları içeren jüri/teknik inceleyici demo script'i.
 - [docs/REPRODUCIBILITY.md](docs/REPRODUCIBILITY.md) - ortam, teknik inceleyici rota sırası, doğrulama komutları, deterministik iddialar ve MVP dışında kalan kısımlar.
 - [docs/VALIDATION_OUTPUT.md](docs/VALIDATION_OUTPUT.md) - beklenen `npm run validate:workflows` çıktısı ve neyi kanıtladığı.
 - [docs/SUPABASE_DATABASE.md](docs/SUPABASE_DATABASE.md) - Supabase Postgres kurulumu, Prisma migration ve mock dataset seed adımları.
 - [docs/TECHNICAL_AUDIT_COMPONENT_MOCKS.md](docs/TECHNICAL_AUDIT_COMPONENT_MOCKS.md) - teknik denetim, smoke sonuçları, component extraction durumu, mock/lokal envanter ve öncelikler.
-- [docs/ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md](docs/ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md) - ürün ve milestone roadmap'i.
 
 ## Bilinen Teknik Borçlar
 

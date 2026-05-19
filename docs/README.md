@@ -15,5 +15,3 @@ Destek dokümanları:
 | Doküman | Amaç |
 |---|---|
 | [TECHNICAL_AUDIT_COMPONENT_MOCKS.md](TECHNICAL_AUDIT_COMPONENT_MOCKS.md) | Smoke kapsamı, component extraction durumu, mock/lokal envanter ve teknik öncelikler. |
-| [ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md](ALISVERIS_ARKADASIM_AGENT_MARKETPLACE_ROADMAP.md) | Ürün ve milestone roadmap'i. |
-| [../PROJECT_MEMORY.md](../PROJECT_MEMORY.md) | Append-only proje hafızası, kararlar, milestone'lar ve güncel durum. |
