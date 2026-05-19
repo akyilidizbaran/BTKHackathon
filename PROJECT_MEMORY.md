@@ -5,7 +5,7 @@
 * Şu an ne yapıyoruz?
   * Supabase Postgres'e geçişin P1 kısmı tamamlandı: Prisma migration Supabase'e uygulandı ve mock commerce datası gerçek DB'ye seed edildi.
 * Son değişiklik neydi?
-  * `Mini Sepet Arkadaşı` asset seti üretildi, 6 ayrı transparent PNG olarak public asset klasörüne taşındı ve Floating Agent widget'ına state bazlı bağlandı.
+  * `Mini Sepet Arkadaşı` PNG asset'leri yeniden temizlendi; checkerboard kaynaklı alpha delikleri ve koyu zeminde siyah görünen gövde/yüz boşlukları kapatıldı.
 * Bir sonraki net adım ne?
   * Vercel env değerleri girilip deploy sonrası GitHub homepage alanı canlı demo URL ile güncellenecek.
 
@@ -1655,6 +1655,20 @@
   * Puppeteer QA: `/buyer/products` desktop açık/kapalı widget, mobil açık/kapalı widget ekranlarında taşma ve okunabilirlik kontrol edildi.
 * Not:
   * Orijinal generated sheet gerçek alpha içermediği için public'e sadece temizlenmiş ve ayrılmış final PNG asset'ler alındı; source sheet runtime'a eklenmedi.
+
+### 2026-05-19 Mini Sepet Arkadaşı PNG Alpha Cleanup
+
+* Problem:
+  * İlk ayrıştırmada generated sheet'in baked checkerboard arka planı bazı krem gövde/yüz pikselleriyle karıştı; koyu zeminde maskot üzerinde siyah/delik gibi görünen bölgeler oluştu.
+* Karar:
+  * Runtime code değiştirilmeden 6 public PNG asset yeniden çıkarıldı ve temizlendi.
+* Kapsam:
+  * `public/agent/mini-cart/mini-cart-*.png` dosyaları kaynak sheet'ten yeniden alpha çıkarımı, edge component cleanup ve iç gövde/yüz boşluğu onarımı ile güncellendi.
+  * Dış arka plan transparan bırakıldı; sadece maskot parçası olmayan edge fragment'ler silindi.
+* Doğrulama:
+  * Koyu ve açık zemin preview'larında siyah/delik görünümü ve checkerboard kalıntısı kontrol edildi.
+* Not:
+  * Bu adım asset-only düzeltmedir; `FloatingAgentPanel` state mapping'i ve CSS motion davranışı değişmedi.
 
 ### Güncelleme Kaydı
 
